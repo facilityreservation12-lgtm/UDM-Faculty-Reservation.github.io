@@ -1,0 +1,416 @@
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+body {
+  background-color: #f4f4f4;
+  display: flex;
+  flex-direction: row;
+}
+
+.sidebar {
+  width: 15%;
+  background-color: #315C3A;
+  color: white;
+  padding: 30px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: fit-content; 
+  height: auto;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.user-photo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 40px;
+}
+
+.user-photo img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+}
+
+.user-photo div {
+  font-size: 14px;
+}
+
+.menu a {
+  display: block;
+  padding: 12px;        
+  margin-bottom: 10px;
+  color: #e0e0e0;
+  text-decoration: none;
+  border-radius: 8px;
+}
+
+.menu a:hover {
+  background-color: #1e3e2e;
+}       
+
+.logout-btn {
+  background-color: #fff;
+  color: black;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.logout-btn:hover {
+  background-color: #1e3e2e;
+  color: white;
+}
+
+
+.reqs-sub-menu {
+  position: relative;
+}
+
+.sub-menu {
+  max-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  margin-left: 20px;
+  gap: 5px;
+  transition: max-height 0.3s ease;
+}
+
+.reqs-sub-menu:hover .sub-menu {
+  max-height: 200px;
+}
+
+.sub-menu a {
+  color: #cccccc;
+  text-decoration: none;
+}
+
+.sub-menu a:hover {
+  color: white;
+}
+
+.main {
+  height: auto;
+  flex: 1;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  z-index: 0;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f4f4f4;
+}
+
+.container {
+  max-width: 1000px;
+  margin: 40px auto;
+  background: white;
+  padding: 20px 40px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+h2 {
+  text-align: start;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.header {
+  text-align: center;
+  font-weight: bold;
+}
+
+.section {
+  border: 1px solid #000;
+  padding: 10px;
+  margin-bottom: 10px;
+  margin-top: 10px;
+}
+
+.section label {
+  font-weight: bold;
+  display: block;
+  margin-top: 10px;
+}
+
+input[type="text"],
+input[type="date"],
+textarea {
+  width: 100%;
+  padding: 5px;
+  margin-top: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.row {
+  display: flex;
+  gap: 20px;
+}
+
+.row .column {
+  flex: 1;
+}
+
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.checkbox-group label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.signature-area {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 60px;
+}
+
+.signature-block {
+  width: 30%;
+  text-align: center;
+  border-top: 1px solid black;
+  padding-top: 5px;
+}
+
+.print-button {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.print-button button {
+  background-color: #2e6b38;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  font-size: 30px;
+  cursor: pointer;
+  color: #333;
+  transition: color 0.2s ease;
+}
+.back-btn:hover {
+  color: #1e734d;
+}
+
+@media print {
+  .print-button, .sidebar,.header, .footer, .back-btn, h2 {
+    display: none;
+  }
+}
+/* ===============================
+   📱 Phones (<= 600px)
+================================== */
+@media (max-width: 600px) {
+  body {
+    flex-direction: column;
+    height: fit-content;
+    width: fit-content;
+  }
+
+  .sidebar { 
+    width: 100%;
+    flex-direction: column;
+    padding: 10px;
+    align-items: flex-start;
+  }
+
+  .side-container {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .logout-btn {
+    align-self: flex-end;
+    order: -1; /* Moves it to the top */
+  }
+.menu {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap; 
+  overflow-x: auto; 
+  gap: 8px;
+  scrollbar-width: none;
+}
+
+.menu::-webkit-scrollbar {
+  display: none; 
+}
+
+.menu a,
+.reqs-sub-menu {
+  flex-shrink: 0; 
+  white-space: nowrap; 
+  font-size: 14px;
+  color: white;
+  border-radius: 6px;
+  text-decoration: none;
+}
+  .sub-menu {
+    display: none;
+    flex-direction: column;
+    gap: 3px;
+    padding: 4px;
+    background-color: #315C3A;
+  }
+
+  .reqs-sub-menu:hover .sub-menu {
+    display: flex;
+  }
+
+  .main {
+    padding: 10px;
+  }
+
+}
+
+/* ===============================
+   📲 Tablets (601px - 900px)
+================================== */
+@media (min-width: 601px) and (max-width: 900px) {
+    body {
+    flex-direction: column;
+    height: fit-content;
+    width: fit-content;
+  }
+ 
+  .sidebar {
+    width: 100%;
+    flex-direction: column;
+    padding: 10px;
+    align-items: flex-start;
+  }
+
+  .side-container {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .logout-btn {
+    align-self: flex-end;
+    order: -1; /* Moves it to the top */
+  }
+.menu {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap; 
+  overflow-x: auto; 
+  gap: 8px;
+  scrollbar-width: none;
+}
+
+.menu::-webkit-scrollbar {
+  display: none; 
+}
+
+.menu a,
+.reqs-sub-menu {
+  flex-shrink: 0; 
+  white-space: nowrap; 
+  font-size: 14px;
+  color: white;
+  border-radius: 6px;
+  text-decoration: none;
+}
+  .sub-menu {
+    display: none;
+    flex-direction: column;
+    gap: 3px;
+    padding: 4px;
+    background-color: #315C3A;
+  }
+
+  .reqs-sub-menu:hover .sub-menu {
+    display: flex;
+  }
+
+  .main {
+    padding: 10px;
+  }
+
+}
+
+
+/* ===============================
+   💻 Mini Laptops (901px - 1200px)
+================================== */
+@media (min-width: 901px) and (max-width: 1200px) {
+  .sidebar {
+    width: 20%;
+    padding: 25px;
+  }
+
+  .main {
+    padding: 25px;
+  }
+
+  .activity-card {
+    width: 48%;
+  }
+
+  table {
+    min-width: 600px;
+  }
+}
+
+/* ===============================
+   🖥️ Desktops (1201px - 1440px)
+================================== */
+@media (min-width: 1201px) and (max-width: 1440px) {
+  .sidebar {
+    width: 15%;
+    padding: 25px;
+  }
+
+  .main {
+    padding: 25px;
+  }
+
+  .activity-card {
+    width: 30%;
+  }
+}
+
+/* ===============================
+   🖥️🖥️ Larger Desktops (> 1440px)
+================================== */
+@media (min-width: 1441px) {
+  .sidebar {
+    width: 15%;
+    padding: 30px;
+  }
+
+  .main {
+    padding: 30px;
+  }
+
+  .activity-card {
+    width: 365px;
+  }
+}

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Relevant Documents</title>
+  <link rel="stylesheet" href="css/SA_Relevantdocument.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="sidebar">
+    <div class="side-container">
+      <div class="user-photo">
+        <img src="img/peppa.jpg" alt="User Photo" />
+        <div>
+          <strong>Juan B. Batumbakal</strong><br />
+          SUPER ADMIN
+        </div>
+        
+      </div>
+      <div class="menu">
+        <a href="SuperAdminDashboard.html">Dashboard</a>
+        <a href="SuperAdminVRF.html">VRF</a>
+        <div class="reqs-sub-menu">
+                <a href="#" class="sidebar-link">Request ▾</a>
+            <div class="sub-menu">
+                <a href="SA_REQ_IncomingRequest.html">IncomingRequest</a>
+                <a href="SA_Pending.html">Pending</a>
+                <a href="SA_Appproved.html">Approved</a>
+          </div> 
+        </div> 
+       <a href="SA_Otheruser.html">Other User</a>
+        <a href="SuperAdmincalendar.html">Calendar</a>
+        <a href="SA_manage.html">Manage</a>
+        <a href="SA_Settings.html">Settings</a>
+        <a href="SA_Activitylog.html">Logs</a>
+        <a href="SA_Reportbugs.html">Report Bugs</a>            
+      </div> 
+    </div>
+       <button onclick="window.location.href='landingPage.html'" class="logout-btn">Log Out</button> 
+  </div>
+
+<div class="main"> 
+<div class="documents-container">
+    <h1><button class="back-btn" onclick="history.back()">←</button> Relevant Documents</h1>
+    <div class="document-grid">
+      <div class="document-card">
+        <p class="title">Approval</p>
+        <img src="https://img.icons8.com/ios/100/document--v1.png" alt="PDF Icon" />
+        <p class="filename">Surname_Approval.PDF</p>       
+      </div>
+      <div class="document-card">
+        <p class="title">Venue Slip</p>
+        <img src="https://img.icons8.com/ios/100/document--v1.png" alt="PDF Icon" />
+        <p class="filename">Surname_VenueSlip.PDF</p>
+      </div>
+      <div class="document-card">
+        <p class="title">Cash Invoice</p>
+        <img src="https://img.icons8.com/ios/100/document--v1.png" alt="PDF Icon" />
+        <p class="filename">Surname_CashInvoice.PDF</p>
+      </div>
+      <div class="document-card">
+        <p class="title">VRF</p>
+        <img src="https://img.icons8.com/ios/100/document--v1.png" alt="PDF Icon" />
+        <p class="filename">Surname_VRF.PDF</p>
+      </div>
+      <div class="document-card">
+        <p class="title">Permit to Use Facility</p>
+        <img src="https://img.icons8.com/ios/100/document--v1.png" alt="PDF Icon" />
+        <p class="filename">Surname_PTUF.PDF</p>
+      </div>
+    </div>
+
+    <div class="print-button-container">
+      <button onclick="window.print()">🖨️ Print</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Super Admin Calendar</title>
+  <link rel="stylesheet" href="css/SuperAdmincalendar.css" />
+</head>
+<body>
+<div class="sidebar">
+    <div class="side-container">
+      <div class="user-photo">
+        <img src="img/peppa.jpg" alt="User Photo" />
+        <div>
+          <strong>Juan B. Batumbakal</strong><br />
+          SUPER ADMIN
+        </div>
+        
+      </div>
+      <div class="menu">
+        <a href="SuperAdminDashboard.html">Dashboard</a>
+        <a href="SuperAdminVRF.html">VRF</a>
+        <div class="reqs-sub-menu">
+                <a href="#" class="sidebar-link">Request ▾</a>
+            <div class="sub-menu">
+                <a href="SA_REQ_IncomingRequest.html">IncomingRequest</a>
+                <a href="SA_Pending.html">Pending</a>
+                <a href="SA_Appproved.html">Approved</a>
+          </div> 
+        </div> 
+     <a href="SA_Otheruser.html">Other User</a>
+        <a href="SuperAdmincalendar.html">Calendar</a>
+        <a href="SA_manage.html">Manage</a>
+        <a href="SA_Settings.html">Settings</a>
+        <a href="SA_Activitylog.html">Logs</a>
+        <a href="SA_Reportbugs.html">Report Bugs</a>           
+      </div> 
+    </div>
+       <button onclick="window.location.href='landingPage.html'" class="logout-btn">Log Out</button> 
+  </div>
+
+  <div class="main">  
+    <div class="header">
+    <img src="img/UDM_Garden-cropped.jpg" alt="UDM Background" class="bg-image">
+    <div class="overlay">
+ </div>
+</div> 
+     <div class="welcome-box"></div>
+ 
+    <div class="calendar-controls">
+      <button id="prevMonth">&#10094;</button>
+      <h2 id="monthYear"></h2>
+      <button id="nextMonth">&#10095;</button>
+    </div>
+
+    <div class="calendar-grid">
+      <div class="day-names">
+        <div>Sunday</div><div>Monday</div><div>Tuesday</div><div>Wednesday</div>
+        <div>Thursday</div><div>Friday</div><div>Saturday</div>
+      </div>
+      <div id="calendarDays" class="days"></div>
+    </div>
+
+    <button class="print-btn" onclick="window.print()">🖨️ Print</button>
+
+  </div> 
+
+  
+  <script src="java/SuperAdmincalendar.js"></script>
+</body>
+</html>

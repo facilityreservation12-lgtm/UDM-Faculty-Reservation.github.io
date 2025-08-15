@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SuperAdmin Incoming Request</title>
+  <link rel="stylesheet" href="css/SA_IncomingRequest.css"/>
+</head>
+<body>
+<div class="sidebar">
+    <div class="side-container">
+      <div class="user-photo">
+        <img src="img/peppa.jpg" alt="User Photo" />
+        <div>
+          <strong>Juan B. Batumbakal</strong><br />
+          SUPER ADMIN
+        </div>
+        
+      </div>
+      <div class="menu">
+        <a href="SuperAdminDashboard.html">Dashboard</a>
+        <a href="SuperAdminVRF.html">VRF</a>
+        <div class="reqs-sub-menu">
+                <a href="#" class="sidebar-link">Request ▾</a>
+            <div class="sub-menu">
+                <a href="SA_REQ_IncomingRequest.html">IncomingRequest</a>
+                <a href="SA_Pending.html">Pending</a>
+                <a href="SA_Appproved.html">Approved</a>
+          </div> 
+        </div> 
+        <a href="SA_Otheruser.html">Other User</a>
+        <a href="SuperAdmincalendar.html">Calendar</a>
+        <a href="SA_manage.html">Manage</a>
+        <a href="SA_Settings.html">Settings</a>
+        <a href="SA_Activitylog.html">Logs</a>
+        <a href="SA_Reportbugs.html">Report Bugs</a>             
+      </div> 
+    </div>
+       <button onclick="window.location.href='landingPage.html'" class="logout-btn">Log Out</button> 
+  </div>
+
+  <div class="content-area">
+<h1 class="page-title">
+      <button class="back-btn" onclick="history.back()">←</button>
+      Incoming Request
+    </h1>
+
+  <table class="request-table">
+    <thead>
+      <tr>
+        <th>User</th>
+        <th>Venue</th>
+        <th>Date</th>
+        <th>Time</th>
+        <th>Details</th>
+        <th>Print VRF</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Erika Ramos</td>
+        <td><strong>Palma Hall</strong></td>
+        <td>June 10, 2025</td>
+        <td>9:00 AM</td>
+        <td>Student council strategic planning meeting</td>
+        <td><button class="print-btn">Print</button></td>
+      </tr>
+      <tr>
+        <td>Nathan Cruz</td>
+        <td><strong>Basketball Court</strong></td>
+        <td>June 11, 2025</td>
+        <td>4:30 PM</td>
+        <td>College of Engineering varsity tryouts</td>
+        <td><button class="print-btn">Print</button></td>
+      </tr>
+      <tr>
+        <td>Bianca Torres</td>
+        <td><strong>Mehan Garden</strong></td>
+        <td>June 20, 2025</td>
+        <td>2:00 PM</td>
+        <td>On-site sketching for architecture class</td>
+        <td><button class="print-btn">Print</button></td>
+      </tr>
+      <!-- Add more rows as needed -->
+    </tbody>
+  </table>
+</div>
+</body>
+</html>

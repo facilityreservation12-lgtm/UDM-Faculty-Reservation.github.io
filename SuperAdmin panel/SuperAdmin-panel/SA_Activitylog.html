@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SuperAdmin Manage</title>
+  <link rel="stylesheet" href="css/SA_Activitylog.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="sidebar">
+    <div class="side-container">
+      <div class="user-photo">
+        <img src="img/peppa.jpg" alt="User Photo" />
+        <div>
+          <strong>Juan B. Batumbakal</strong><br />
+          SUPER ADMIN
+        </div>
+        
+      </div>
+      <div class="menu">
+        <a href="SuperAdminDashboard.html">Dashboard</a>
+        <a href="SuperAdminVRF.html">VRF</a>
+        <div class="reqs-sub-menu">
+                <a href="#" class="sidebar-link">Request ▾</a>
+            <div class="sub-menu">
+                <a href="SA_REQ_IncomingRequest.html">IncomingRequest</a>
+                <a href="SA_Pending.html">Pending</a>
+                <a href="SA_Appproved.html">Approved</a>
+          </div> 
+        </div> 
+        <a href="SA_Otheruser.html">Other User</a>
+        <a href="SuperAdmincalendar.html">Calendar</a>
+        <a href="SA_manage.html">Manage</a>
+        <a href="SA_Settings.html">Settings</a>
+        <a href="SA_Activitylog.html">Logs</a>
+        <a href="SA_Reportbugs.html">Report Bugs</a>            
+      </div> 
+    </div>
+       <button onclick="window.location.href='landingPage.html'" class="logout-btn">Log Out</button> 
+  </div>
+
+  <div class="main"> 
+<div class="panel-header">
+      <button class="back-btn">←</button>
+      <h2>Activity Logs</h2>
+    </div>
+
+    <div class="filter-box">
+      <div class="filter-toggle" onclick="toggleFilter()">Activities Filters ▲</div>
+      <div class="filters" id="filterSection">
+        <label>Action
+          <select id="actionFilter">
+            <option value="All">All</option>
+            <option value="Logged In">Logged In</option>
+            <option value="Logged Out">Logged Out</option>
+            <option value="Edited">Edited</option>
+          </select>
+        </label>
+        <label>User
+          <select id="userFilter">
+            <option value="All">All</option>
+            <option value="Juan B. Batumbakal">Juan B. Batumbakal</option>
+            <option value="Chloe M. Baldwin">Chloe M. Baldwin</option>
+          </select>
+        </label>
+        <label>From Date
+          <input type="date" id="fromDate" />
+        </label>
+        <label>To Date
+          <input type="date" id="toDate" />
+        </label>
+      </div>
+    </div>
+
+    <div class="log-table">
+      <div class="log-header">
+        <div>Date stamp</div>
+        <div>User</div>
+        <div>Action</div>
+        <div>IP Address</div>
+      </div>
+      <div id="logEntries"></div>
+    </div>
+  </div>
+  </div>
+  <script src="java/SA_Activitylog.js"></script>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Slip</title>
+  <link rel="stylesheet" href="css/Slip.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="sidebar">
+    <div>
+      <div class="user-photo">
+        <img src="img/peppa.jpg" alt="User Photo" />
+        <div>
+          <strong>Juan B. Batumbakal</strong><br />
+          ADMIN
+        </div>
+      </div>
+      <div class="menu">
+        <a href="AdminDashboard.html">Dashboard</a>
+        <a href="AdminVRF.html">VRF</a>
+        <a href="Otheruser.html">Other User</a>
+        <a href="Admincalendar.html">Calendar</a>
+            <div class="reqs-sub-menu">
+                <a href="#" class="sidebar-link">Request ▾</a>
+            <div class="sub-menu">
+                <a href="AD_REQ_IncomingRequest.html">IncomingRequest</a>
+                <a href="AD_Pending.html">Pending</a>
+                <a href="AD_Appproved.html">Approved</a>
+          </div>
+        </div>        
+      </div>
+    </div>
+    <button onclick="window.location.href='landingPage.html'" class="logout-btn">Log Out</button>
+  </div>
+
+  <div class="main">  
+    <h2><button class="back-btn" onclick="history.back()">←</button> Venue Slip</h2>
+        <div class="container">
+    <div class="header">
+      <div>Republic of the Philippines – City of Manila</div>
+      <div><strong>UNIVERSIDAD DE MANILA</strong></div>
+      <div>VENUE/FACILITY SLIP</div>
+    </div>
+
+    <div class="row">
+      <div class="column">
+        <label>Date Filed:</label>
+        <input type="date">
+      </div>
+      <div class="column">
+        <label>Venue Slip No.:</label>
+        <input type="text">
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="row">
+        <div class="column">
+          <label>Unit/Office/College:</label>
+          <input type="text">
+        </div>
+        <div class="column">
+          <label>Inclusive Dates:</label>
+          <input type="text">
+        </div>
+      </div>
+
+      <label>Event/Activity:</label>
+      <input type="text">
+
+      <label>UDM Facility:</label>
+      <div class="checkbox-group">
+        <label><input type="checkbox"> Palma Hall</label>
+        <label><input type="checkbox"> Right Wing Lobby</label>
+        <label><input type="checkbox"> Mehan Garden</label>
+        <label><input type="checkbox"> Rooftop</label>
+        <label><input type="checkbox" id="classroomCheckbox" onchange="toggleInput('classroomInput', this)">Classroom, Room No.</label>
+        <input type="text" id="classroomInput" placeholder="Specify room no." style="display:none; width: 200px;">
+        <label><input type="checkbox"> Basketball Court</label>
+        <label><input type="checkbox"> Ground Floor</label>
+        <label><input type="checkbox" id="othersFacilityCheckbox" onchange="toggleInput('othersFacilityInput', this)">Others</label>
+        <input type="text" id="othersFacilityInput" placeholder="Specify other facility" style="display:none; width: 200px;">
+      </div>
+
+      <label>Set-up Details:</label>
+      <div class="checkbox-group">
+        <label><input type="checkbox"> Chairs</label>
+        <label><input type="checkbox"> Tables</label>
+        <label><input type="checkbox"> Sound System</label>
+        <label><input type="checkbox"> Electrical System</label>
+        <label><input type="checkbox"> Projector and HDMI</label>
+        <label><input type="checkbox" id="othersSetupCheckbox" onchange="toggleInput('othersSetupInput', this)">Others</label>
+        <input type="text" id="othersSetupInput" placeholder="Specify setup" style="display:none; width: 200px;">
+      </div>
+
+      <label>Remarks:</label>
+      <div class="checkbox-group">
+        <label><input type="checkbox" checked> Approved by PFCT</label>
+        <label><input type="checkbox" checked> Reserved and plotted</label>
+        <label><input type="checkbox" id="othersRemarksCheckbox" onchange="toggleInput('othersRemarksInput', this)">Others:</label>
+        <input type="text" id="othersRemarksInput" placeholder="Specify remark" style="display:none; width: 200px;">
+      </div>
+    </div>
+
+    <div class="signature-area">
+      <div class="signature-block">
+        (Name and Signature)<br>
+        Requested by
+      </div>
+      <div class="signature-block">
+        Engr. JAYSON L. VALEROSO<br>
+        Head, Maintenance and Engineering Division
+      </div>
+      <div class="signature-block">
+        VP for Administration<br>
+        Approved by:
+      </div>
+    </div>
+
+    <h3 style="margin-top: 30px">Furnish a copy of ALL RELEVANT DOCUMENTS to the following offices:</h3>
+    <div class="checkbox-group">
+      <label><input type="checkbox"> OVPA</label>
+      <label><input type="checkbox"> OVPSSS</label>
+      <label><input type="checkbox"> OVPA</label>
+      <label><input type="checkbox"> OVPC</label>
+      <label><input type="checkbox"> CAO</label>
+      <label><input type="checkbox"> FGJS</label>
+      <label><input type="checkbox"> Security Office</label>
+      <label><input type="checkbox"> ICTO (if with technical req)</label>
+    </div>
+
+    <div class="print-button">
+      <button onclick="window.print()">🖨 Print Slip</button>
+    </div>
+  </div>
+  </div>
+  <script>
+  function toggleInput(inputId, checkbox) {
+    const input = document.getElementById(inputId);
+    input.style.display = checkbox.checked ? "inline-block" : "none";
+  }
+</script>
+</body>
+</html>

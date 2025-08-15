@@ -1,0 +1,630 @@
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+body {
+  background-color: #f4f4f4;
+  display: flex;
+  flex-direction: row;
+}
+
+.sidebar {
+  width: 15%;
+  background-color: #315C3A;
+  color: white;
+  padding: 30px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.user-photo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 40px;
+}
+
+.user-photo img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+}
+
+.user-photo div {
+  font-size: 14px;
+}
+
+.menu a {
+  display: block;
+  padding: 12px;        
+  margin-bottom: 10px;
+  color: #e0e0e0;
+  text-decoration: none;
+  border-radius: 8px;
+}
+
+.menu a:hover {
+  background-color: #1e3e2e;
+}       
+
+.logout-btn {
+  background-color: #fff;
+  color: black;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.logout-btn:hover {
+  background-color: #1e3e2e;
+  color: white;
+}
+
+
+.reqs-sub-menu {
+  position: relative;
+}
+
+.sub-menu {
+  max-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  margin-left: 20px;
+  gap: 5px;
+  transition: max-height 0.3s ease;
+}
+
+.reqs-sub-menu:hover .sub-menu {
+  max-height: 200px;
+}
+
+.sub-menu a {
+  color: #cccccc;
+  text-decoration: none;
+}
+
+.sub-menu a:hover {
+  color: white;
+}
+
+.main {
+  height: auto;
+  flex: 1;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  z-index: 0;
+}
+
+.header {
+  position: relative;
+  width: 100%;
+  height: 250px;
+  overflow: hidden;
+}
+
+.bg-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.7); /* Optional for dim effect */
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(255,255,255,1));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.welcome-box {
+  background-color: #315C3A;
+  background-size: cover;
+  border-radius: 15px;
+  color: white;
+  padding: 20px;
+}
+
+.calendar-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 20px 0 10px 0;
+  gap: 10px;
+}
+
+#monthYear {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+}
+
+.calendar-grid {
+  background: rgb(255, 255, 255);
+  border-radius: 10px;
+  padding: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.day-names {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #315C3A;
+}
+
+.days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+}
+
+.days div {
+  border: 1px solid #ddd;
+  min-height: 100px;
+  padding: 5px;
+  position: relative;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.days div span {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #333;
+}
+
+.days .event {
+  margin-top: 10px;
+  font-size: 11px;
+  background: #315C3A;
+  color: white;
+  padding: 2px 5px;
+  border-radius: 4px;
+  height: auto;
+}
+
+.print-btn {
+  background-color: #315C3A;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 15px;
+  float: right;
+}
+
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Modal Content */
+.modal-content {
+  background: #ffffff;
+  padding: 25px;
+  border-radius: 10px;
+  width: 320px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.modal-content h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #315C3A;
+  text-align: center;
+}
+
+/* Input Fields */
+.modal-content label {
+  display: block;
+  margin-top: 10px;
+  font-size: 14px;
+  color: #333;
+}
+
+.modal-content input[type="text"],
+.modal-content input[type="time"] {
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+  font-size: 14px;
+}
+
+/* Buttons */
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.modal-buttons button {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.modal-buttons button:first-child {
+  background-color: #315C3A;
+  color: white;
+}
+
+.modal-buttons button:last-child {
+  background-color: #ccc;
+  color: #333;
+}
+
+/* Bullet style for event display */
+.event-list {
+  list-style-type: disc;
+  padding-left: 18px;
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: #315C3A;
+}
+
+.event-list li {
+  line-height: 1.3;
+}
+
+/* Delete Confirmation Modal */
+.delete-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.delete-modal {
+  background: #ffffff;
+  padding: 20px 25px;
+  border-radius: 10px;
+  width: 320px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  font-family: 'Segoe UI', sans-serif;
+  text-align: center;
+}
+
+.delete-modal h4 {
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.delete-modal p {
+  font-size: 14px;
+  color: #666;
+}
+
+.delete-modal-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.delete-modal-buttons button {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 5px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.delete-modal-buttons .confirm {
+  background-color: #315C3A;
+  color: white;
+}
+
+.delete-modal-buttons .cancel {
+  background-color: #ccc;
+  color: #333;
+}
+
+@media print {
+  html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    color: black !important;
+    font-size: 12px;
+  }
+
+  .sidebar,
+  .modal-overlay,
+  .delete-modal-overlay,
+  button,
+  .print-hide,
+  .header,
+  .overlay,.welcome-box {
+    display: none !important;
+  }
+
+  .calendar-container {
+    width: 100vw !important;
+    height: 100vh !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    page-break-inside: avoid;
+  }
+
+  .calendar {
+    width: 100% !important;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
+  }
+
+  .calendar-header {
+    justify-content: center !important;
+    text-align: center;
+    margin-bottom: 10px;
+  }
+
+  .calendar-header button {
+    display: none !important;
+  }
+
+  .days div {
+    min-height: 120px;
+    border: 1px solid #000 !important;
+    padding: 4px;
+    box-sizing: border-box;
+    vertical-align: top;
+  }
+
+  .event-list {
+    padding-left: 10px;
+  }
+
+  .event-list li {
+    font-size: 10px;
+    color: #315C3A !important;
+    line-height: 1.2;
+  }
+
+  .event {
+    background: none !important;
+    color: rgb(0, 0, 0) !important;
+  }
+}
+
+/* ===============================
+   📱 Phones (<= 600px)
+================================== */
+@media (max-width: 600px) {
+  body {
+    flex-direction: column;
+    height: fit-content;
+    width: fit-content;
+  }
+
+  .sidebar {
+    width: 100%;
+    flex-direction: column;
+    padding: 10px;
+    align-items: flex-start;
+  }
+
+  .side-container {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .logout-btn {
+    align-self: flex-end;
+    order: -1; /* Moves it to the top */
+  }
+.menu {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap; 
+  overflow-x: auto; 
+  gap: 8px;
+  scrollbar-width: none;
+}
+
+.menu::-webkit-scrollbar {
+  display: none; 
+}
+
+.menu a,
+.reqs-sub-menu {
+  flex-shrink: 0; 
+  white-space: nowrap; 
+  font-size: 14px;
+  color: white;
+  border-radius: 6px;
+  text-decoration: none;
+}
+  .sub-menu {
+    display: none;
+    flex-direction: column;
+    gap: 3px;
+    padding: 4px;
+    background-color: #315C3A;
+  }
+
+  .reqs-sub-menu:hover .sub-menu {
+    display: flex;
+  }
+
+  .main {
+    padding: 10px;
+  }
+
+}
+
+/* ===============================
+   📲 Tablets (601px - 900px)
+================================== */
+@media (min-width: 601px) and (max-width: 900px) {
+    body {
+    flex-direction: column;
+    height: fit-content;
+    width: fit-content;
+  }
+ 
+  .sidebar {
+    width: 100%;
+    flex-direction: column;
+    padding: 10px;
+    align-items: flex-start;
+  }
+
+  .side-container {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .logout-btn {
+    align-self: flex-end;
+    order: -1; /* Moves it to the top */
+  }
+.menu {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap; 
+  overflow-x: auto; 
+  gap: 8px;
+  scrollbar-width: none;
+}
+
+.menu::-webkit-scrollbar {
+  display: none; 
+}
+
+.menu a,
+.reqs-sub-menu {
+  flex-shrink: 0; 
+  white-space: nowrap; 
+  font-size: 14px;
+  color: white;
+  border-radius: 6px;
+  text-decoration: none;
+}
+  .sub-menu {
+    display: none;
+    flex-direction: column;
+    gap: 3px;
+    padding: 4px;
+    background-color: #315C3A;
+  }
+
+  .reqs-sub-menu:hover .sub-menu {
+    display: flex;
+  }
+
+  .main {
+    padding: 10px;
+  }
+
+}
+
+
+/* ===============================
+   💻 Mini Laptops (901px - 1200px)
+================================== */
+@media (min-width: 901px) and (max-width: 1200px) {
+  .sidebar {
+    width: 20%;
+    padding: 25px;
+  }
+
+  .main {
+    padding: 25px;
+  }
+
+  .activity-card {
+    width: 48%;
+  }
+
+  table {
+    min-width: 600px;
+  }
+}
+
+/* ===============================
+   🖥️ Desktops (1201px - 1440px)
+================================== */
+@media (min-width: 1201px) and (max-width: 1440px) {
+  .sidebar {
+    width: 15%;
+    padding: 25px;
+  }
+
+  .main {
+    padding: 25px;
+  }
+
+  .activity-card {
+    width: 30%;
+  }
+}
+
+/* ===============================
+   🖥️🖥️ Larger Desktops (> 1440px)
+================================== */
+@media (min-width: 1441px) {
+  .sidebar {
+    width: 15%;
+    padding: 30px;
+  }
+
+  .main {
+    padding: 30px;
+  }
+
+  .activity-card {
+    width: 365px;
+  }
+}

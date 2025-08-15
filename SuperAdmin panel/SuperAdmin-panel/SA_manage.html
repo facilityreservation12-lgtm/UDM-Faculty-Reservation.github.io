@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SuperAdmin Manage</title>
+  <link rel="stylesheet" href="css/SA_manage.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="sidebar">
+    <div class="side-container">
+      <div class="user-photo">
+        <img src="img/peppa.jpg" alt="User Photo" />
+        <div>
+          <strong>Juan B. Batumbakal</strong><br />
+          SUPER ADMIN
+        </div>
+        
+      </div>
+      <div class="menu">
+        <a href="SuperAdminDashboard.html">Dashboard</a>
+        <a href="SuperAdminVRF.html">VRF</a>
+        <div class="reqs-sub-menu">
+                <a href="#" class="sidebar-link">Request ▾</a>
+            <div class="sub-menu">
+                <a href="SA_REQ_IncomingRequest.html">IncomingRequest</a>
+                <a href="SA_Pending.html">Pending</a>
+                <a href="SA_Appproved.html">Approved</a>
+          </div> 
+        </div> 
+        <a href="SA_Otheruser.html">Other User</a>
+        <a href="SuperAdmincalendar.html">Calendar</a>
+        <a href="SA_manage.html">Manage</a>
+        <a href="SA_Settings.html">Settings</a>
+        <a href="SA_Activitylog.html">Logs</a>
+        <a href="SA_Reportbugs.html">Report Bugs</a>
+      </div> 
+    </div>
+       <button onclick="window.location.href='landingPage.html'" class="logout-btn">Log Out</button> 
+  </div>
+
+  <div class="main">  
+ <div class="main-container">
+    <div class="header-bar">
+      <h2><button class="back-btn" onclick="history.back()">←</button>Manage User</h2>
+    </div>
+
+    <table class="user-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>User</th>
+          <th>Role</th>
+          <th>Active Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="userTableBody">
+        <!-- Sample user rows will be injected by JS -->
+      </tbody>
+    </table>
+
+    <button class="add-admin-btn" onclick="openAddModal()">Add ADMIN</button>
+  </div>
+
+  <!-- Add/Edit Modal -->
+  <div id="userModal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeModal()">&times;</span>
+      <h3 id="modalTitle">Add Admin</h3>
+      <form id="userForm">
+        <label>Name</label>
+        <input type="text" id="userName" required />
+        <label>Email</label>
+        <input type="email" id="userEmail" required />
+        <label>Password</label>
+        <div class="password-group">
+          <input type="password" id="userPassword" required />
+          <button type="button" class="toggle-pass" onclick="togglePassword('userPassword')">👁️</button>
+        </div>
+        <label>Re-enter Password</label>
+        <div class="password-group">
+          <input type="password" id="userRePassword" required />
+          <button type="button" class="toggle-pass" onclick="togglePassword('userRePassword')">👁️</button>
+        </div>
+        <label>Role</label>
+        <select id="userRole">
+          <option value="ADMIN">ADMIN</option>
+          <option value="SUPER ADMIN">SUPER ADMIN</option>
+           <option value="USER">USER</option>
+        </select>
+        <div class="modal-actions">
+          <button type="submit">Save</button>
+          <button type="button" class="cancel-btn" onclick="closeModal()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Confirmation Popup -->
+  <div id="confirmPopup" class="confirm-popup">
+    <div class="popup-content">
+      <p id="confirmMessage">Are you sure you want to delete this user?</p>
+      <div class="popup-actions">
+        <button id="confirmYes">Yes</button>
+        <button class="no-btn" onclick="closeConfirm()">No</button>
+      </div>
+    </div>
+  </div>
+  <script src="java/SA_manage.js"></script>
+  </div>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login - Universidad de Manila</title>
+  <link rel="stylesheet" href="CSS/login.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    window.SUPABASE_URL = 'https://hfasujvdkbjpllwohqcc.supabase.co';
+    window.SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhmYXN1anZka2JqcGxsd29ocWNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ2NjA4ODgsImV4cCI6MjA3MDIzNjg4OH0.Wo6eqzObQ_sI_qebCi0F6iGyyP7TYcHCyxSoOZQOpPM';
+  </script>
+  <script defer src="Javascript/login.js"></script>
+</head>
+<body>
+  <div class="login-wrapper">
+    <div class="login-box">
+      <img src="../User panel/images/udm-logo.webp" alt="UDM Logo" class="logo" />
+      <h1>UNIVERSIDAD DE MANILA</h1>
+      <small>Former City College of Manila</small>
+      <p>Please Log in to continue to your account</p>
+
+      <div class="role-switch">
+        <span id="facultyBtn" class="active">Faculty/Student Org</span>
+        <span id="adminBtn">Admin</span>
+      </div>
+      <form class="login-form">
+        <input type="hidden" id="role" name="role" value="faculty" />
+        <input type="text" placeholder="User ID" required />
+        <input type="password" placeholder="Password" required />
+        <button type="submit">LOG IN</button>
+        <div class="forgot-password">
+          <a href="#" id="forgotPasswordLink">Forgot Password?</a>
+        </div>
+      </form>
+    </div>
+    <!-- Modal for Forgot Password -->
+    <div id="forgotPasswordModal" class="modal" style="display:none;">
+      <div class="login-box modal-content">
+        <span class="close" id="closeModalBtn">&times;</span>
+        <img src="../User panel/images/udm-logo.webp" alt="UDM Logo" class="logo" />
+        <h1>UNIVERSIDAD DE MANILA</h1>
+        <small>Former City College of Manila</small>
+        <h2 style="margin-top: 1rem;">Change Password</h2>
+        <form id="changePasswordForm">
+          <input type="text" placeholder="Enter your User ID" required />
+          <input type="email" placeholder="Enter your Email" required />
+          <div class="password-wrapper">
+            <input type="password" id="newPassword" placeholder="New Password" required />
+            <span class="toggle-password" data-target="newPassword">&#128065;</span>
+          </div>
+          <div class="password-wrapper">
+            <input type="password" id="confirmPassword" placeholder="Confirm New Password" required />
+            <span class="toggle-password" data-target="confirmPassword">&#128065;</span>
+          </div>
+          <button type="submit">Change Password</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

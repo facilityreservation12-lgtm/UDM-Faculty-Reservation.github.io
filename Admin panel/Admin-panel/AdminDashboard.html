@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="css/AdminDashboard.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="sidebar">
+    <div>
+      <div class="user-photo">
+        <img src="img/peppa.jpg" alt="User Photo" />
+        <div>
+          <strong>Juan B. Batumbakal</strong><br />
+          ADMIN
+        </div>
+      </div>
+      <div class="menu">
+        <a href="AdminDashboard.html">Dashboard</a>
+        <a href="AdminVRF.html">VRF</a>
+        <a href="Otheruser.html">Other User</a>
+        <a href="Admincalendar.html">Calendar</a>
+            <div class="reqs-sub-menu">
+                <a href="#" class="sidebar-link">Request ▾</a>
+            <div class="sub-menu">
+                <a href="AD_REQ_IncomingRequest.html">IncomingRequest</a>
+                <a href="AD_Pending.html">Pending</a>
+                <a href="AD_Appproved.html">Approved</a>
+          </div>
+        </div>        
+      </div>
+    </div>
+    <button onclick="window.location.href='landingPage.html'" class="logout-btn">Log Out</button>
+  </div>
+
+  <div class="main">  
+  <div class="card">
+      <h2 id="usage-title">USAGE PERCENTAGE OF FACILITIES FOR THE MONTH OF ______</h2>
+      <div class="chart-legend-container">
+        <canvas id="UsagePieChart"></canvas>
+        <ul>
+          <li>
+            <span style="background-color: #FFCC00;"></span>
+            <a href="UDMfacility.html?facility=Palma%20Hall">Palma Hall</a>
+          </li>
+          <li>
+            <span style="background-color: #A1C181;"></span>
+            <a href="UDMfacility.html?facility=Right%20Wing%20Lobby">Right Wing Lobby</a>
+          </li>
+          <li>
+            <span style="background-color: #E8E288;"></span>
+            <a href="UDMfacility.html?facility=Mehan%20Garden">Mehan Garden</a>
+          </li>
+          <li>
+            <span style="background-color: #92DCE5;"></span>
+            <a href="UDMfacility.html?facility=Rooftop">Rooftop</a>
+          </li>
+          <li>
+            <span style="background-color: #FFDCC1;"></span>
+            <a href="UDMfacility.html?facility=Classrooms">Classroom</a>
+          </li>
+          <li>
+            <span style="background-color: #A7C6ED;"></span>
+            <a href="UDMfacility.html?facility=Basketball%20Court">Basketball Court</a>
+          </li>
+          <li>
+            <span style="background-color: #FFABAB;"></span>
+            <a href="UDMfacility.html?facility=Space%20at%20the%20Ground%20Floor">Space at the Ground Floor</a>
+          </li>
+          <li>
+            <span style="background-color: #CCCCCC;"></span>
+            <a href="UDMfacility.html?facility=Others">Others</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  <div class="activity-container">
+    <div class="activity-card">
+      <h3>Activity Today</h3>
+      <ul>
+        <li>Thrift shop at <strong>Space at the Ground Floor</strong> - 12:00 PM</li>
+        <li>Student interviews at <strong>Right Wing Lobby</strong> - 3:00 PM</li>
+        <li>Musical rehearsal at <strong>Palma Hall</strong> - 6:00 PM</li>
+        <li>Thrift shop at <strong>Space at the Ground Floor</strong> - 12:00 PM</li>
+        <li>Student interviews at <strong>Right Wing Lobby</strong> - 3:00 PM</li>
+        <li>Musical rehearsal at <strong>Palma Hall</strong> - 6:00 PM</li>
+        <li>Thrift shop at <strong>Space at the Ground Floor</strong> - 12:00 PM</li>
+        <li>Student interviews at <strong>Right Wing Lobby</strong> - 3:00 PM</li>
+        <li>Musical rehearsal at <strong>Palma Hall</strong> - 6:00 PM</li>
+      </ul>
+    </div>
+
+    <div class="activity-card">
+      <h3>Activity Tommorow</h3>
+      <ul>
+        <li>Mental health booth at <strong>Right Wing Lobby</strong> - 11:30 AM</li>
+        <li>Poetry event at <strong>Space at the Ground Floor</strong> - 1:00 PM</li>
+        <li>Basketball training at <strong>Basketball Court</strong> - 3:00 PM</li>
+      </ul>
+    </div>
+    <div class="activity-card">
+      <h3>Activity Next Day</h3>
+      <ul>
+        <li>Mental health booth at <strong>Right Wing Lobby</strong> - 11:30 AM</li>
+        <li>Poetry event at <strong>Space at the Ground Floor</strong> - 1:00 PM</li>
+        <li>Basketball training at <strong>Basketball Court</strong> - 3:00 PM</li>
+      </ul>
+    </div>
+</div>
+    <div class="card">
+      <h3>Incoming Request</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Venue</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Kevin Reyes</td>
+            <td>Classroom</td>
+            <td>June 10, 2025</td>
+            <td>10:30 AM</td>
+            <td>Facilitating a review</td>
+          </tr>
+          <tr>
+            <td>Mika Salamanca</td>
+            <td>Palma Hall</td>
+            <td>June 12, 2025</td>
+            <td>1:00 PM</td>
+            <td>Hosting a poetry reading</td>
+          </tr>
+          <tr>
+            <td>Nina Sinclair</td>
+            <td>Basketball Court</td>
+            <td>July 15, 2025</td>
+            <td>1:00 PM</td>
+            <td>Volleyball Try-out</td>
+          </tr>
+          <tr>
+            <td>Theo Fedelin</td>
+            <td>Basketball Court</td>
+            <td>July 15, 2025</td>
+            <td>3:00 PM</td>
+            <td>Basketball Try-out</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Chart.js Datalabels Plugin -->
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+<script>
+const ctx = document.getElementById('UsagePieChart').getContext('2d');
+
+new Chart(ctx, {
+  type: 'pie',
+  data: {
+    labels: [
+      'Palma Hall',
+      'Right Wing Lobby',
+      'Mehan Garden',
+      'Rooftop',
+      'Classroom',
+      'Basketball Court',
+      'Space at the Ground Floor',
+      'Others'
+    ],
+    datasets: [{
+      data: [30, 20, 15, 14, 6, 5, 5, 5],
+      backgroundColor: [
+        '#FFCC00',
+        '#A1C181',
+        '#E8E288',
+        '#92DCE5',
+        '#FFDCC1',
+        '#A7C6ED',
+        '#FFABAB',
+        '#CCCCCC'
+      ]
+    }]
+  },
+  options: {
+    responsive: false,
+    plugins: {
+      legend: {
+        display: false
+      },
+      datalabels: {
+        color: '#000', // text color
+        font: {
+          weight: 'bold',
+          size: 14
+        },
+        formatter: (value, ctx) => {
+          let sum = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+          let percentage = (value * 100 / sum).toFixed(1) + "%";
+          return percentage;
+        }
+      }
+    }
+  },
+  plugins: [ChartDataLabels]
+});
+ function updateUsageTitle() {
+    const titleElement = document.getElementById('usage-title');
+    const now = new Date();
+    const monthName = now.toLocaleString('default', { month: 'long' });
+    const year = now.getFullYear();
+    titleElement.textContent = `USAGE PERCENTAGE OF FACILITIES FOR THE MONTH OF ${monthName.toUpperCase()} ${year}`;
+  }
+
+  // Call it once on page load
+  updateUsageTitle();
+
+  // Optional: refresh it every day (in case the month changes)
+  setInterval(updateUsageTitle, 24 * 60 * 60 * 1000);
+</script>
+
+</body>
+</html>

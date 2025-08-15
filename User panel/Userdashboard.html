@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>User Dashboard</title>
+  <link rel="stylesheet" href="CSS/Userdasboard.css" />
+</head>
+<body>
+
+  <div class="notification-panel" id="notificationPanel">
+    <h1>Notifications</h1>
+    <div class="notification-container">
+    <div class="notification-item">Your Request for Palma hall on May 12, 2025 at
+      1:00pm-3:00pm is currently Pending</div>
+    <div class="notification-item">Your Request for Palma hall on May 12, 2025 at
+      1:00pm-3:00pm is currently Pending</div>
+    <div class="notification-item">Your Request for Palma hall on May 12, 2025 at
+      1:00pm-3:00pm is currently Pending</div>
+    <div class="notification-item">Your Request for Palma hall on May 12, 2025 at
+      1:00pm-3:00pm is currently Pending</div>
+    <div class="notification-item">Your Request for Palma hall on May 12, 2025 at
+      1:00pm-3:00pm is currently Pending</div>
+    <div class="notification-item">Your Request for Palma hall on May 12, 2025 at
+      1:00pm-3:00pm is currently Pending</div>
+    <div class="notification-item">Your Request for Palma hall on May 12, 2025 at
+      1:00pm-3:00pm is currently Pending</div>
+    <div class="notification-item">Your Request for Palma hall on May 12, 2025 at
+      1:00pm-3:00pm is currently Pending</div>
+    <div class="notification-item">Your Request for Palma hall on May 12, 2025 at
+      1:00pm-3:00pm is currently Pending</div>
+    <div class="notification-item">Your Request for Palma hall on May 12, 2025 at
+      1:00pm-3:00pm is currently Pending</div>
+      <div class="notification-item">Your Request for Palma hall on May 12, 2025 at
+        1:00pm-3:00pm is currently Pending</div>
+      <div class="notification-item">Your Request for Palma hall on May 12, 2025 at
+        1:00pm-3:00pm is currently Pending</div>
+      <div class="notification-item">Your Request for Palma hall on May 12, 2025 at
+        1:00pm-3:00pm is currently Pending</div>          
+    </div> 
+  </div>
+  <div class="notification-overlay" id="notificationOverlay"></div>
+
+<div class="sidebar">
+    <div>
+      <div class="user-photo">
+        <img src="images/udm-logo.webp" alt="User Photo" />
+        <div>
+          <strong>Juan B. Batumbakal</strong><br />
+          Faculty
+        </div>
+      </div>
+      <div class="menu">
+        <a href="Userdashboard.html">Dashboard</a>
+        <a href="Usercalendar.html">Request Calendar</a>
+        <a onclick="toggleNotificationPanel()">Notification</a>
+      </div>
+    </div>
+    <button onclick="window.location.href='landingPage.html'" class="logout-btn">Log Out</button>
+  </div>
+
+  <div class="main">  
+ <div class="header">
+  <img src="images/UDM_Garden-cropped.jpg" alt="UDM Background" class="bg-image">
+  <div class="overlay">
+ </div>
+</div> 
+      <div class="welcome-box">
+        <div class="welcome-content">
+          <h2>Welcome Juan!</h2>
+          <button onclick="window.location.href='Usercalendar.html'">Reserve Facility</button>
+        </div>
+        <div class="time-date">
+          <div>
+          <p class="date" id="currentDate">Wednesday | March 19, 2025</p>
+          <p class="time" id="currentTime">11:58 AM</p>
+        </div>
+        </div>
+      </div>
+
+    <div class="facility-table">
+      <h3>Your Reserved Facility</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>End User</th>
+            <th>Code ID</th>
+            <th>Facility</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="facilityTableBody">
+          <tr>
+            <td>1</td>
+            <td>JUAN B. BATUMBAKAL<br /><small>CET SECRETARY</small></td>
+            <td>PH-04425</td>
+            <td>Palma Hall</td>
+            <td>April 14, 2025</td>
+            <td>11:00am-2:00pm</td>
+            <td class="status-pending">PENDING</td>
+            <td><button class="cancel-btn" onclick="cancelReservation('PH-04425')">Cancel</button></td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>JUAN B. BATUMBAKAL<br /><small>CET SECRETARY</small></td>
+            <td>PH-04326</td>
+            <td>Palma Hall</td>
+            <td>March 30, 2025</td>
+            <td>11:00am-2:00pm</td>
+            <td class="status-approved">APPROVED</td>
+            <td><button class="cancel-btn" onclick="cancelReservation('PH-04326')">Cancel</button></td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>JUAN B. BATUMBAKAL<br /><small>CET SECRETARY</small></td>
+            <td>PH-04227</td>
+            <td>Palma Hall</td>
+            <td>March 18, 2025</td>
+            <td>11:00am-2:00pm</td>
+            <td class="status-completed">COMPLETED</td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+ 
+  <script src="Javascript/Userdashboard.js"></script>
+</body>
+</html>

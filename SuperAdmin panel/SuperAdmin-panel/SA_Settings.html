@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SuperAdmin Settings</title>
+  <link rel="stylesheet" href="css/SA_Settings.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="sidebar">
+    <div class="side-container">
+      <div class="user-photo">
+        <img src="img/peppa.jpg" alt="User Photo" />
+        <div>
+          <strong>Juan B. Batumbakal</strong><br />
+          SUPER ADMIN
+        </div>
+        
+      </div>
+      <div class="menu">
+        <a href="SuperAdminDashboard.html">Dashboard</a>
+        <a href="SuperAdminVRF.html">VRF</a>
+        <div class="reqs-sub-menu">
+                <a href="#" class="sidebar-link">Request ▾</a>
+            <div class="sub-menu">
+                <a href="SA_REQ_IncomingRequest.html">IncomingRequest</a>
+                <a href="SA_Pending.html">Pending</a>
+                <a href="SA_Appproved.html">Approved</a>
+          </div> 
+        </div> 
+       <a href="SA_Otheruser.html">Other User</a>
+        <a href="SuperAdmincalendar.html">Calendar</a>
+        <a href="SA_manage.html">Manage</a>
+        <a href="SA_Settings.html">Settings</a>
+        <a href="SA_Activitylog.html">Logs</a>
+        <a href="SA_Reportbugs.html">Report Bugs</a>     
+      </div> 
+    </div>
+       <button onclick="window.location.href='landingPage.html'" class="logout-btn">Log Out</button> 
+  </div>
+
+  <div class="main">  
+ <div class="main-content">
+    <div class="header-bar">⚙️ Settings</div>
+
+    <div class="section">
+      <h3>Account Settings</h3>
+      <form>
+        <label>Full Name: <input type="text" value="Juan B. Batumbakal" /></label>
+        <label>Email: <input type="email" value="juan@udm.edu" /></label>
+        <label>New Password: <input type="password" /></label>
+        <label>Re-enter Password: <input type="password" /></label>
+        <button type="submit" class="save-btn">Save Changes</button>
+      </form>
+    </div>
+
+    <div class="section">
+      <h3>Personal Preferences</h3>
+      <form>
+        <label>Theme:
+          <select>
+            <option>Default</option>
+            <option>Dark Mode</option>
+            <option>High Contrast</option>
+          </select>
+        </label>
+        <label>Language:
+          <select>
+            <option>English</option>
+            <option>Filipino</option>
+          </select>
+        </label>
+        <button type="submit" class="save-btn">Save Preferences</button>
+      </form>
+    </div>
+
+    <div class="section">
+      <h3>Super Admin Settings</h3>
+      <form>
+        <label>Role Management:
+          <select>
+            <option>Enable Manual Role Change</option>
+            <option>Restrict to System Roles</option>
+          </select>
+        </label>
+        <label>Logs Visibility:
+          <select>
+            <option>All Admins</option>
+            <option>Super Admins Only</option>
+          </select>
+        </label>
+        <label>Password Reset Option:
+          <select>
+            <option>Allow Email Reset</option>
+            <option>Require Manual Reset</option>
+          </select>
+        </label>
+        <label>Database Backup:
+          <button type="button" onclick="backupNow()">Backup Now</button>
+        </label>
+        <label>Maintenance Mode:
+          <select>
+            <option>Off</option>
+            <option>Enable (Users will be locked out)</option>
+          </select>
+        </label>
+        <button type="submit" class="save-btn">Save Admin Settings</button>
+      </form>
+    </div>
+  </div>
+
+  </div>
+   <script src="java/SA_Settings.js"></script>
+</body>
+</html>

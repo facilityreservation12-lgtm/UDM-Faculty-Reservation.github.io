@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Request Calendar</title>
+  <link rel="stylesheet" href="CSS/Usercalendar.css" />
+</head>
+<body>
+  <div class="sidebar">
+    <div>
+      <div class="user-photo">
+        <img src="images/udm-logo.webp" alt="User Photo" />
+        <div>
+          <strong>Juan B. Batumbakal</strong><br />
+          CET Secretary
+        </div>
+      </div>
+      <div class="menu">
+        <a href="Userdashboard.html">Dashboard</a>
+        <a href="Usercalendar.html">Request Calendar</a>
+        <a onclick="toggleNotificationPanel()">Notification</a>
+      </div>
+    </div>
+    <button onclick="window.location.href='landingPage.html'" class="logout-btn">Log Out</button>
+  </div>
+  <div class="main">  
+ <div class="header">
+  <img src="images/UDM_Garden-cropped.jpg" alt="UDM Background" class="bg-image">
+  <div class="overlay">
+ </div>
+</div> 
+    <div class="welcome-box">
+          <h2>Please Select the date you want to Reserved </h2>
+    </div>
+    <div class="calendar-container">
+    <div class="nav-buttons">
+      <button onclick="prevMonth()">← Prev</button>
+      <h2 id="monthYear">Month Year</h2>
+      <button onclick="nextMonth()">Next →</button>
+    </div>
+    <div class="calendar-labels">
+      <div>Sun</div>
+      <div>Mon</div>
+      <div>Tue</div>
+      <div>Wed</div>
+      <div>Thu</div>
+      <div>Fri</div>
+      <div>Sat</div>
+    </div>
+    <div class="calendar-grid" id="calendarGrid"></div>
+  </div>
+
+  <!-- Alert Modal -->
+  <div id="customAlert" class="modal-overlay">
+    <div class="modal-content">
+      <p id="alertMessage"></p>
+      <button onclick="closeAlert()">OK</button>
+    </div>
+  </div>
+
+  <!-- Confirm Modal -->
+  <div id="customConfirm" class="modal-overlay">
+    <div class="modal-content">
+      <p id="confirmMessage"></p>
+      <div style="display:flex; justify-content:flex-end; gap: 10px;">
+        <button id="confirmYes">Yes</button>
+        <button id="confirmNo">No</button>
+      </div>
+    </div>
+  </div>
+  <script src="Javascript/Usercalendar.js"></script>
+</body>
+</html>
+

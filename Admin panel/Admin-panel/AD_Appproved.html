@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Approved</title>
+  <link rel="stylesheet" href="css/AD_Approved.css"/>
+</head>
+<body>
+<div class="sidebar">
+    <div>
+      <div class="user-photo">
+        <img src="img/peppa.jpg" alt="User Photo" />
+        <div>
+          <strong>Juan B. Batumbakal</strong><br />
+          ADMIN
+        </div>
+      </div>
+      <div class="menu">
+        <a href="AdminDashboard.html">Dashboard</a>
+        <a href="AdminVRF.html">VRF</a>
+        <a href="Otheruser.html">Other User</a>
+        <a href="Admincalendar.html">Calendar</a>
+            <div class="reqs-sub-menu">
+                <a href="#" class="sidebar-link">Request ▾</a>
+            <div class="sub-menu">
+                <a href="AD_REQ_IncomingRequest.html">IncomingRequest</a>
+                <a href="AD_Pending.html">Pending</a>
+                <a href="AD_Appproved.html">Approved</a>
+          </div>
+        </div>        
+      </div>
+    </div>
+    <button onclick="window.location.href='landingPage.html'" class="logout-btn">Log Out</button>
+  </div>
+  <div class="content-area">
+   <h1 class="page-title">
+      <button class="back-btn" onclick="history.back()">←</button>
+      Approved
+    </h1>
+
+  <table class="approved-table">
+    <thead>
+      <tr>
+        <th>User</th>
+        <th>Venue</th>
+        <th>Date</th>
+        <th>Time</th>
+        <th>Details</th>
+        <th>Slip</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Erika Ramos</td>
+        <td><strong>Palma Hall</strong></td>
+        <td>June 10, 2025</td>
+        <td>9:00 AM</td>
+        <td>Student council strategic planning meeting</td>
+        <td><button onclick="window.location.href='Slip.html'" class="slip-btn">View Slip</button></td>
+      </tr>
+      <tr>
+        <td>Miko Javier</td>
+        <td><strong>Palma Hall</strong></td>
+        <td>June 14, 2025</td>
+        <td>10:30 AM</td>
+        <td>Department of Social Sciences general assembly</td>
+        <td><button  onclick="window.location.href='Slip.html'" class="slip-btn">View Slip</button></td>
+      </tr>
+      <tr>
+        <td>Trisha Lim</td>
+        <td><strong>Classroom</strong></td>
+        <td>June 15, 2025</td>
+        <td>8:00 AM</td>
+        <td>Thesis defense presentation</td>
+        <td><button  onclick="window.location.href='Slip.html'" class="slip-btn">View Slip</button></td>
+      </tr>
+      <!-- More rows as needed -->
+    </tbody>
+  </table>
+</div>
+</body>
+</html>

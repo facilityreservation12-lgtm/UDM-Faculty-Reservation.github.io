@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Venue Reservation Form</title>
+  <link rel="stylesheet" href="css/SuperAdminVRFStyle.css"/>
+</head>
+<body>
+<div class="sidebar">
+    <div class="side-container">
+      <div class="user-photo">
+        <img src="img/peppa.jpg" alt="User Photo" />
+        <div>
+          <strong>Juan B. Batumbakal</strong><br />
+          SUPER ADMIN
+        </div>
+        
+      </div>
+      <div class="menu">
+        <a href="SuperAdminDashboard.html">Dashboard</a>
+        <a href="SuperAdminVRF.html">VRF</a>
+        <div class="reqs-sub-menu">
+                <a href="#" class="sidebar-link">Request ▾</a>
+            <div class="sub-menu">
+                <a href="SA_REQ_IncomingRequest.html">IncomingRequest</a>
+                <a href="SA_Pending.html">Pending</a>
+                <a href="SA_Appproved.html">Approved</a>
+          </div> 
+        </div> 
+       <a href="SA_Otheruser.html">Other User</a>
+        <a href="SuperAdmincalendar.html">Calendar</a>
+        <a href="SA_manage.html">Manage</a>
+        <a href="SA_Settings.html">Settings</a>
+        <a href="SA_Activitylog.html">Logs</a>
+        <a href="SA_Reportbugs.html">Report Bugs</a>         
+      </div> 
+    </div>
+       <button onclick="window.location.href='landingPage.html'" class="logout-btn">Log Out</button> 
+  </div>
+
+<div class="reservation-form">
+  <h2>Venue Reservation Form</h2>
+
+  <table>
+    <tr>
+      <td colspan="2">
+        Date Filed:<br>
+        <input type="text">
+      </td>
+      <td colspan="2">
+        Date/Time Received:<br>
+        <input type="text">
+      </td>
+    </tr>
+    <tr>
+      <td colspan="2">
+        Unit/Office/College:<br>
+        <input type="text">
+      </td>
+      <td colspan="2">
+        Date of Event:<br>
+        <input type="text">
+      </td>
+    </tr>
+    <tr>
+      <td colspan="4">
+        Title of Event/Activity:<br>
+        <textarea></textarea>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="4">
+        Additional Requirements:<br>
+        <textarea></textarea>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="4">
+        Attendees:<br>
+        <textarea></textarea>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="4"><strong>UDM Facility</strong></td>
+    </tr>
+    <tr>
+      <td colspan="4">
+        <label class="checkbox"><input type="checkbox"> Palma Hall</label>
+        <label class="checkbox"><input type="checkbox"> Right Wing Lobby</label>
+        <label class="checkbox"><input type="checkbox"> Mehan Garden</label>
+        <label class="checkbox"><input type="checkbox"> Rooftop</label>
+        <label class="checkbox"><input type="checkbox"> Classroom, Room No.</label>
+        <label class="checkbox"><input type="checkbox"> Basketball Court</label>
+        <label class="checkbox"><input type="checkbox"> Space at the Ground Floor</label>
+        <label class="checkbox"><input type="checkbox"> Others</label>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="4"><strong>Set Up Details</strong></td>
+    </tr>
+    <tr>
+      <td colspan="4">
+        <label class="checkbox"><input type="checkbox"> Chairs</label>
+        <label class="checkbox"><input type="checkbox"> Tables</label>
+        <label class="checkbox"><input type="checkbox"> Sound System</label>
+        <label class="checkbox"><input type="checkbox"> Electrical System</label>
+        <label class="checkbox"><input type="checkbox"> Projector/HDMI</label>
+        <label class="checkbox"><input type="checkbox"> Others</label>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        Requested by:<br>
+        <input type="text">
+      </td>
+      <td>
+        Recommending Approval:<br>
+        <input type="text">
+      </td>
+      <td colspan="2">
+        Approved by:<br>
+        <input type="text">
+      </td>
+    </tr>
+    <tr>
+      <td>
+        (Name and Signature)<br>
+        End-User/Requester/Event Organizer
+      </td>
+      <td>
+        Head, Maintenance & Engineering Division
+      </td>
+      <td colspan="2">
+        VP For Administration
+      </td>
+    </tr>
+    <tr>
+      <td colspan="4">
+        Reason for Non-Availability:<br>
+        <textarea></textarea>
+      </td>
+    </tr>
+  </table>
+
+  <div class="print-button">
+    <button onclick="window.print()">🖨️ Print</button>
+  </div>
+</div>
+
+
+
+  </form>
+</body>
+</html>

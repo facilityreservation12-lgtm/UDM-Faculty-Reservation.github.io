@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SuperAdmin Pending</title>
+  <link rel="stylesheet" href="css/SA_Pending.css"/>
+</head>
+<body>
+<div class="sidebar">
+    <div class="side-container">
+      <div class="user-photo">
+        <img src="img/peppa.jpg" alt="User Photo" />
+        <div>
+          <strong>Juan B. Batumbakal</strong><br />
+          SUPER ADMIN
+        </div>
+        
+      </div>
+      <div class="menu">
+        <a href="SuperAdminDashboard.html">Dashboard</a>
+        <a href="SuperAdminVRF.html">VRF</a>
+        <div class="reqs-sub-menu">
+                <a href="#" class="sidebar-link">Request ▾</a>
+            <div class="sub-menu">
+                <a href="SA_REQ_IncomingRequest.html">IncomingRequest</a>
+                <a href="SA_Pending.html">Pending</a>
+                <a href="SA_Appproved.html">Approved</a>
+          </div> 
+        </div> 
+       <a href="SA_Otheruser.html">Other User</a>
+        <a href="SuperAdmincalendar.html">Calendar</a>
+        <a href="SA_manage.html">Manage</a>
+        <a href="SA_Settings.html">Settings</a>
+        <a href="SA_Activitylog.html">Logs</a>
+        <a href="SA_Reportbugs.html">Report Bugs</a>             
+      </div> 
+    </div>
+       <button onclick="window.location.href='landingPage.html'" class="logout-btn">Log Out</button> 
+  </div>
+
+  <div class="content-area">
+  <h1 class="page-title">
+      <button class="back-btn" onclick="history.back()">←</button>
+      Pending
+    </h1>
+
+
+  <table class="pending-table">
+    <thead>
+      <tr>
+        <th>User</th>
+        <th>Venue</th>
+        <th>Date</th>
+        <th>Time</th>
+        <th>Details</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Erika Ramos</td>
+        <td><strong>Palma Hall</strong></td>
+        <td>June 10, 2025</td>
+        <td>9:00 AM</td>
+        <td>Student council strategic planning meeting</td>
+        <td><button class="status-btn">Accept / Reject</button></td>
+      </tr>
+      <tr>
+        <td>Gwen Santos</td>
+        <td><strong>Right Wing Lobby</strong></td>
+        <td>July 5, 2025</td>
+        <td>11:00 AM</td>
+        <td>Informational booth for student elections</td>
+        <td><button class="status-btn">Accept / Reject</button></td>
+      </tr>
+      <tr>
+        <td>Darren Velasco</td>
+        <td><strong>Classroom</strong></td>
+        <td>July 10, 2025</td>
+        <td>1:00 PM</td>
+        <td>Crash course in public speaking</td>
+        <td><button class="status-btn">Accept / Reject</button></td>
+      </tr>
+      <!-- Add more rows as needed -->
+    </tbody>
+  </table>
+</div>
+
+

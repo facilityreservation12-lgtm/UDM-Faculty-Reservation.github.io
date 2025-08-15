@@ -1,0 +1,176 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: url('../images/UDM_Garden.jpg') no-repeat center center/cover;
+  font-family: 'Segoe UI', sans-serif;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.login-wrapper {
+  background-color: rgba(0, 63, 36, 0.8);
+  padding: 3rem;
+  border-radius: 15px;
+  width: 100%;
+  max-width: 500px;
+  text-align: center;
+  color: white;
+}
+
+.logo {
+  width: 70px;
+  margin-bottom: 0.5rem;
+}
+
+h1 {
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+small {
+  font-size: 0.8rem;
+  color: #ddd;
+  margin-bottom: 1.5rem;
+  display: block;
+}
+
+h2 {
+  margin-top: 1rem;
+  font-size: 1.2rem;
+}
+
+p {
+  margin-bottom: 1rem;
+  font-size: 18px;
+}
+
+.role-switch {
+  display: flex;
+  justify-content: space-between;
+  margin: 1rem 0;
+  padding: 0.5rem;
+  background-color: #f0f0f0;
+  border-radius: 10px;
+  color: #333;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.role-switch span {
+  flex: 1;
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: 0.2s;
+}
+
+.role-switch .active {
+  background-color: #0a3d25;
+  color: white;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.login-form input {
+  padding: 0.8rem;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+}
+
+.login-form button {
+  padding: 0.8rem;
+  border: none;
+  border-radius: 8px;
+  background-color: #0a3d25;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.login-form button:hover {
+  background-color: #145d39;
+}
+
+/* Add to CSS/login.css */
+.modal {
+  position: fixed;
+  z-index: 1000;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  background: #145d39(0, 0, 0, 0.5);
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-content.login-box {
+  box-shadow: 0 0 20px rgba(0,0,0,0.2);
+  min-width: 350px;
+  max-width: 400px;
+  padding: 2rem 2.5rem;
+  border-radius: 12px;
+  background: #145d39;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.modal-content .close {
+  position: absolute;
+  top: 18px; right: 22px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #333;
+}
+.modal-content h2 {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  color: #2b2a2a;
+}
+.modal-content form input {
+  width: 100%;
+  margin-bottom: 12px;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+}
+.modal-content form button {
+  width: 100%;
+  padding: 10px;
+  background: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 8px;
+}
+.password-wrapper {
+      position: relative;
+      margin-bottom: 10px;
+    }
+    .password-wrapper input[type="password"],
+    .password-wrapper input[type="text"] {
+      width: 100%;
+      padding-right: 30px;
+      box-sizing: border-box;
+    }
+    .toggle-password {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      font-size: 18px;
+      color: #888;
+      user-select: none;
+    }

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SuperAdmin ReportBugs</title>
+  <link rel="stylesheet" href="css/SA_Reportbugs.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="sidebar">
+    <div class="side-container">
+      <div class="user-photo">
+        <img src="img/peppa.jpg" alt="User Photo" />
+        <div>
+          <strong>Juan B. Batumbakal</strong><br />
+          SUPER ADMIN
+        </div>
+        
+      </div>
+      <div class="menu">
+        <a href="SuperAdminDashboard.html">Dashboard</a>
+        <a href="SuperAdminVRF.html">VRF</a>
+        <div class="reqs-sub-menu">
+                <a href="#" class="sidebar-link">Request ▾</a>
+            <div class="sub-menu">
+                <a href="SA_REQ_IncomingRequest.html">IncomingRequest</a>
+                <a href="SA_Pending.html">Pending</a>
+                <a href="SA_Appproved.html">Approved</a>
+          </div> 
+        </div> 
+      <a href="SA_Otheruser.html">Other User</a>
+        <a href="SuperAdmincalendar.html">Calendar</a>
+        <a href="SA_manage.html">Manage</a>
+        <a href="SA_Settings.html">Settings</a>
+        <a href="SA_Activitylog.html">Logs</a>
+        <a href="SA_Reportbugs.html">Report Bugs</a>         
+      </div> 
+    </div>
+       <button onclick="window.location.href='landingPage.html'" class="logout-btn">Log Out</button> 
+  </div>
+
+  <div class="main">  
+ <div class="main-content">
+    <div class="header-bar">🐞 Report a Bug</div>
+    <div class="report-section">
+      <form id="bugForm">
+        <label>Full Name:
+          <input type="text" id="bugName" required>
+        </label>
+        <label>Email:
+          <input type="email" id="bugEmail" required>
+        </label>
+        <label>Page/Module Affected:
+          <input type="text" id="bugPage" placeholder="e.g., Calendar, VRF, Logs" required>
+        </label>
+        <label>Bug Description:
+          <textarea id="bugDescription" rows="4" placeholder="Describe the issue in detail..." required></textarea>
+        </label>
+        <label>Steps to Reproduce:
+          <textarea id="bugSteps" rows="3" placeholder="1. Go to... 2. Click... 3. Observe..." required></textarea>
+        </label>
+        <label>Screenshot URL (optional):
+          <input type="url" id="bugScreenshot" placeholder="https://example.com/screenshot.png">
+        </label>
+        <button type="submit" class="submit-btn">Submit Bug Report</button>
+      </form>
+    </div>
+  </div>
+</div>
+<script src="java/SA_Reportbugs.js"></script>
+</body>
+</html>

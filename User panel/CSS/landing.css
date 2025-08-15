@@ -1,0 +1,154 @@
+html{
+    scroll-behavior: smooth;
+}
+body{
+   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+             "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans",
+             sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    color: #1f2937;
+}
+.header1{
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    z-index: 50;
+    background-color: #ffffff;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+            0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+.div1{
+    margin-left: auto;
+    margin-right: auto;
+    display: flex; 
+    justify-content: space-between;
+    align-items: center;
+    padding: 1%;
+}
+.logo{
+  height: 50px;
+  width: auto;
+  display: flex;
+  align-items: start;
+}
+/* Container that appears only on medium and up */
+/* Navigation styles */
+.nav-container {
+  display: flex;
+  align-items: start;
+  gap: 1.5rem;
+}
+
+
+
+.nav-link {
+  text-decoration: none;
+  color: #1f2937; /* Tailwind's gray-800 */
+  transition: all 0.2s ease-in-out;
+}
+
+.nav-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  color: #16a34a; /* Tailwind's green-600 */
+}
+
+.login-link {
+  color: #15803d; /* Tailwind's green-700 */
+  text-decoration: none;
+  transition: all 0.2s ease-in-out;
+}
+
+.login-link:hover {
+  text-decoration: underline;
+}
+
+/* Home section full background */
+.home-section {
+  display: flex;
+  height: 100vh;
+  background-image: url('../images/UDM_Garden.jpg'); /* Replace with actual image path */
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+/* Left box overlay */
+.home-box {
+  width: 50%;
+  height: auto;
+  background-color: rgba(255, 255, 255, 0.75); /* semi-transparent white */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2.5rem;
+  text-align: center;
+}
+
+/* Heading style */
+.home-title {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #1f2937; /* gray-800 */
+  margin-bottom: 1rem;
+}
+
+/* Reserve button */
+.home-button {
+  background-color: #ffffff;
+  color: #000000;
+  padding: 0.75rem 1.5rem;
+  border-radius: 9999px;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.home-button:hover {
+  background-color: #15803d; /* green-700 */
+  color: #ffffff;
+}
+
+/* Shared styles for both sections */
+.section-content {
+  max-width: 48rem; 
+  text-align: center;
+}
+
+.section-title {
+  font-size: 1.5rem; 
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.section-text {
+  font-size: 1.125rem; 
+}
+
+/* About Section */
+.about-section {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #77bd9c; 
+  padding: 4rem;
+}
+
+/* Contact Section */
+.contact-section {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #ffffff; 
+  padding: 4rem;
+}
+
+@media (min-width: 768px) {
+  .nav-container {
+    display: flex;
+    align-items: center;
+  }
+}

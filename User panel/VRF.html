@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Venue Reservation Form</title>
+  <link rel="stylesheet" href="CSS/VRF.css">
+  <script src="Javascript/VRF.js" defer></script>
+</head>
+<body>
+  <div class="sidebar">
+    <div>
+      <div class="user-photo">
+        <img src="images/udm-logo.webp" alt="User Photo" />
+        <div>
+          <strong>Juan B. Batumbakal</strong><br />
+          CET Secretary
+        </div>
+      </div>
+      <div class="menu">
+        <a href="Userdashboard.html">Dashboard</a>
+        <a href="Usercalendar.html">Request Calendar</a>
+        <a onclick="toggleNotificationPanel()">Notification</a>
+      </div>
+    </div>
+    <button onclick="window.location.href='landingPage.html'" class="logout-btn">Log Out</button>
+  </div>
+
+  <main>
+    <div class="form-container">
+      <h2>Venue Reservation Form</h2>
+
+      <form id="reservationForm">
+        <div class="row">
+           <label>Date Filed: <input type="date"  name="dateFiled" readonly></label>
+           <label>Date/Time Received: <input type="datetime-local" name="dateReceived" readonly></label>
+           <div class="time-inputs">
+           <label>Time Start: <input type="time" name="timeStart" required></label>
+           <label>Time End: <input type="time" name="timeEnd" required></label>
+          </div>
+        </div>
+
+        <div class="row">
+          <input type="text" placeholder="Unit/Office/College" required>
+          <input type="date" name="dateOfEvent" placeholder="Date of Event" required>
+          <input type="text" placeholder="Attendees" required>
+        </div>
+
+        <div class="row">
+          <input type="text" name="eventTitle" placeholder="Title of Event/Activity" required>
+          <input type="text" placeholder="Additional Requirements" required>
+        </div>
+
+        <!-- UDM Facility Dropdown -->
+        <div class="dropdown">
+          <button type="button" class="dropdown-btn">UDM Facility</button>
+          <div class="dropdown-content">
+            <label><input type="checkbox" name="facility" value="Palma Hall"> Palma Hall</label>
+            <label><input type="checkbox" name="facility" value="Right Wing Lobby"> Right Wing Lobby</label>
+            <label><input type="checkbox" name="facility" value="Mehan Garden"> Mehan Garden</label>
+            <label><input type="checkbox" name="facility" value="Rooftop"> Rooftop</label>
+            <label>
+              <input type="checkbox" name="facility" value="Classroom"> Classroom
+              <input type="text" placeholder="Room #" class="extra-input">
+            </label>
+            <label><input type="checkbox" name="facility" value="Basketball Court"> Basketball Court</label>
+            <label><input type="checkbox" name="facility" value="Ground Floor Space"> Space at the ground floor</label>
+            <label>
+              <input type="checkbox" name="facility" value="Others"> Others
+              <input type="text" placeholder="Specify" class="extra-input">
+            </label>
+          </div>
+        </div>
+
+        <!-- Setup Details Dropdown -->
+        <div class="dropdown">
+          <button type="button" class="dropdown-btn">Set up Details</button>
+          <div class="dropdown-content">
+            <label><input type="checkbox" name="setup" value="Chairs"> Chairs</label>
+            <label><input type="checkbox" name="setup" value="Tables"> Tables</label>
+            <label><input type="checkbox" name="setup" value="Sound System"> Sound System</label>
+            <label><input type="checkbox" name="setup" value="Electrical System"> Electrical System</label>
+            <label><input type="checkbox" name="setup" value="Projector/HDMI"> Projector/HDMI</label>
+            <label>
+              <input type="checkbox" name="setup" value="Others"> Others
+              <input type="text" placeholder="Specify" class="extra-input">
+            </label>
+          </div>
+        </div>
+
+        <!-- Signatures -->
+        <div class="signatures">
+          <div class="signContainer">
+            Requested by:<br>
+            <input type="file" accept="image/*,.pdf">
+            <br>
+            <div class="Personel">(Name and E-signature)<br>End-User/Requester/Event organizer   </div>
+          </div>
+          <div class="signContainer">
+            Recommending Approval:<br><br><br>
+            <div class="Personel">Head, Maintenance & Engineering Division</div>
+          </div>
+          <div class="signContainer">
+            Approved by:<br><br><br>
+            <div class="Personel">VP for Administration</div>
+          </div>
+        </div>
+
+        <button type="submit" class="submit-btn">SUBMIT</button>
+      </form>
+    </div>
+  </main>
+</body>
+</html>

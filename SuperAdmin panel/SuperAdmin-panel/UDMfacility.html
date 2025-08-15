@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UDM Facility Reservations</title>
+  <link rel="stylesheet" href="css/UDMFacilities.css">
+</head>
+<body>
+  <div class="sidebar">
+   <div>
+      <div class="user-photo">
+        <img src="img/peppa.jpg" alt="User Photo" />
+        <div>
+          <strong>Juan B. Batumbakal</strong><br />
+          ADMIN
+        </div>
+      </div>
+      <div class="menu">
+        <a href="AdminDashboard.html">Dashboard</a>
+        <a href="AdminVRF.html">VRF</a>
+        <a href="Admincalendar.html">Calendar</a>
+            <div class="reqs-sub-menu">
+                <a href="#" class="sidebar-link">Request ▾</a>
+            <div class="sub-menu">
+                <a href="AD_REQ_IncomingRequest.html">IncomingRequest</a>
+                <a href="AD_Pending.html">Pending</a>
+                <a href="AD_Appproved.html">Approved</a>
+          </div>
+        </div>   
+        <a href="SA_Otheruser.html">Other User</a>
+        <a href="SuperAdmincalendar.html">Calendar</a>
+        <a href="SA_manage.html">Manage</a>
+        <a href="SA_Settings.html">Settings</a>
+        <a href="SA_Activitylog.html">Logs</a>
+        <a href="SA_Reportbugs.html">Report Bugs</a>         
+      </div>
+    </div>
+    <button onclick="window.location.href='landingPage.html'" class="logout-btn">Log Out</button>
+  </div>
+
+  <div class="main-content">
+    <h2 id="venue-title">UDM - Palma Hall</h2>
+
+    <div class="selector">
+      <label for="facilitySelect">Jump to Facility:</label>
+      <select id="facilitySelect" onchange="jumpToFacility()">
+        <option value="0">Palma Hall</option>
+        <option value="1">Right Wing Lobby</option>
+        <option value="2">Mehan Garden</option>
+        <option value="3">Rooftop</option>
+        <option value="4">Classroom</option>
+        <option value="5">Basketball Court</option>
+        <option value="6">Space at the Ground Floor</option>
+        <option value="7">Others</option>
+      </select>
+    </div>
+
+    <div class="table-container">
+      <table class="reservation-table" id="facility-table"></table>
+    </div>
+
+    <div class="nav-buttons">
+      <button onclick="prevFacility()">⟵ Prev</button>
+      <button onclick="nextFacility()">Next ⟶</button>
+    </div>
+  </div>
+
+   <script src="java/UDMfacility.js"></script>
+</body>
+</html>
