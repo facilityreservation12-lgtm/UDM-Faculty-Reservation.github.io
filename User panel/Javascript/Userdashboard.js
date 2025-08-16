@@ -46,7 +46,7 @@ async function loadUserDetails() {
 
   const { data, error } = await supabase
     .from('users')
-    .select('id, name, role')
+    .select('id, first_name, last_name, role_name')
     .eq('id', userId)
     .single();
 
@@ -55,8 +55,11 @@ async function loadUserDetails() {
   }
   console.log('Supabase user fetch result:', data); // Debug
   if (data) {
-    if (document.getElementById('UserName')) document.getElementById('UserName').textContent = data.name || 'Unknown User';
-    if (document.getElementById('UserRole')) document.getElementById('UserRole').textContent = data.role || 'Unknown Role';
+    const userName = `${data.first_name} ${data.last_name}`.trim() || 'Unknown User';
+    const firstName = data.first_name || 'Unknown';
+    if (document.getElementById('UserName')) document.getElementById('UserName').textContent = userName;
+    if (document.getElementById('UserRole')) document.getElementById('UserRole').textContent = data.role_name || 'Unknown Role';
+    if (document.getElementById('welcomeUserName')) document.getElementById('welcomeUserName').textContent = firstName;
     console.log('User data:', data);
   } else {
     if (document.getElementById('UserName')) document.getElementById('UserName').textContent = 'Unknown User';
