@@ -112,8 +112,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
     console.log(`[LOGIN SUCCESS] UserID: ${userId}, Role: ${data.role}, Name: ${data.name}`);
-      alert('Login successful!');
-      switch (data.role) {
+    
+    // Store user information in localStorage
+    localStorage.setItem('user_id', data.id);
+    localStorage.setItem('user_name', data.name);
+    localStorage.setItem('user_role', data.role);
+    
+    alert('Login successful!');
+    switch (data.role) {
         case 'super_admin':
           window.location.href = '../SuperAdmin panel/SuperAdmin-panel/SuperAdminDashboard.html';
           break;

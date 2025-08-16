@@ -1,3 +1,5 @@
+const supabase = window.supabaseClient;
+
 function formatTime12hr(timeStr) {
   if (!timeStr) return "";
   let [hour, minute] = timeStr.split(":");
@@ -27,6 +29,46 @@ function loadReservations() {
   });
 }
 
+async function loadUserDetails() {
+  const userId = localStorage.getItem('user_id');
+  console.log('user_id from localStorage:', userId); // Debug
+  if (!userId) {
+    if (document.getElementById('UserName')) document.getElementById('UserName').textContent = 'Unknown User';
+    if (document.getElementById('UserRole')) document.getElementById('UserRole').textContent = 'Unknown Role';
+    console.warn('No user_id found in localStorage');
+    return;
+  }
+
+  if (typeof supabase === 'undefined') {
+    console.error('Supabase client not initialized');
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from('users')
+    .select('id, name, role')
+    .eq('id', userId)
+    .single();
+
+  if (error) {
+    console.error('Supabase error:', error);
+  }
+  console.log('Supabase user fetch result:', data); // Debug
+  if (data) {
+    if (document.getElementById('UserName')) document.getElementById('UserName').textContent = data.name || 'Unknown User';
+    if (document.getElementById('UserRole')) document.getElementById('UserRole').textContent = data.role || 'Unknown Role';
+    console.log('User data:', data);
+  } else {
+    if (document.getElementById('UserName')) document.getElementById('UserName').textContent = 'Unknown User';
+    if (document.getElementById('UserRole')) document.getElementById('UserRole').textContent = 'Unknown Role';
+    console.warn('No user data found for id:', userId);
+  }
+}
+
+if (document.getElementById('UserName') && document.getElementById('UserRole')) {
+  loadUserDetails();
+}
+
 window.onload = function() {
   loadReservations();
   updateDateTime();
@@ -52,3 +94,23 @@ function updateDateTime() {
 }
 
 setInterval(updateDateTime, 1000);
+
+// Call this after successful login, passing the user's email or username
+async function fetchAndStoreUserIdByEmail(userEmail) {
+  if (typeof supabase === 'undefined') return;
+  const { data, error } = await supabase
+    .from('users')
+    .select('id')
+    .eq('email', userEmail)
+    .single();
+
+  if (error) {
+    console.error('Supabase error:', error);
+    return;
+  }
+  if (data && data.id) {
+    localStorage.setItem('user_id', data.id);
+  } else {
+    console.warn('No user found for email:', userEmail);
+  }
+}
