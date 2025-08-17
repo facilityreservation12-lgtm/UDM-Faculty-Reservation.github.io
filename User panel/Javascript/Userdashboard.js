@@ -9,15 +9,39 @@ function formatTime12hr(timeStr) {
   return `${hour}:${minute} ${ampm}`;
 }
 
-function loadReservations() {
+async function loadReservations() {
   const tbody = document.getElementById('facilityTableBody');
   tbody.innerHTML = "";
+
+  // Get user details first
+  const userId = localStorage.getItem('user_id');
+  let userName = 'Unknown User';
+  let userRole = 'Unknown Role';
+
+  if (userId) {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('first_name, last_name, role_name')
+        .eq('id', userId)
+        .single();
+
+      if (data && !error) {
+        userName = `${data.first_name} ${data.last_name}`.trim();
+        userRole = data.role_name;
+      }
+    } catch (error) {
+      console.error('Error fetching user details:', error);
+    }
+  }
+
+  // Now load reservations
   let reservations = JSON.parse(localStorage.getItem('reservations') || "[]");
   reservations.forEach((r, i) => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${i+1}</td>
-      <td>${r.user}<br /></td>
+      <td>${userName}</td>
       <td>${r.codeId}</td>
       <td>${r.facility}</td>
       <td>${r.dateOfEvent}</td>
@@ -28,6 +52,16 @@ function loadReservations() {
     tbody.appendChild(tr);
   });
 }
+
+const panel = document.getElementById("notificationPanel");
+  const overlay = document.getElementById("notificationOverlay");
+
+  function toggleNotificationPanel() {
+    panel.classList.toggle("active");
+    overlay.classList.toggle("active");
+  }
+
+  overlay.addEventListener("click", toggleNotificationPanel);
 
 async function loadUserDetails() {
   const userId = localStorage.getItem('user_id');
@@ -72,8 +106,8 @@ if (document.getElementById('UserName') && document.getElementById('UserRole')) 
   loadUserDetails();
 }
 
-window.onload = function() {
-  loadReservations();
+window.onload = async function() {
+  await loadReservations();
   updateDateTime();
 };
 

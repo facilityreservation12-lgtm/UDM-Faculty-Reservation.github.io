@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <title>Venue Reservation Form</title>
   <link rel="stylesheet" href="CSS/VRF.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.min.js"></script>
+  <script src="../supabaseClient.js"></script>
   <script src="Javascript/VRF.js" defer></script>
 </head>
 <body>
@@ -40,14 +43,14 @@
         </div>
 
         <div class="row">
-          <input type="text" placeholder="Unit/Office/College" required>
-          <input type="date" name="dateOfEvent" placeholder="Date of Event" required>
-          <input type="text" placeholder="Attendees" required>
+          <input type="text" id="unitOffice" name="unitOffice" placeholder="Unit/Office/College" required>
+          <input type="date" id="dateOfEvent" name="dateOfEvent" placeholder="Date of Event" required>
+          <input type="text" id="attendees" name="attendees" placeholder="Attendees" required>
         </div>
 
         <div class="row">
-          <input type="text" name="eventTitle" placeholder="Title of Event/Activity" required>
-          <input type="text" placeholder="Additional Requirements" required>
+          <input type="text" id="eventTitle" name="eventTitle" placeholder="Title of Event/Activity" required>
+          <input type="text" id="additionalReq" name="additionalReq" placeholder="Additional Requirements" required>
         </div>
 
         <!-- UDM Facility Dropdown -->

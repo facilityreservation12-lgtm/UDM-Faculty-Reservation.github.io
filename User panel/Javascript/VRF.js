@@ -56,7 +56,10 @@ function getCodePrefix(fac) {
   return "PH";
 }
 
-document.addEventListener("DOMContentLoaded", function () {
+// Initialize Supabase client from the global variable
+const supabase = window.supabaseClient;
+
+document.addEventListener('DOMContentLoaded', function() {
   // Dropdown logic
   document.querySelectorAll('.dropdown-btn').forEach(btn => {
     btn.addEventListener('click', function (ev) {
@@ -107,7 +110,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // Form submission
-  reservationForm.addEventListener('submit', function (e) {
+  reservationForm.addEventListener('submit', async function (e) {
     e.preventDefault();
     const form = e.target;
 
@@ -160,10 +163,53 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
 
-    // Generate code & save
+    // Generate sequential code for the facility
     const firstFacility = selectedFacilities[0];
     const codePrefix = getCodePrefix(firstFacility);
-    const codeId = codePrefix + "-" + Math.floor(Math.random() * 100000);
+    
+    // Get the last request_id for this facility type from Supabase
+    const { data: lastRequest, error: countError } = await supabase
+      .from('reservations')
+      .select('request_id')
+      .like('request_id', `${codePrefix}-%`)
+      .order('request_id', { ascending: false })
+      .limit(1)
+      .single();
+
+    let sequentialNumber = 1;
+    if (lastRequest && lastRequest.request_id) {
+      // Extract the number from the last request_id (e.g., "PH-0001" -> 1)
+      const lastNumber = parseInt(lastRequest.request_id.substring(3), 10);
+      sequentialNumber = lastNumber + 1;
+    }
+
+    // Create the new code ID with padding (e.g., PH-0001)
+    const codeId = `${codePrefix}-${String(sequentialNumber).padStart(4, '0')}`;
+
+    // Get all form data
+    const unitOffice = document.querySelector('#unitOffice, input[name="unitOffice"]').value;
+    const attendees = document.querySelector('#attendees, input[name="attendees"]').value;
+    const additionalReq = document.querySelector('#additionalReq, input[name="additionalReq"]').value;
+
+    // Get setup details
+    const setupDetails = Array.from(form.querySelectorAll('input[name="setup"]:checked')).map(input => {
+      const extraInput = input.parentElement.querySelector('.extra-input');
+      return extraInput && extraInput.value ? 
+        `${input.value} (${extraInput.value})` : 
+        input.value;
+    }).join(', ');
+
+    // Create reservation object for Supabase
+    const supabaseReservation = {
+      id: localStorage.getItem('user_id'), // user's ID from login
+      request_id: codeId,
+      facility: selectedFacilities.join(", "),
+      date: dateOfEventVal,
+      time_start: timeStartInput.value,
+      time_end: timeEndInput.value
+    };
+
+    // Create reservation object for localStorage (keeping old format for compatibility)
     const reservation = {
       user: "JUAN B. BATUMBAKAL",
       codeId: codeId,
@@ -175,12 +221,41 @@ document.addEventListener("DOMContentLoaded", function () {
       timeEnd: timeEndInput && timeEndInput.value ? timeEndInput.value : "",
       eventTitle: eventTitleInput && eventTitleInput.value ? eventTitleInput.value : "",
       status: "PENDING",
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      userId: localStorage.getItem('user_id')
     };
-    reservations.push(reservation);
-    localStorage.setItem('reservations', JSON.stringify(reservations));
-    localStorage.removeItem('selectedDate');
-    window.location.href = "Userdashboard.html";
+
+    // First save to Supabase
+    try {
+      const { data, error } = await supabase
+        .from('reservations')
+        .insert([supabaseReservation]);
+
+      if (error) throw error;
+
+      // Generate PDF
+      const element = document.querySelector('.form-container');
+      const options = {
+        margin: 1,
+        filename: `VRF-${codeId}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      await html2pdf().set(options).from(element).save();
+
+      // Save to localStorage for local display
+      reservations.push(reservation);
+      localStorage.setItem('reservations', JSON.stringify(reservations));
+      localStorage.removeItem('selectedDate');
+
+      alert('Reservation submitted successfully! PDF has been generated.');
+      window.location.href = "Userdashboard.html";
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      alert('Error submitting form. Please try again.');
+    }
   });
 });
 
