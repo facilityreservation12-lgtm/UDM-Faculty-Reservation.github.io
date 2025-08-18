@@ -115,7 +115,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = e.target;
 
     // Facilities
-    let selectedFacilities = Array.from(form.querySelectorAll('input[name="facility"]:checked')).map(i => i.value.trim());
+    let selectedFacilities = [];
+    const selectedFacilityRadio = form.querySelector('input[name="facility"]:checked');
+    if (selectedFacilityRadio) {
+      selectedFacilities = [selectedFacilityRadio.value.trim()];
+    }
+    
     if (selectedFacilities.length === 0) {
       const facilitySelect = form.querySelector('select[name="facility"], select#facility');
       if (facilitySelect && facilitySelect.value) selectedFacilities = [facilitySelect.value.trim()];
@@ -199,6 +204,9 @@ document.addEventListener('DOMContentLoaded', function() {
         input.value;
     }).join(', ');
 
+    // Get event title
+    const eventTitle = eventTitleInput && eventTitleInput.value ? eventTitleInput.value : "";
+
     // Create reservation object for Supabase
     const supabaseReservation = {
       id: localStorage.getItem('user_id'), // user's ID from login
@@ -206,7 +214,8 @@ document.addEventListener('DOMContentLoaded', function() {
       facility: selectedFacilities.join(", "),
       date: dateOfEventVal,
       time_start: timeStartInput.value,
-      time_end: timeEndInput.value
+      time_end: timeEndInput.value,
+      title_of_the_event: eventTitle,
     };
 
     // Create reservation object for localStorage (keeping old format for compatibility)

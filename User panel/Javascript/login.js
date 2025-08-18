@@ -88,38 +88,62 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log(`[LOGIN ATTEMPT] UserID: ${userId}, Role: ${role}`);
   
         // Query Supabase users table for matching userId and role
-        const { data, error } = await supabase
+        // Try to get all available columns, but handle if some don't exist
+        let { data, error } = await supabase
           .from('users')
-          .select('id, name, role, password')
+          .select('*')
           .eq('id', userId)
-          .eq('role', role)
-          .single();
-  
+          .eq('role', role);
+
+        // If the above fails, try with minimal columns
+        if (error && error.code === '42703') {
+          console.log('Trying with minimal columns...');
+          const result = await supabase
+            .from('users')
+            .select('id, role, password')
+            .eq('id', userId)
+            .eq('role', role);
+          data = result.data;
+          error = result.error;
+        }
+
         console.log('Supabase query result:', data);
-  
-        if (error || !data) {
+        console.log('Supabase query error:', error);
+
+        if (error) {
+          console.log(`[LOGIN FAILED] UserID: ${userId}, Role: ${role}, Reason: Database error`, error);
+          alert('Database connection error. Please try again.');
+          return;
+        }
+
+        if (!data || data.length === 0) {
           console.log(`[LOGIN FAILED] UserID: ${userId}, Role: ${role}, Reason: Invalid User ID or Role`);
           alert('Invalid User ID or Role!');
           return;
         }
-  
-        // Check password (assuming plaintext for demo)
-        if (!data.password || data.password !== password) {
+
+        // Get the first (and should be only) user record
+        const user = data[0];        // Check password (assuming plaintext for demo)
+        if (!user.password || user.password !== password) {
           console.log(`[LOGIN FAILED] UserID: ${userId}, Role: ${role}, Reason: Incorrect password`);
           alert('Incorrect password!');
           return;
         }
 
 
-    console.log(`[LOGIN SUCCESS] UserID: ${userId}, Role: ${data.role}, Name: ${data.name}`);
+    // Get user's display name from available columns
+    const userName = user.name || user.full_name || user.first_name || user.username || `User ${user.id}`;
+    
+    console.log(`[LOGIN SUCCESS] UserID: ${userId}, Role: ${user.role}, Name: ${userName}`);
+    console.log('Available user data:', user);
     
     // Store user information in localStorage
-    localStorage.setItem('user_id', data.id);
-    localStorage.setItem('user_name', data.name);
-    localStorage.setItem('user_role', data.role);
+    localStorage.setItem('user_id', user.id);
+    localStorage.setItem('user_name', userName);
+    localStorage.setItem('user_role', user.role);
     
     alert('Login successful!');
-    switch (data.role) {
+    switch (user.role) {
         case 'super_admin':
           window.location.href = '../SuperAdmin panel/SuperAdmin-panel/SuperAdminDashboard.html';
           break;

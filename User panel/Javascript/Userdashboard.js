@@ -11,46 +11,102 @@ function formatTime12hr(timeStr) {
 
 async function loadReservations() {
   const tbody = document.getElementById('facilityTableBody');
-  tbody.innerHTML = "";
+  tbody.innerHTML = "<tr><td colspan='8'>Loading...</td></tr>";
 
   // Get user details first
   const userId = localStorage.getItem('user_id');
   let userName = 'Unknown User';
   let userRole = 'Unknown Role';
 
-  if (userId) {
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('first_name, last_name, role_name')
-        .eq('id', userId)
-        .single();
-
-      if (data && !error) {
-        userName = `${data.first_name} ${data.last_name}`.trim();
-        userRole = data.role_name;
-      }
-    } catch (error) {
-      console.error('Error fetching user details:', error);
-    }
+  if (!userId) {
+    tbody.innerHTML = "<tr><td colspan='8'>Please log in to view your reservations</td></tr>";
+    return;
   }
 
-  // Now load reservations
-  let reservations = JSON.parse(localStorage.getItem('reservations') || "[]");
-  reservations.forEach((r, i) => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${i+1}</td>
-      <td>${userName}</td>
-      <td>${r.codeId}</td>
-      <td>${r.facility}</td>
-      <td>${r.dateOfEvent}</td>
-      <td>${formatTime12hr(r.timeStart)} - ${formatTime12hr(r.timeEnd)}</td>
-      <td class="status-pending">${r.status}</td>
-      <td><button class="cancel-btn" onclick="cancelReservation('${r.codeId}')">Cancel</button></td>
-    `;
-    tbody.appendChild(tr);
-  });
+  try {
+    // Get user details - try with basic columns first
+    let { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', userId);
+
+    console.log('User query result:', { data: userData, error: userError });
+
+    if (userData && userData.length > 0 && !userError) {
+      const user = userData[0];
+      console.log('Available user columns:', Object.keys(user));
+      
+      // Try different name combinations based on available columns
+      if (user.first_name && user.last_name) {
+        userName = `${user.first_name} ${user.last_name}`.trim();
+      } else if (user.full_name) {
+        userName = user.full_name;
+      } else if (user.name) {
+        userName = user.name;
+      } else {
+        userName = `User ${userId}`;
+      }
+      userRole = user.role_name || user.role || 'Unknown Role';
+    } else if (userError) {
+      console.error('Error fetching user details:', userError);
+      userName = `User ${userId}`;
+    }
+
+    // Fetch user's reservations from Supabase
+    const { data: reservations, error: reservationError } = await supabase
+      .from('reservations')
+      .select('*')
+      .eq('id', userId)
+      .order('date', { ascending: true });
+
+    if (reservationError) {
+      console.error('Error fetching reservations:', reservationError);
+      tbody.innerHTML = `<tr><td colspan='8'>Error loading reservations: ${reservationError.message}</td></tr>`;
+      return;
+    }
+
+    // Clear loading message
+    tbody.innerHTML = "";
+
+    if (!reservations || reservations.length === 0) {
+      tbody.innerHTML = "<tr><td colspan='8'>No reservations found</td></tr>";
+      return;
+    }
+
+    // Display reservations
+    reservations.forEach((reservation, index) => {
+      const tr = document.createElement('tr');
+      
+      // Format the date
+      const formattedDate = new Date(reservation.date).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+
+      // Format time range
+      const timeRange = `${formatTime12hr(reservation.time_start)} - ${formatTime12hr(reservation.time_end)}`;
+      
+      // Determine status (you can add a status column to your database later)
+      const status = reservation.status || 'PENDING';
+      
+      tr.innerHTML = `
+        <td>${index + 1}</td>
+        <td>${userName}</td>
+        <td>${reservation.request_id}</td>
+        <td>${reservation.facility}</td>
+        <td>${formattedDate}</td>
+        <td>${timeRange}</td>
+        <td class="status-${status.toLowerCase()}">${status}</td>
+        <td><button class="cancel-btn" onclick="cancelReservation('${reservation.request_id}')">Cancel</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+  } catch (error) {
+    console.error('Error in loadReservations:', error);
+    tbody.innerHTML = `<tr><td colspan='8'>Error loading data: ${error.message}</td></tr>`;
+  }
 }
 
 const panel = document.getElementById("notificationPanel");
@@ -111,11 +167,33 @@ window.onload = async function() {
   updateDateTime();
 };
 
-function cancelReservation(codeId) {
-  let reservations = JSON.parse(localStorage.getItem('reservations') || "[]");
-  reservations = reservations.filter(r => r.codeId !== codeId);
-  localStorage.setItem('reservations', JSON.stringify(reservations));
-  loadReservations();
+async function cancelReservation(requestId) {
+  if (!confirm('Are you sure you want to cancel this reservation?')) {
+    return;
+  }
+
+  try {
+    // Delete reservation from Supabase
+    const { error } = await supabase
+      .from('reservations')
+      .delete()
+      .eq('request_id', requestId);
+
+    if (error) {
+      console.error('Error canceling reservation:', error);
+      alert('Error canceling reservation. Please try again.');
+      return;
+    }
+
+    alert('Reservation canceled successfully!');
+    
+    // Reload the reservations to update the display
+    await loadReservations();
+    
+  } catch (error) {
+    console.error('Error in cancelReservation:', error);
+    alert('Error canceling reservation. Please try again.');
+  }
 }
 
 function updateDateTime() {

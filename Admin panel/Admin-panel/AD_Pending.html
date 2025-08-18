@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin Pending</title>
   <link rel="stylesheet" href="css/AD_Pending.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    window.SUPABASE_URL = 'https://hfasujvdkbjpllwohqcc.supabase.co';
+    window.SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhmYXN1anZka2JqcGxsd29ocWNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ2NjA4ODgsImV4cCI6MjA3MDIzNjg4OH0.Wo6eqzObQ_sI_qebCi0F6iGyyP7TYcHCyxSoOZQOpPM';
+  </script>
+  <script defer src="java/AD_pending.js"></script>
 </head>
 <body>
 
@@ -34,12 +41,24 @@
     </div>
     <button onclick="window.location.href='landingPage.html'" class="logout-btn">Log Out</button>
   </div>
+
+
+  <div id="statusModal" class="modal" style="display:none;">
+      <div class="modal-content">
+        <span class="close" id="closeStatusModalBtn">&times;</span>
+        <h2>Do you want to?</h2>
+        <div style="margin: 20px 0;">
+          <button id="approveBtn" class="modal-action-btn" style="background:#184C2F;color:#fff;margin-right:10px;">Accept</button>
+          <button id="disapproveBtn" class="modal-action-btn" style="background:#ad332b;color:#fff;">Reject</button>
+        </div>
+      </div>
+    </div>
+
   <div class="content-area">
   <h1 class="page-title">
       <button class="back-btn" onclick="history.back()">←</button>
       Pending
     </h1>
-
 
   <table class="pending-table">
     <thead>
@@ -83,3 +102,5 @@
 </div>
 
 
+</body>
+</html>
