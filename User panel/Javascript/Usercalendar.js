@@ -19,6 +19,96 @@ function getReservationsForDay(year, month, day) {
   });
 }
 
+// helper to locate the initialized Supabase client
+function getSupabase() {
+	// most of your files use window.supabaseClient, some include the UMD as `supabase`
+	// prefer the initialized client first
+	if (typeof window !== 'undefined') {
+		if (window.supabaseClient) return window.supabaseClient;
+		if (window.supabase) return window.supabase;
+	}
+	// fallback to global variable `supabase` if present
+	if (typeof supabase !== 'undefined') return supabase;
+	return null;
+}
+
+async function loadUserDetails() {
+  try {
+    const sb = getSupabase();
+    if (!sb) {
+      console.error('Supabase client not found. Ensure supabaseClient.js is loaded before this script.');
+      if (document.getElementById('UserName')) document.getElementById('UserName').textContent = 'Unknown User';
+      if (document.getElementById('UserRole')) document.getElementById('UserRole').textContent = 'Unknown Role';
+      return;
+    }
+
+    // Prefer session-based user id; safe-guarded to avoid AuthSessionMissingError
+    let userId = null;
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      if (session?.user?.id) {
+        userId = session.user.id;
+      } else {
+        // No active session, do not call getUser() (it will throw AuthSessionMissingError)
+        console.log('No active session from getSession(), will try localStorage fallback');
+      }
+    } catch (sessionErr) {
+      // getSession rarely throws, but if it does, fallback to localStorage
+      console.warn('getSession error (falling back to localStorage):', sessionErr);
+    }
+
+    // If we didn't obtain userId from session, try stored user_id
+    if (!userId) userId = localStorage.getItem('user_id');
+
+    if (!userId) {
+      if (document.getElementById('UserName')) document.getElementById('UserName').textContent = 'Unknown User';
+      if (document.getElementById('UserRole')) document.getElementById('UserRole').textContent = 'Unknown Role';
+      if (document.getElementById('welcomeUserName')) document.getElementById('welcomeUserName').textContent = '';
+      console.warn('No user_id available from session or localStorage');
+      return;
+    }
+
+    // Fetch profile from users table
+    const { data, error } = await sb
+      .from('users')
+      .select('id, first_name, last_name, role_name')
+      .eq('id', userId)
+      .single();
+
+    if (error) {
+      console.error('Supabase error fetching user:', error);
+      if (document.getElementById('UserName')) document.getElementById('UserName').textContent = 'Unknown User';
+      if (document.getElementById('UserRole')) document.getElementById('UserRole').textContent = 'Unknown Role';
+      return;
+    }
+
+    const userName = `${data.first_name || ''} ${data.last_name || ''}`.trim() || 'Unknown User';
+    const firstName = data.first_name || '';
+    if (document.getElementById('UserName')) document.getElementById('UserName').textContent = userName;
+    if (document.getElementById('UserRole')) document.getElementById('UserRole').textContent = data.role_name || 'Unknown Role';
+    if (document.getElementById('welcomeUserName')) document.getElementById('welcomeUserName').textContent = firstName;
+    // ensure localStorage has current user id
+    localStorage.setItem('user_id', data.id);
+  } catch (err) {
+    console.error('loadUserDetails error:', err);
+  }
+}
+
+// call on load (always attempt to populate UI)
+loadUserDetails();
+
+// subscribe to auth changes to refresh UI when login state changes
+const sbClient = getSupabase();
+if (sbClient && sbClient.auth && sbClient.auth.onAuthStateChange) {
+  sbClient.auth.onAuthStateChange((event, session) => {
+    console.log('Auth event', event, session?.user?.id);
+    // on sign in/out, reload user details (session-aware)
+    loadUserDetails();
+  });
+} else {
+  console.warn('Supabase auth.onAuthStateChange not available - skipping subscription.');
+}
+
 function renderCalendar(date) {
   calendarGrid.innerHTML = "";
   const year = date.getFullYear();

@@ -15,8 +15,8 @@
       <div class="user-photo">
         <img src="images/udm-logo.webp" alt="User Photo" />
         <div>
-          <strong>Juan B. Batumbakal</strong><br />
-          CET Secretary
+          <b><p class="UserName" id="UserName">Loading...</p></b>
+          <p class="UserRole" id="UserRole">Loading...</p>
         </div>
       </div>
       <div class="menu">
@@ -34,7 +34,7 @@
 
       <form id="reservationForm">
         <div class="row">
-           <label>Date Filed: <input type="date"  name="dateFiled" readonly></label>
+           <label>Date Filed: <input type="date" name="dateFiled" readonly></label>
            <label>Date/Time Received: <input type="datetime-local" name="dateReceived" readonly></label>
            <div class="time-inputs">
            <label>Time Start: <input type="time" name="timeStart" required></label>
@@ -94,7 +94,7 @@
         <div class="signatures">
           <div class="signContainer">
             Requested by:<br>
-            <input type="file" accept="image/*,.pdf">
+            <input type="file" id="signature" accept="image/*,.pdf">
             <br>
             <div class="Personel">(Name and E-signature)<br>End-User/Requester/Event organizer   </div>
           </div>
