@@ -33,7 +33,7 @@ async function getUserFullName(userId) {
     // First try to get all available columns to see what's in the users table
     let { data, error } = await supabase
       .from('users')
-      .select('*')
+      .select('first_name, last_name, role')
       .eq('id', userId);
 
     console.log(`User query result for ${userId}:`, { data, error });
