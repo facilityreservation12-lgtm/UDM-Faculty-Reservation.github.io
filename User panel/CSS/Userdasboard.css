@@ -54,7 +54,13 @@ body {
 
 .menu a:hover {
   background-color: #1e3e2e;
-}       
+}    
+
+.menu a.active {
+  background-color: #F7CF52;
+  color: #234734;
+  font-weight: bold;
+}
 
 .logout-btn {
   background-color: #fff;
@@ -87,7 +93,7 @@ body {
 }
 
 .notification-panel.active {
-  left: 13%;
+  left: 15%;
 }
 
 /* Optional overlay when panel is open */

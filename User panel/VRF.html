@@ -10,6 +10,21 @@
   <script src="Javascript/VRF.js" defer></script>
 </head>
 <body>
+  <div class="notification-panel" id="notificationPanel">
+    <h1>Notifications</h1>
+    <div class="notification-container">
+    <div class="notification-item">Your Request for Palma hall on May 12, 2025 at
+      1:00pm-3:00pm is currently Pending</div>
+    <div class="notification-item">Your Request for Palma hall on May 12, 2025 at
+      1:00pm-3:00pm is currently Pending</div>
+    <div class="notification-item">Your Request for Palma hall on May 12, 2025 at
+      1:00pm-3:00pm is currently Pending</div>
+    <div class="notification-item">Your Request for Palma hall on May 12, 2025 at
+      1:00pm-3:00pm is currently Pending</div>        
+    </div> 
+  </div>
+  <div class="notification-overlay" id="notificationOverlay"></div>
+
   <div class="sidebar">
     <div>
       <div class="user-photo">
@@ -112,5 +127,25 @@
       </form>
     </div>
   </main>
+    <script>
+document.querySelectorAll('.menu a').forEach(link => {
+  if (
+    link.href &&
+    window.location.pathname.endsWith(link.getAttribute('href'))
+  ) {
+    link.classList.add('active');
+  }
+});
+
+  const panel = document.getElementById("notificationPanel");
+  const overlay = document.getElementById("notificationOverlay");
+
+  function toggleNotificationPanel() {
+    panel.classList.toggle("active");
+    overlay.classList.toggle("active");
+  }
+
+  overlay.addEventListener("click", toggleNotificationPanel);
+</script>
 </body>
 </html>

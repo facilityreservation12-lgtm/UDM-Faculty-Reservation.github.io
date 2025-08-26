@@ -63,4 +63,14 @@
 
    <script src="java/UDMfacility.js"></script>
 </body>
+  <script>
+document.querySelectorAll('.menu a').forEach(link => {
+  if (
+    link.href &&
+    window.location.pathname.endsWith(link.getAttribute('href'))
+  ) {
+    link.classList.add('active');
+  }
+});
+</script>
 </html>

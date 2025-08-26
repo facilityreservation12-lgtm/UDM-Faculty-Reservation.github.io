@@ -98,6 +98,11 @@ body {
 .sub-menu a:hover {
   color: white;
 }
+.menu a.active {
+  background-color: #F7CF52;
+  color: #234734;
+  font-weight: bold;
+}
 
 .main {
     height: 100%;

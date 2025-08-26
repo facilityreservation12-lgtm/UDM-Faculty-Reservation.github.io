@@ -113,10 +113,6 @@
         Engr. JAYSON L. VALEROSO<br>
         Head, Maintenance and Engineering Division
       </div>
-      <div class="signature-block">
-        VP for Administration<br>
-        Approved by:
-      </div>
     </div>
 
     <h3 style="margin-top: 30px">Furnish a copy of ALL RELEVANT DOCUMENTS to the following offices:</h3>
@@ -141,6 +137,16 @@
     const input = document.getElementById(inputId);
     input.style.display = checkbox.checked ? "inline-block" : "none";
   }
+</script>
+  <script>
+document.querySelectorAll('.menu a').forEach(link => {
+  if (
+    link.href &&
+    window.location.pathname.endsWith(link.getAttribute('href'))
+  ) {
+    link.classList.add('active');
+  }
+});
 </script>
 </body>
 </html>

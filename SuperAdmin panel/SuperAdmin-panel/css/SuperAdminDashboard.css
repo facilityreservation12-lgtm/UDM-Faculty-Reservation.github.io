@@ -96,6 +96,23 @@ body {
 .sub-menu a:hover {
   color: white;
 }
+.menu a.active {
+  background-color: #F7CF52;
+  color: #234734;
+  font-weight: bold;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: #1e3e2e; 
+  transition: all 0.2s ease-in-out;
+}
+
+.nav-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  color: #16a34a;
+}
 
 .main {
     height: auto;

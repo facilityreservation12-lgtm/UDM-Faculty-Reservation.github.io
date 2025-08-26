@@ -98,6 +98,12 @@ body {
   color: white;
 }
 
+.menu a.active {
+  background-color: #F7CF52;
+  color: #234734;
+  font-weight: bold;
+}
+
 .main {
   flex: 1;
   padding: 30px;
