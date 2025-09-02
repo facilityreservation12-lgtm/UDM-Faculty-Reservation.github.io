@@ -97,6 +97,12 @@ body {
   color: white;
 }
 
+.menu a.active {
+  background-color: #F7CF52;
+  color: #234734;
+  font-weight: bold;
+}
+
  .reservation-form {
  background: rgb(255, 255, 255);
   padding: 2rem;

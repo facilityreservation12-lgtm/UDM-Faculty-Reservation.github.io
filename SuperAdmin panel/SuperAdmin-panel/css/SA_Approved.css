@@ -96,7 +96,11 @@ body {
 .sub-menu a:hover {
   color: white;
 }
-
+.menu a.active {
+  background-color: #F7CF52;
+  color: #234734;
+  font-weight: bold;
+}
 .page-title {
   display: flex;
   align-items: center;

@@ -69,5 +69,15 @@
   </div>
 </div>
 <script src="java/SA_Reportbugs.js"></script>
+  <script>
+document.querySelectorAll('.menu a').forEach(link => {
+  if (
+    link.href &&
+    window.location.pathname.endsWith(link.getAttribute('href'))
+  ) {
+    link.classList.add('active');
+  }
+});
+</script>
 </body>
 </html>

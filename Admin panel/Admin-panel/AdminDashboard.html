@@ -43,35 +43,35 @@
         <ul>
           <li>
             <span style="background-color: #FFCC00;"></span>
-            <a href="UDMfacility.html?facility=Palma%20Hall">Palma Hall</a>
+            <a href="UDMfacility.html?facility=Palma%20Hall" class="nav-link">Palma Hall</a>
           </li>
           <li>
             <span style="background-color: #A1C181;"></span>
-            <a href="UDMfacility.html?facility=Right%20Wing%20Lobby">Right Wing Lobby</a>
+            <a href="UDMfacility.html?facility=Right%20Wing%20Lobby" class="nav-link">Right Wing Lobby</a>
           </li>
           <li>
             <span style="background-color: #E8E288;"></span>
-            <a href="UDMfacility.html?facility=Mehan%20Garden">Mehan Garden</a>
+            <a href="UDMfacility.html?facility=Mehan%20Garden" class="nav-link">Mehan Garden</a>
           </li>
           <li>
             <span style="background-color: #92DCE5;"></span>
-            <a href="UDMfacility.html?facility=Rooftop">Rooftop</a>
+            <a href="UDMfacility.html?facility=Rooftop" class="nav-link">Rooftop</a>
           </li>
           <li>
             <span style="background-color: #FFDCC1;"></span>
-            <a href="UDMfacility.html?facility=Classrooms">Classroom</a>
+            <a href="UDMfacility.html?facility=Classrooms" class="nav-link">Classroom</a>
           </li>
           <li>
             <span style="background-color: #A7C6ED;"></span>
-            <a href="UDMfacility.html?facility=Basketball%20Court">Basketball Court</a>
+            <a href="UDMfacility.html?facility=Basketball%20Court" class="nav-link">Basketball Court</a>
           </li>
           <li>
             <span style="background-color: #FFABAB;"></span>
-            <a href="UDMfacility.html?facility=Space%20at%20the%20Ground%20Floor">Space at the Ground Floor</a>
+            <a href="UDMfacility.html?facility=Space%20at%20the%20Ground%20Floor" class="nav-link">Space at the Ground Floor</a>
           </li>
           <li>
             <span style="background-color: #CCCCCC;"></span>
-            <a href="UDMfacility.html?facility=Others">Others</a>
+            <a href="UDMfacility.html?facility=Others" class="nav-link">Others</a>
           </li>
         </ul>
       </div>
@@ -224,6 +224,15 @@ new Chart(ctx, {
   // Optional: refresh it every day (in case the month changes)
   setInterval(updateUsageTitle, 24 * 60 * 60 * 1000);
 </script>
-
+  <script>
+document.querySelectorAll('.menu a').forEach(link => {
+  if (
+    link.href &&
+    window.location.pathname.endsWith(link.getAttribute('href'))
+  ) {
+    link.classList.add('active');
+  }
+});
+</script>
 </body>
 </html>

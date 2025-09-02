@@ -18,25 +18,7 @@
     <div class="notification-item">Your Request for Palma hall on May 12, 2025 at
       1:00pm-3:00pm is currently Pending</div>
     <div class="notification-item">Your Request for Palma hall on May 12, 2025 at
-      1:00pm-3:00pm is currently Pending</div>
-    <div class="notification-item">Your Request for Palma hall on May 12, 2025 at
-      1:00pm-3:00pm is currently Pending</div>
-    <div class="notification-item">Your Request for Palma hall on May 12, 2025 at
-      1:00pm-3:00pm is currently Pending</div>
-    <div class="notification-item">Your Request for Palma hall on May 12, 2025 at
-      1:00pm-3:00pm is currently Pending</div>
-    <div class="notification-item">Your Request for Palma hall on May 12, 2025 at
-      1:00pm-3:00pm is currently Pending</div>
-    <div class="notification-item">Your Request for Palma hall on May 12, 2025 at
-      1:00pm-3:00pm is currently Pending</div>
-    <div class="notification-item">Your Request for Palma hall on May 12, 2025 at
-      1:00pm-3:00pm is currently Pending</div>
-      <div class="notification-item">Your Request for Palma hall on May 12, 2025 at
-        1:00pm-3:00pm is currently Pending</div>
-      <div class="notification-item">Your Request for Palma hall on May 12, 2025 at
-        1:00pm-3:00pm is currently Pending</div>
-      <div class="notification-item">Your Request for Palma hall on May 12, 2025 at
-        1:00pm-3:00pm is currently Pending</div>          
+      1:00pm-3:00pm is currently Pending</div>        
     </div> 
   </div>
   <div class="notification-overlay" id="notificationOverlay"></div>
@@ -105,5 +87,15 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.min.js"></script>
   <script src="../supabaseClient.js"></script>
   <script src="Javascript/Userdashboard.js"></script>
+    <script>
+document.querySelectorAll('.menu a').forEach(link => {
+  if (
+    link.href &&
+    window.location.pathname.endsWith(link.getAttribute('href'))
+  ) {
+    link.classList.add('active');
+  }
+});
+</script>
 </body>
 </html>
