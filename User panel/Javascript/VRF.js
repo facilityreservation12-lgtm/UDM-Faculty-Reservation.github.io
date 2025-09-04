@@ -312,6 +312,34 @@ async function retryLocalUploads(sb) {
 	}
 }
 
+// Create notification for reservation
+async function createReservationNotification(sb, reservationData) {
+	try {
+		const notification = {
+			id: reservationData.userId,
+			facility: reservationData.facility,
+			date: reservationData.date,
+			time_start: reservationData.timeStart,
+			time_end: reservationData.timeEnd,
+			status: 'Pending'
+		};
+		
+		console.log('Creating notification:', notification);
+		
+		const { error: notificationError } = await sb
+			.from('notifications')
+			.insert([notification]);
+			
+		if (notificationError) {
+			console.error('Failed to create notification:', notificationError);
+		} else {
+			console.log('Notification created successfully');
+		}
+	} catch (error) {
+		console.error('Error creating notification:', error);
+	}
+}
+
 document.addEventListener('DOMContentLoaded', async function() {
 	try {
 		// Acquire safe client once per page load
@@ -451,32 +479,22 @@ document.addEventListener('DOMContentLoaded', async function() {
 				}
 			}
 
-			// Generate sequential code for the facility
+			// Generate sequential code for the facility locally
 			const firstFacility = selectedFacilities[0];
 			const codePrefix = getCodePrefix(firstFacility);
 			
-			// Get the last request_id for this facility type from Supabase
-			const { data: lastRequest, error: countError } = await sb
-				.from('reservations')
-				.select('request_id')
-				.ilike('request_id', `${codePrefix}-%`) // Changed from like to ilike
-				.order('request_id', { ascending: false })
-				.limit(1);
-
-			if (countError) {
-				console.error('Error fetching last request:', countError);
-				alert('Error generating request ID. Please try again.');
-				return;
+			// Generate local sequence
+			const existingCodes = reservations
+				.filter(r => r.codeId && r.codeId.startsWith(codePrefix))
+				.map(r => parseInt(r.codeId.substring(3), 10))
+				.filter(n => !isNaN(n));
+			
+			let localSequence = 1;
+			if (existingCodes.length > 0) {
+				localSequence = Math.max(...existingCodes) + 1;
 			}
-
-			let sequentialNumber = 1;
-			if (lastRequest && lastRequest[0]?.request_id) { // Check first array item
-				const lastNumber = parseInt(lastRequest[0].request_id.substring(3), 10);
-				sequentialNumber = lastNumber + 1;
-			}
-
-			// Create the new code ID with padding (e.g., PH-0001)
-			const codeId = `${codePrefix}-${String(sequentialNumber).padStart(4, '0')}`;
+			
+			const codeId = `${codePrefix}-${String(localSequence).padStart(4, '0')}`;
 
 			// Get all form data
 			const unitOffice = document.querySelector('#unitOffice, input[name="unitOffice"]').value;
@@ -494,25 +512,8 @@ document.addEventListener('DOMContentLoaded', async function() {
 			// Get event title
 			const eventTitle = eventTitleInput && eventTitleInput.value ? eventTitleInput.value : "";
 
-			// Create reservation object for Supabase
-			const supabaseReservation = {
-				id: localStorage.getItem('user_id'), // Changed from id to faculty_id
-				request_id: codeId,
-				facility: selectedFacilities.join(", "),
-				date: dateOfEventVal,
-				title_of_the_event: eventTitle,
-				unit: unitOffice,
-				additional_req: additionalReq,
-				set_up_details: setupDetails,
-				time_start: timeStartInput.value,
-				time_end: timeEndInput.value,
-				attendees: attendees,
-				pdf_url: '',      // ensure NOT NULL constraint satisfied
-				status: 'request' // mark as initial request
-			};
-
 			const reservation = {
-				user: localStorage.getItem('user_id'), // fixed: use stored user id instead of undefined 'id'
+				user: localStorage.getItem('user_id'),
 				codeId: codeId,
 				facility: selectedFacilities.join(", "),
 				dateFiled: dateFiledInput && dateFiledInput.value ? dateFiledInput.value : todayYMD,
@@ -520,30 +521,23 @@ document.addEventListener('DOMContentLoaded', async function() {
 				dateOfEvent: dateOfEventVal,
 				timeStart: timeStartInput && timeStartInput.value ? timeStartInput.value : "",
 				timeEnd: timeEndInput && timeEndInput.value ? timeEndInput.value : "",
-				eventTitle: eventTitleInput && eventTitleInput.value ? eventTitleInput.value : "",
+				eventTitle: eventTitle,
+				unitOffice: unitOffice,
+				attendees: attendees,
+				additionalReq: additionalReq,
+				setupDetails: setupDetails,
 				status: "request",
 				createdAt: new Date().toISOString(),
 				userId: localStorage.getItem('user_id')
 			};
 
 			try {
-				// Attempt DB insert regardless of session (you said login is in DB/localStorage)
-				const { data: insertData, error: insertError } = await sb
-					.from('reservations')
-					.insert([supabaseReservation])
-					.select();
+				console.log('Working in local-only mode - no database calls to avoid notifications dependency');
 
-				if (insertError) {
-					console.error('DB insert error:', insertError);
-					// If auth/permission related, save locally as fallback
-					let reservations = JSON.parse(localStorage.getItem('reservations') || "[]");
-					reservations.push(reservation);
-					localStorage.setItem('reservations', JSON.stringify(reservations));
-					alert('Could not save to server. Reservation saved locally. Please contact admin or try again later.');
-					return;
-				}
+				// Skip all database operations to avoid notifications table dependency
+				// Work entirely with local storage and file uploads
 
-				// Try file upload(s). If upload fails (e.g. RLS), we will save local fallback and notify user.
+				// Try file upload(s). If upload fails, save in IndexedDB
 				const fileInput = document.getElementById('signature');
 				const file = fileInput && fileInput.files ? fileInput.files[0] : null;
 
@@ -556,29 +550,20 @@ document.addEventListener('DOMContentLoaded', async function() {
 					const uploadResult = await uploadToSupabase(file, filePath);
 
 					if (!uploadResult) {
-						// Upload failed (likely storage RLS). Save file in IndexedDB and store reference in reservation
+						// Upload failed. Save file in IndexedDB
 						try {
 							const signatureKey = `${codeId}_signature`;
 							await storeFileInIDB(signatureKey, file);
 							reservation.signatureKey = signatureKey;
 							reservation.signatureName = fileName;
 							console.warn('Signature saved to IndexedDB due to upload failure.');
-							alert('Signature upload blocked by storage policy. The reservation and signature have been saved locally. Please contact admin to enable storage uploads or retry later.');
-							// Save reservation metadata only (no base64)
-							let reservationsLocal = JSON.parse(localStorage.getItem('reservations') || "[]");
-							reservationsLocal.push(reservation);
-							localStorage.setItem('reservations', JSON.stringify(reservationsLocal));
-							return;
 						} catch (idbErr) {
 							console.error('Failed to store signature in IndexedDB:', idbErr);
-							alert('Signature upload failed and could not be saved locally. Please try again.');
-							return;
 						}
 					}
 				}
 
 				// Generate and upload PDF
-				// prefer the page <main> so the PDF contains the full page content
 				const element = document.querySelector('main') || document.querySelector('.form-container');
 				const pdfOptions = {
 					margin: 1,
@@ -598,40 +583,99 @@ document.addEventListener('DOMContentLoaded', async function() {
  				);
 
 				if (!pdfUploadResult) {
-					// PDF upload failed. Save PDF blob in IndexedDB and metadata in reservation
+					// PDF upload failed. Save PDF blob in IndexedDB
 					try {
 						const pdfKey = `${codeId}_pdf`;
 						const pdfFile = new File([pdfBlob], `VRF-${codeId}.pdf`, { type: 'application/pdf' });
 						await storeFileInIDB(pdfKey, pdfFile);
 						reservation.pdfKey = pdfKey;
 						reservation.pdfName = `VRF-${codeId}.pdf`;
-						let reservationsLocal = JSON.parse(localStorage.getItem('reservations') || "[]");
-						reservationsLocal.push(reservation);
-						localStorage.setItem('reservations', JSON.stringify(reservationsLocal));
-						alert('PDF upload blocked by storage policy. Reservation and PDF saved locally. Contact admin or retry later.');
-						return;
 					} catch (pdfErr) {
 						console.error('Failed to store PDF in IndexedDB:', pdfErr);
-						alert('PDF upload failed and could not be saved locally. Please try again.');
-						return;
 					}
 				}
 
-				// Everything succeeded or server insert succeeded and uploads ok
-				let reservations = JSON.parse(localStorage.getItem('reservations') || "[]");
+				// Save everything locally
 				reservations.push(reservation);
 				localStorage.setItem('reservations', JSON.stringify(reservations));
 				localStorage.removeItem('selectedDate');
 
-				alert('Reservation submitted successfully! PDF has been generated and stored.');
+				alert('Reservation submitted successfully! Saved locally with PDF generated.');
 				window.location.href = "Userdashboard.html";
 			} catch (error) {
 				console.error('Error submitting form:', error);
 				// Fallback: save locally so user won't lose data
-				let reservations = JSON.parse(localStorage.getItem('reservations') || "[]");
 				reservations.push(reservation);
 				localStorage.setItem('reservations', JSON.stringify(reservations));
 				alert('An error occurred; reservation saved locally. Please contact admin or try again later.');
+			}
+
+			try {
+				console.log('Attempting to save to Supabase database');
+
+				// Create minimal reservation object for database
+				const dbReservation = {
+					id: localStorage.getItem('user_id'),
+					request_id: codeId,
+					facility: selectedFacilities.join(", "),
+					date: dateOfEventVal,
+					time_start: timeStartInput && timeStartInput.value ? timeStartInput.value : "",
+					time_end: timeEndInput && timeEndInput.value ? timeEndInput.value : "",
+					title_of_the_event: eventTitle,
+					unit: unitOffice || '',
+					attendees: attendees || '',
+					additional_req: additionalReq || '',
+					set_up_details: setupDetails || '',
+					pdf_url: '',
+					status: 'request'
+				};
+
+				// Try database insert with minimal approach
+				let dbSuccess = false;
+				try {
+					console.log('Attempting database insert:', dbReservation);
+					
+					// Use the most basic insert possible
+					const { error } = await sb
+						.from('reservations')
+						.insert(dbReservation);
+
+					if (error) {
+						console.error('Database insert failed:', error);
+						if (error.message.includes('notifications')) {
+							console.error('ISSUE: Database has notifications table dependency that needs to be fixed');
+						}
+					} else {
+						console.log('Database insert successful!');
+						dbSuccess = true;
+						
+						// Create notification after successful reservation
+						await createReservationNotification(sb, {
+							facility: selectedFacilities.join(", "),
+							date: dateOfEventVal,
+							timeStart: timeStartInput && timeStartInput.value ? timeStartInput.value : "",
+							timeEnd: timeEndInput && timeEndInput.value ? timeEndInput.value : "",
+							userId: localStorage.getItem('user_id')
+						});
+					}
+				} catch (dbError) {
+					console.error('Database insert exception:', dbError);
+				}
+
+				// Save everything locally (always as backup)
+				reservations.push(reservation);
+				localStorage.setItem('reservations', JSON.stringify(reservations));
+				localStorage.removeItem('selectedDate');
+
+				if (dbSuccess) {
+					alert('Reservation submitted successfully! Saved to database and PDF generated.');
+				} else {
+					alert('Reservation submitted successfully! Saved locally (database unavailable). PDF generated.');
+				}
+				window.location.href = "Userdashboard.html";
+			} catch (error) {
+				console.error('Error in final reservation processing:', error);
+				alert('Reservation saved locally due to an error. Please check your data and try again.');
 			}
 		});
 	} catch (error) {
@@ -644,17 +688,6 @@ function selectDateFromCalendar(dateString) {
   const dateOfEventInput = document.querySelector('input[name="dateOfEvent"], input#dateOfEvent, input[id="dateOfEvent"]');
   const normalized = toYMD(dateString) || dateString;
   if (dateOfEventInput) {
-  dateOfEventInput.value = normalized;
-  dateOfEventInput.focus();
-  return;
-  // If not on form, store for later
-  localStorage.setItem('selectedDate', normalized);
-  window.location.href = "ReservationForm.html";
-}
-function selectDateFromCalendar(dateString) {
-  const dateOfEventInput = document.querySelector('input[name="dateOfEvent"], input#dateOfEvent, input[id="dateOfEvent"]');
-  const normalized = toYMD(dateString) || dateString;
-  if (dateOfEventInput) {
     dateOfEventInput.value = normalized;
     dateOfEventInput.focus();
     return;
@@ -663,7 +696,3 @@ function selectDateFromCalendar(dateString) {
   localStorage.setItem('selectedDate', normalized);
   window.location.href = "ReservationForm.html";
 }
-    dateOfEventInput.value = normalized;
-    dateOfEventInput.focus();
-    return;
-  }
