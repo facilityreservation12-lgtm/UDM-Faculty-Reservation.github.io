@@ -312,34 +312,6 @@ async function retryLocalUploads(sb) {
 	}
 }
 
-// Create notification for reservation
-async function createReservationNotification(sb, reservationData) {
-	try {
-		const notification = {
-			id: reservationData.userId,
-			facility: reservationData.facility,
-			date: reservationData.date,
-			time_start: reservationData.timeStart,
-			time_end: reservationData.timeEnd,
-			status: 'Pending'
-		};
-		
-		console.log('Creating notification:', notification);
-		
-		const { error: notificationError } = await sb
-			.from('notifications')
-			.insert([notification]);
-			
-		if (notificationError) {
-			console.error('Failed to create notification:', notificationError);
-		} else {
-			console.log('Notification created successfully');
-		}
-	} catch (error) {
-		console.error('Error creating notification:', error);
-	}
-}
-
 document.addEventListener('DOMContentLoaded', async function() {
 	try {
 		// Acquire safe client once per page load
@@ -532,10 +504,75 @@ document.addEventListener('DOMContentLoaded', async function() {
 			};
 
 			try {
-				console.log('Working in local-only mode - no database calls to avoid notifications dependency');
+				console.log('Attempting to save to database and work locally');
 
-				// Skip all database operations to avoid notifications table dependency
-				// Work entirely with local storage and file uploads
+				// Create reservation object for database
+				const dbReservation = {
+					id: localStorage.getItem('user_id'),
+					request_id: codeId,
+					facility: selectedFacilities.join(", "),
+					date: dateOfEventVal,
+					time_start: timeStartInput && timeStartInput.value ? timeStartInput.value : "",
+					time_end: timeEndInput && timeEndInput.value ? timeEndInput.value : "",
+					title_of_the_event: eventTitle,
+					unit: unitOffice || '',
+					attendees: attendees || '',
+					additional_req: additionalReq || '',
+					set_up_details: setupDetails || '',
+					pdf_url: '',
+					status: 'request'
+				};
+
+				// Try database insert with network retry
+				let dbSuccess = false;
+				let retryCount = 0;
+				const maxRetries = 2;
+				
+				while (!dbSuccess && retryCount <= maxRetries) {
+					try {
+						console.log(`Database insert attempt ${retryCount + 1}:`, dbReservation);
+						
+						const { error } = await sb
+							.from('reservations')
+							.insert(dbReservation);
+
+						if (error) {
+							console.error('Database insert failed:', error);
+							if (error.message.includes('Failed to fetch') || error.code === '') {
+								if (retryCount < maxRetries) {
+									console.log(`Network error, retrying in 2 seconds... (attempt ${retryCount + 2})`);
+									await new Promise(resolve => setTimeout(resolve, 2000));
+									retryCount++;
+									continue;
+								}
+							}
+							break;
+						} else {
+							console.log('Database insert successful!');
+							dbSuccess = true;
+							
+							// Create notification after successful reservation
+							await createReservationNotification(sb, {
+								facility: selectedFacilities.join(", "),
+								date: dateOfEventVal,
+								timeStart: timeStartInput && timeStartInput.value ? timeStartInput.value : "",
+								timeEnd: timeEndInput && timeEndInput.value ? timeEndInput.value : "",
+								userId: localStorage.getItem('user_id')
+							});
+						}
+					} catch (dbError) {
+						console.error('Database operation exception:', dbError);
+						if (retryCount < maxRetries && 
+							(dbError.message.includes('Failed to fetch') || 
+							 dbError.message.includes('ERR_CONNECTION_CLOSED'))) {
+							console.log(`Network error, retrying in 2 seconds... (attempt ${retryCount + 2})`);
+							await new Promise(resolve => setTimeout(resolve, 2000));
+							retryCount++;
+						} else {
+							break;
+						}
+					}
+				}
 
 				// Try file upload(s). If upload fails, save in IndexedDB
 				const fileInput = document.getElementById('signature');
@@ -595,12 +632,16 @@ document.addEventListener('DOMContentLoaded', async function() {
 					}
 				}
 
-				// Save everything locally
+				// Save everything locally as backup
 				reservations.push(reservation);
 				localStorage.setItem('reservations', JSON.stringify(reservations));
 				localStorage.removeItem('selectedDate');
 
-				alert('Reservation submitted successfully! Saved locally with PDF generated.');
+				if (dbSuccess) {
+					alert('Reservation submitted successfully! Saved to database with notification created.');
+				} else {
+					alert('Reservation submitted successfully! Saved locally (network issues). Will sync when connection improves.');
+				}
 				window.location.href = "Userdashboard.html";
 			} catch (error) {
 				console.error('Error submitting form:', error);
@@ -608,74 +649,6 @@ document.addEventListener('DOMContentLoaded', async function() {
 				reservations.push(reservation);
 				localStorage.setItem('reservations', JSON.stringify(reservations));
 				alert('An error occurred; reservation saved locally. Please contact admin or try again later.');
-			}
-
-			try {
-				console.log('Attempting to save to Supabase database');
-
-				// Create minimal reservation object for database
-				const dbReservation = {
-					id: localStorage.getItem('user_id'),
-					request_id: codeId,
-					facility: selectedFacilities.join(", "),
-					date: dateOfEventVal,
-					time_start: timeStartInput && timeStartInput.value ? timeStartInput.value : "",
-					time_end: timeEndInput && timeEndInput.value ? timeEndInput.value : "",
-					title_of_the_event: eventTitle,
-					unit: unitOffice || '',
-					attendees: attendees || '',
-					additional_req: additionalReq || '',
-					set_up_details: setupDetails || '',
-					pdf_url: '',
-					status: 'request'
-				};
-
-				// Try database insert with minimal approach
-				let dbSuccess = false;
-				try {
-					console.log('Attempting database insert:', dbReservation);
-					
-					// Use the most basic insert possible
-					const { error } = await sb
-						.from('reservations')
-						.insert(dbReservation);
-
-					if (error) {
-						console.error('Database insert failed:', error);
-						if (error.message.includes('notifications')) {
-							console.error('ISSUE: Database has notifications table dependency that needs to be fixed');
-						}
-					} else {
-						console.log('Database insert successful!');
-						dbSuccess = true;
-						
-						// Create notification after successful reservation
-						await createReservationNotification(sb, {
-							facility: selectedFacilities.join(", "),
-							date: dateOfEventVal,
-							timeStart: timeStartInput && timeStartInput.value ? timeStartInput.value : "",
-							timeEnd: timeEndInput && timeEndInput.value ? timeEndInput.value : "",
-							userId: localStorage.getItem('user_id')
-						});
-					}
-				} catch (dbError) {
-					console.error('Database insert exception:', dbError);
-				}
-
-				// Save everything locally (always as backup)
-				reservations.push(reservation);
-				localStorage.setItem('reservations', JSON.stringify(reservations));
-				localStorage.removeItem('selectedDate');
-
-				if (dbSuccess) {
-					alert('Reservation submitted successfully! Saved to database and PDF generated.');
-				} else {
-					alert('Reservation submitted successfully! Saved locally (database unavailable). PDF generated.');
-				}
-				window.location.href = "Userdashboard.html";
-			} catch (error) {
-				console.error('Error in final reservation processing:', error);
-				alert('Reservation saved locally due to an error. Please check your data and try again.');
 			}
 		});
 	} catch (error) {
@@ -695,4 +668,32 @@ function selectDateFromCalendar(dateString) {
   // If not on form, store for later
   localStorage.setItem('selectedDate', normalized);
   window.location.href = "ReservationForm.html";
+}
+
+// Create notification for reservation
+async function createReservationNotification(sb, reservationData) {
+	try {
+		const notification = {
+			id: reservationData.userId,
+			facility: reservationData.facility,
+			date: reservationData.date,
+			time_start: reservationData.timeStart,
+			time_end: reservationData.timeEnd,
+			status: 'Pending'
+		};
+		
+		console.log('Creating notification:', notification);
+		
+		const { error: notificationError } = await sb
+			.from('notifications')
+			.insert([notification]);
+			
+		if (notificationError) {
+			console.error('Failed to create notification:', notificationError);
+		} else {
+			console.log('Notification created successfully');
+		}
+	} catch (error) {
+		console.error('Error creating notification:', error);
+	}
 }
