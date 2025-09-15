@@ -68,6 +68,22 @@ function getSupabase() {
 	return null;
 }
 
+// Supabase conflict check for reservations
+async function checkConflict(sb, facility, date, start, end) {
+  const { data, error } = await sb
+    .from("reservations")
+    .select("*")
+    .eq("facility", facility)
+    .eq("date", date)
+    .or(`and(time_start <= '${end}', time_end >= '${start}')`);
+
+  if (error) {
+    console.error('Conflict check error:', error);
+    return false;
+  }
+  return data && data.length > 0;
+}
+
 // Replace loadUserDetails to use safe client
 async function loadUserDetails() {
   try {
@@ -394,6 +410,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 		// Form submission
 		reservationForm.addEventListener('submit', async function (e) {
 			e.preventDefault();
+	 let reservations = JSON.parse(localStorage.getItem('reservations') || "[]");
 
 			const form = e.target;
 
@@ -432,24 +449,219 @@ document.addEventListener('DOMContentLoaded', async function() {
 				return;
 			}
 
-			// Check conflicts
-			let reservations = JSON.parse(localStorage.getItem('reservations') || "[]");
+						// Improved conflict check with recommendations
 			for (let facility of selectedFacilities) {
-				const conflict = reservations.some(r => {
-					const rDate = toYMD(r.dateOfEvent) || r.dateOfEvent;
-					if (rDate !== dateOfEventVal) return false;
-					const rFacilities = facilityListFromString(r.facility || "");
-					if (!rFacilities.includes(facility)) return false;
-					const rStart = parseTimeToMinutes(r.timeStart);
-					const rEnd = parseTimeToMinutes(r.timeEnd);
-					if (rStart === null || rEnd === null) return true;
-					return (newStart < rEnd && newEnd > rStart);
-				});
-				if (conflict) {
-					alert(`The facility "${facility}" is already reserved for ${dateOfEventVal} during the selected time.`);
-					return;
+			  // Query all reservations for this facility and date
+			  const { data, error } = await sb
+				.from("reservations")
+				.select("time_start, time_end")
+				.eq("facility", facility)
+				.eq("date", dateOfEventVal);
+			
+			  if (error) {
+				alert("Error checking reservation conflicts. Please try again later.");
+				console.error('Conflict check error:', error);
+				return;
+			  }
+			
+			  // Check if any reservation overlaps
+			  const requestedStart = parseTimeToMinutes(timeStartInput.value);
+			  const requestedEnd = parseTimeToMinutes(timeEndInput.value);
+			
+			  const conflict = data.some(r => {
+				const existingStart = parseTimeToMinutes(r.time_start);
+				const existingEnd = parseTimeToMinutes(r.time_end);
+				return requestedStart < existingEnd && requestedEnd > existingStart;
+			  });
+			
+			  // Find available slots for recommendation
+			  let slots = [];
+			  const sorted = data
+				.map(r => ({
+				  start: parseTimeToMinutes(r.time_start),
+				  end: parseTimeToMinutes(r.time_end)
+				}))
+				.sort((a, b) => a.start - b.start);
+			
+			  let lastEnd = 7 * 60;
+			  for (const res of sorted) {
+				if (res.start > lastEnd) {
+				  slots.push({
+					start: lastEnd,
+					end: res.start
+				  });
 				}
+				lastEnd = Math.max(lastEnd, res.end);
+			  }
+			  if (lastEnd < 19 * 60) {
+				slots.push({
+				  start: lastEnd,
+				  end: 19 * 60
+				});
+			  }
+			
+			  if (conflict) {
+				// If no slots for this facility, recommend another facility
+				if (slots.length === 0) {
+				  // Get all facilities
+				  const allFacilities = Object.keys(facilityCodes);
+				  let foundFacility = null;
+				  let foundSlots = null;
+			
+				  for (let altFacility of allFacilities) {
+					if (altFacility === facility) continue;
+					const { data: altData } = await sb
+					  .from("reservations")
+					  .select("time_start, time_end")
+					  .eq("facility", altFacility)
+					  .eq("date", dateOfEventVal);
+			
+					// Find slots for alt facility
+					let altSlots = [];
+					const altSorted = (altData || [])
+					  .map(r => ({
+						start: parseTimeToMinutes(r.time_start),
+						end: parseTimeToMinutes(r.time_end)
+					  }))
+					  .sort((a, b) => a.start - b.start);
+			
+					let altLastEnd = 7 * 60;
+					for (const res of altSorted) {
+					  if (res.start > altLastEnd) {
+						altSlots.push({
+						  start: altLastEnd,
+						  end: res.start
+						});
+					  }
+					  altLastEnd = Math.max(altLastEnd, res.end);
+					}
+					if (altLastEnd < 19 * 60) {
+					  altSlots.push({
+						start: altLastEnd,
+						end: 19 * 60
+					  });
+					}
+			
+					if (altSlots.length > 0) {
+					  foundFacility = altFacility;
+					  foundSlots = altSlots;
+					  break;
+					}
+				  }
+			
+				  if (foundFacility) {
+					const slotStr = foundSlots.map(s => `<li>${pad(Math.floor(s.start / 60))}:${pad(s.start % 60)} - ${pad(Math.floor(s.end / 60))}:${pad(s.end % 60)}</li>`).join('');
+					const messageHtml = `
+					  <strong>No slots available for "<span style="color:#234734">${facility}</span>" on <span style="color:#234734">${dateOfEventVal}</span>.</strong>
+					  <br><br>
+					  <span>Recommended facility: <b>${foundFacility}</b></span>
+					  <br><br>
+					  <span style="font-weight:bold;">Available slots:</span>
+					  <ul style="margin:0 0 0 1.2em;padding:0;">${slotStr}</ul>
+					`;
+					showConflictModal(messageHtml);
+					return;
+				  } else {
+					// If all facilities are full for this date, recommend another date
+					let nextDate = null;
+					for (let offset = 1; offset <= 7; offset++) {
+					  const tryDate = new Date(dateOfEventVal);
+					  tryDate.setDate(tryDate.getDate() + offset);
+					  const tryDateYMD = toYMD(tryDate);
+			
+					  let found = false;
+					  for (let altFacility of allFacilities) {
+						const { data: altData } = await sb
+						  .from("reservations")
+						  .select("time_start, time_end")
+						  .eq("facility", altFacility)
+						  .eq("date", tryDateYMD);
+			
+						let altSlots = [];
+						const altSorted = (altData || [])
+						  .map(r => ({
+							start: parseTimeToMinutes(r.time_start),
+							end: parseTimeToMinutes(r.time_end)
+						  }))
+						  .sort((a, b) => a.start - b.start);
+			
+						let altLastEnd = 7 * 60;
+						for (const res of altSorted) {
+						  if (res.start > altLastEnd) {
+							altSlots.push({
+							  start: altLastEnd,
+							  end: res.start
+							});
+						  }
+						  altLastEnd = Math.max(altLastEnd, res.end);
+						}
+						if (altLastEnd < 19 * 60) {
+						  altSlots.push({
+							start: altLastEnd,
+							end: 19 * 60
+						  });
+						}
+			
+						if (altSlots.length > 0) {
+						  nextDate = tryDateYMD;
+						  found = true;
+						  break;
+						}
+					  }
+					  if (found) break;
+					}
+			
+					if (nextDate) {
+					  const messageHtml = `
+						<strong>All facilities are fully booked for <span style="color:#234734">${dateOfEventVal}</span>.</strong>
+						<br><br>
+						<span>Recommended date: <b>${nextDate}</b></span>
+						<br><br>
+						<span>Please try reserving for this date.</span>
+					  `;
+					  showConflictModal(messageHtml);
+					  return;
+					} else {
+					  // If all dates in the next week are full, recommend next month
+					  const currentDate = new Date(dateOfEventVal);
+					  let nextMonth = currentDate.getMonth() + 1;
+					  let nextYear = currentDate.getFullYear();
+					  if (nextMonth > 11) {
+						nextMonth = 0;
+						nextYear += 1;
+					  }
+					  const firstDayNextMonth = new Date(nextYear, nextMonth, 1);
+					  const nextMonthYMD = toYMD(firstDayNextMonth);
+			
+					  const messageHtml = `
+						<strong>All facilities and dates are fully booked for this week.</strong>
+						<br><br>
+						<span>Recommended month: <b>${pad(nextMonth + 1)}-${nextYear}</b></span>
+						<br><br>
+						<span>Please try reserving for next month.</span>
+					  `;
+					  showConflictModal(messageHtml);
+					  return;
+					}
+				  }
+				} else {
+				  // If there are available slots for the selected facility, show them
+				  const slotStr = slots.map(s => `<li>${pad(Math.floor(s.start / 60))}:${pad(s.start % 60)} - ${pad(Math.floor(s.end / 60))}:${pad(s.end % 60)}</li>`).join('');
+				  const messageHtml = `
+					<strong>The facility "<span style="color:#234734">${facility}</span>" is already reserved for <span style="color:#234734">${dateOfEventVal}</span> during the selected time.</strong>
+					<br><br>
+					<span>Please pick another time.</span>
+					<br><br>
+					<span style="font-weight:bold;">Available slots for this date:</span>
+					<ul style="margin:0 0 0 1.2em;padding:0;">${slotStr}</ul>
+				  `;
+				  showConflictModal(messageHtml);
+				  return;
+				}
+			  }
 			}
+			  
+			
 
 			// Generate sequential code for the facility locally
 			const firstFacility = selectedFacilities[0];

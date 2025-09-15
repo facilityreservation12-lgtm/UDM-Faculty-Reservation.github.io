@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Other Users</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/Otheruser.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -36,53 +37,67 @@
   </div>
 <div class="main">
 
-  <div class="user-page-container">
-    <h2 class="page-title">
-      <button class="back-btn" onclick="history.back()">←</button>
-      Other User
-    </h2>
 
-    <table class="user-table">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>User</th>
-          <th>Role</th>
-          <th>Active Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><div class="id-box">001</div></td>
-          <td>
-            <strong>Chloe H. Baldwin</strong><br />
-            <span class="email">ChloeBaldwin28@gmail.com</span>
-          </td>
-          <td>ADMIN</td>
-          <td><span class="status online">ONLINE</span></td>
-        </tr>
-        <tr>
-          <td><div class="id-box">002</div></td>
-          <td>
-            <strong>Violet G. Mercado</strong><br />
-            <span class="email">VGMercado@gmail.com</span>
-          </td>
-          <td>ADMIN</td>
-          <td><span class="status online">ONLINE</span></td>
-        </tr>
-        <tr>
-          <td><div class="id-box">003</div></td>
-          <td>
-            <strong>Brandon B. Perez</strong><br />
-            <span class="email">BradPerez@gmail.com</span>
-          </td>
-          <td>ADMIN</td>
-          <td><span class="status offline">OFFLINE</span></td>
-        </tr>
-      </tbody>
-    </table>
+ <div class="soa-container">
+    <!-- Header with three logos -->
+    <div class="soa-logos">
+      <div class="logo-box">
+        <img src="../Admin-panel/img/udmlogo.jpg" alt="UDM Logo" class="logo">
+      </div>
+      <div class="logo-box">
+        <img src="../Admin-panel/img/Ph_seal_ncr_manila.svg.png" alt="Republic Logo" class="logo">
+        <p>Republic of the Philippines<br>City of Manila</p>
+      </div>
+      <div class="logo-box">
+        <img src="../Admin-panel/img/Bagong-Pilipinas-logo.png" alt="Bagong Pilipinas Logo" class="logo">
+      </div>
+    </div>
+
+    <!-- University name -->
+    <div class="soa-university">
+      <h1>UNIVERSIDAD DE MANILA</h1>
+    </div>
+
+    <!-- Rental & Statement of Account -->
+     <div class="soa-content">
+    <div class="soa-title">
+      <p><b>RENTAL</b></p>
+      <p><b><u>STATEMENT OF ACCOUNT</b></u></p>
+    </div>
+
+    <!-- Form fields -->
+    <div class="soa-body">
+      <p>Renter: ___________________________________________________________________________________________________________</p>
+      <p>Rent Space: ______________________________________________________________________________________________________</p>
+      <p>Date: _____________________________________________________________________________________________________________</p>
+      <p>Time: _____________________________________________________________________________________________________________</p>
+      <p>Rental: P ____________________________________________________________________</p>
+    </div>
+
+    <!-- Footer with signatures -->
+    <div class="soa-footer">
+      <div class="signature-block">
+        <p><b>Prepared by:</b></p>
+        <div class="sig-line"></div>
+        <p><b>Engr. JAYSON L. VALEROSO</b><br>
+        Head, Maintenance and Engineering Division</p>
+      </div>
+
+      <div class="signature-block">
+        <p><b>Approved:</b></p>
+        <div class="sig-line"></div>
+        <p><b>Atty. RODOLFO V. CASTILLO, Jr. RCrim</b><br>
+        Officer-in-Charge<br>
+        Vice President for Administration</p>
+      </div>
+    </div>
+    </div>
+
+    <!-- Print Button -->
+    <div class="print-btn">
+      <button onclick="window.print()">Print</button>
+    </div>
   </div>
-</div>
   <script>
 document.querySelectorAll('.menu a').forEach(link => {
   if (
