@@ -1,4 +1,4 @@
-const calendarGrid = document.getElementById("calendarGrid");
+const calendarGrid = document.querySelector(".calendar-grid") || document.getElementById("calendarGrid");
 const monthYear = document.getElementById("monthYear");
 let currentDate = new Date();
 
@@ -20,7 +20,10 @@ async function getReservationsForDay(year, month, day) {
     }
 
     // Get current user ID from localStorage (users table based login)
-    const userId = localStorage.getItem('id');
+    const userId = localStorage.getItem('id') || 
+                   localStorage.getItem('user_id') || 
+                   localStorage.getItem('userId') || 
+                   localStorage.getItem('currentUserId');
 
     // Format the target date
     const targetDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
@@ -136,7 +139,7 @@ loadUserDetails();
 
 // Listen for storage changes to detect login/logout from other tabs
 window.addEventListener('storage', (event) => {
-  if (event.key === 'id') {
+  if (event.key === 'id' || event.key === 'user_id' || event.key === 'userId' || event.key === 'currentUserId') {
     console.log('User login state changed in another tab');
     loadUserDetails();
     // Refresh calendar to show user-specific reservations
@@ -145,6 +148,14 @@ window.addEventListener('storage', (event) => {
 });
 
 async function renderCalendar(date) {
+  console.log('calendarGrid element:', calendarGrid);
+  console.log('calendarGrid found:', !!calendarGrid);
+  
+  if (!calendarGrid) {
+    console.error('Calendar grid element not found!');
+    return;
+  }
+
   calendarGrid.innerHTML = "";
   const year = date.getFullYear();
   const month = date.getMonth();
@@ -152,64 +163,71 @@ async function renderCalendar(date) {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDayIndex = new Date(year, month, 1).getDay();
 
+  console.log('Calendar debug:', { year, month, monthName, daysInMonth, firstDayIndex });
+  
+  // Ensure the calendar grid has proper CSS
+  calendarGrid.style.display = 'grid';
+  calendarGrid.style.gridTemplateColumns = 'repeat(7, 1fr)';
+  calendarGrid.style.gap = '5px';
+
   monthYear.textContent = `${monthName} ${year}`;
 
+  // Add empty cells for days before the first day of the month
   for (let i = 0; i < firstDayIndex; i++) {
     const empty = document.createElement("div");
+    empty.classList.add("calendar-day", "empty");
     calendarGrid.appendChild(empty);
   }
 
+  // Add actual days of the month
   for (let d = 1; d <= daysInMonth; d++) {
     const day = document.createElement("div");
     day.classList.add("calendar-day");
 
     day.innerHTML = `
       <div class="day-number">${d}</div>
-      <div class="events"></div>
+      <div class="events">Loading...</div>
     `;
 
-    // Get reservations for this day from database
-    try {
-      const reservations = await getReservationsForDay(year, month, d);
-
-      if (reservations.length > 0) {
-        day.classList.add("booked");
-        // Show all reservations for this day (facility, event title, time)
-        day.querySelector('.events').innerHTML = reservations.map(r =>
-          `<div>
-            <strong>${r.facility || 'Unknown Facility'}</strong><br>
-            <span>${r.title_of_the_event || ''}</span><br>
-            <span>${formatTime12hr(r.time_start)} - ${formatTime12hr(r.time_end)}</span>
-          </div>`
-        ).join("<hr>");
-        day.title = "Reserved";
-        // Allow reserving even if there are existing reservations
-        day.addEventListener("click", () => {
-          const formattedDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-          showCustomConfirm("Do you want to reserve this date?", () => {
-            window.location.href = `VRF.html?date=${formattedDate}`;
-          });
-        });
-      } else {
-        day.addEventListener("click", () => {
-          const formattedDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-          showCustomConfirm("Are you sure you want to reserve this date?", () => {
-            window.location.href = `VRF.html?date=${formattedDate}`;
-          });
-        });
-      }
-    } catch (err) {
-      console.error('Error loading reservations for day', d, ':', err);
-      // Still allow clicking even if there's an error loading reservations
-      day.addEventListener("click", () => {
-        const formattedDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-        showCustomConfirm("Are you sure you want to reserve this date?", () => {
-          window.location.href = `VRF.html?date=${formattedDate}`;
-        });
+    // Add click event handler
+    const formattedDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    day.addEventListener("click", () => {
+      showCustomConfirm("Do you want to reserve this date?", () => {
+        window.location.href = `VRF.html?date=${formattedDate}`;
       });
-    }
+    });
 
+    // Append the day first to maintain order
     calendarGrid.appendChild(day);
+    
+    // Then asynchronously load reservations for this specific day
+    loadReservationsForDay(day, year, month, d);
+  }
+}
+
+// Separate function to load reservations for a specific day
+async function loadReservationsForDay(dayElement, year, month, day) {
+  try {
+    const reservations = await getReservationsForDay(year, month, day);
+    const eventsDiv = dayElement.querySelector('.events');
+    
+    if (reservations.length > 0) {
+      dayElement.classList.add("booked");
+      eventsDiv.innerHTML = reservations.map(r =>
+        `<div>
+          <strong>${r.facility || 'Unknown Facility'}</strong><br>
+          <span>${r.title_of_the_event || ''}</span><br>
+          <span>${formatTime12hr(r.time_start)} - ${formatTime12hr(r.time_end)}</span>
+        </div>`
+      ).join("<hr>");
+      dayElement.title = "Reserved";
+    } else {
+      eventsDiv.innerHTML = "";
+    }
+  } catch (err) {
+    console.error('Error loading reservations for day', day, ':', err);
+    const eventsDiv = dayElement.querySelector('.events');
+    eventsDiv.innerHTML = "";
   }
 }
 
