@@ -1,5 +1,5 @@
-const calendarGrid = document.querySelector(".calendar-grid") || document.getElementById("calendarGrid");
-const monthYear = document.getElementById("monthYear");
+let calendarGrid;
+let monthYear;
 let currentDate = new Date();
 
 function formatTime12hr(timeStr) {
@@ -148,11 +148,20 @@ window.addEventListener('storage', (event) => {
 });
 
 async function renderCalendar(date) {
+  // Initialize elements when needed to ensure DOM is ready
+  if (!calendarGrid) {
+    calendarGrid = document.querySelector(".calendar-grid") || document.getElementById("calendarGrid");
+  }
+  if (!monthYear) {
+    monthYear = document.getElementById("monthYear");
+  }
+  
   console.log('calendarGrid element:', calendarGrid);
+  console.log('monthYear element:', monthYear);
   console.log('calendarGrid found:', !!calendarGrid);
   
   if (!calendarGrid) {
-    console.error('Calendar grid element not found!');
+    console.error('Calendar grid element not found! Check your HTML for .calendar-grid or #calendarGrid');
     return;
   }
 
@@ -193,7 +202,7 @@ async function renderCalendar(date) {
     const formattedDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
     day.addEventListener("click", () => {
       showCustomConfirm("Do you want to reserve this date?", () => {
-        window.location.href = `VRF.html?date=${formattedDate}`;
+        window.location.href = `VRF.html?dateOfEvent=${formattedDate}`;
       });
     });
 

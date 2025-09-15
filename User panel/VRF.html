@@ -167,6 +167,20 @@ document.querySelectorAll('.menu a').forEach(link => {
       modal.style.display = 'none';
     };
 }
+
+// Auto-fill date from calendar selection
+window.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const dateOfEvent = urlParams.get('dateOfEvent');
+    
+    if (dateOfEvent) {
+        const dateInput = document.getElementById('dateOfEvent');
+        if (dateInput) {
+            dateInput.value = dateOfEvent;
+            console.log('Auto-filled date:', dateOfEvent);
+        }
+    }
+});
 </script>
 </body>
 </html>
