@@ -11,12 +11,54 @@ function formatTime12hr(timeStr) {
   return `${hour}:${minute} ${ampm}`;
 }
 
-function getReservationsForDay(year, month, day) {
-  let reservations = JSON.parse(localStorage.getItem('reservations') || "[]");
-  return reservations.filter(r => {
-    const d = new Date(r.dateOfEvent);
-    return d.getFullYear() === year && d.getMonth() === month && d.getDate() === day;
-  });
+async function getReservationsForDay(year, month, day) {
+  try {
+    const sb = getSupabase();
+    if (!sb) {
+      console.error('Supabase client not found');
+      return [];
+    }
+
+    // Get current user ID from localStorage (users table based login)
+    const userId = localStorage.getItem('id');
+
+    // Format the target date
+    const targetDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+
+    if (!userId) {
+      // No user logged in, show all reservations
+      // Fetch all reservations for the date if no user is logged in
+      const { data: reservations, error } = await sb
+        .from('reservations')
+        .select('facility, time_start, time_end, title_of_the_event')
+        .eq('date', targetDate);
+
+      if (error) {
+        console.error('Error fetching reservations:', error);
+        return [];
+      }
+
+      return reservations || [];
+    }
+
+    // Fetch reservations from database for the specific user and date
+    // Note: id in reservations table is FK to users.id, request_id is the PK
+    const { data: reservations, error } = await sb
+      .from('reservations')
+      .select('facility, time_start, time_end, title_of_the_event')
+      .eq('id', userId)
+      .eq('date', targetDate);
+
+    if (error) {
+      console.error('Error fetching reservations:', error);
+      return [];
+    }
+
+    return reservations || [];
+  } catch (err) {
+    console.error('getReservationsForDay error:', err);
+    return [];
+  }
 }
 
 // helper to locate the initialized Supabase client
@@ -37,34 +79,27 @@ async function loadUserDetails() {
     const sb = getSupabase();
     if (!sb) {
       console.error('Supabase client not found. Ensure supabaseClient.js is loaded before this script.');
-      if (document.getElementById('UserName')) document.getElementById('UserName').textContent = 'Unknown User';
-      if (document.getElementById('UserRole')) document.getElementById('UserRole').textContent = 'Unknown Role';
+      if (document.getElementById('UserName')) document.getElementById('UserName').textContent = '';
+      if (document.getElementById('UserRole')) document.getElementById('UserRole').textContent = '';
       return;
     }
 
-    // Prefer session-based user id; safe-guarded to avoid AuthSessionMissingError
-    let userId = null;
-    try {
-      const { data: { session } } = await sb.auth.getSession();
-      if (session?.user?.id) {
-        userId = session.user.id;
-      } else {
-        // No active session, do not call getUser() (it will throw AuthSessionMissingError)
-        console.log('No active session from getSession(), will try localStorage fallback');
-      }
-    } catch (sessionErr) {
-      // getSession rarely throws, but if it does, fallback to localStorage
-      console.warn('getSession error (falling back to localStorage):', sessionErr);
-    }
-
-    // If we didn't obtain userId from session, try stored user_id
-    if (!userId) userId = localStorage.getItem('user_id');
+    // Get user ID from localStorage (users table based login)
+    // Check multiple possible keys that might be used by your login system
+    let userId = localStorage.getItem('id') || 
+                 localStorage.getItem('user_id') || 
+                 localStorage.getItem('userId') || 
+                 localStorage.getItem('currentUserId');
+    
+    console.log('All localStorage keys:', Object.keys(localStorage));
+    console.log('localStorage contents:', {...localStorage});
+    console.log('Retrieved userId from localStorage:', userId);
 
     if (!userId) {
-      if (document.getElementById('UserName')) document.getElementById('UserName').textContent = 'Unknown User';
-      if (document.getElementById('UserRole')) document.getElementById('UserRole').textContent = 'Unknown Role';
+      console.log('No user ID found in localStorage. User not logged in.');
+      if (document.getElementById('UserName')) document.getElementById('UserName').textContent = '';
+      if (document.getElementById('UserRole')) document.getElementById('UserRole').textContent = '';
       if (document.getElementById('welcomeUserName')) document.getElementById('welcomeUserName').textContent = '';
-      console.warn('No user_id available from session or localStorage');
       return;
     }
 
@@ -77,18 +112,20 @@ async function loadUserDetails() {
 
     if (error) {
       console.error('Supabase error fetching user:', error);
-      if (document.getElementById('UserName')) document.getElementById('UserName').textContent = 'Unknown User';
-      if (document.getElementById('UserRole')) document.getElementById('UserRole').textContent = 'Unknown Role';
+      if (document.getElementById('UserName')) document.getElementById('UserName').textContent = '';
+      if (document.getElementById('UserRole')) document.getElementById('UserRole').textContent = '';
       return;
     }
 
-    const userName = `${data.first_name || ''} ${data.last_name || ''}`.trim() || 'Unknown User';
+    const userName = `${data.first_name || ''} ${data.last_name || ''}`.trim();
     const firstName = data.first_name || '';
+    console.log('User data fetched successfully:', { userName, role: data.role_name, firstName });
+    
     if (document.getElementById('UserName')) document.getElementById('UserName').textContent = userName;
-    if (document.getElementById('UserRole')) document.getElementById('UserRole').textContent = data.role_name || 'Unknown Role';
+    if (document.getElementById('UserRole')) document.getElementById('UserRole').textContent = data.role_name || '';
     if (document.getElementById('welcomeUserName')) document.getElementById('welcomeUserName').textContent = firstName;
     // ensure localStorage has current user id
-    localStorage.setItem('user_id', data.id);
+    localStorage.setItem('id', data.id);
   } catch (err) {
     console.error('loadUserDetails error:', err);
   }
@@ -97,19 +134,17 @@ async function loadUserDetails() {
 // call on load (always attempt to populate UI)
 loadUserDetails();
 
-// subscribe to auth changes to refresh UI when login state changes
-const sbClient = getSupabase();
-if (sbClient && sbClient.auth && sbClient.auth.onAuthStateChange) {
-  sbClient.auth.onAuthStateChange((event, session) => {
-    console.log('Auth event', event, session?.user?.id);
-    // on sign in/out, reload user details (session-aware)
+// Listen for storage changes to detect login/logout from other tabs
+window.addEventListener('storage', (event) => {
+  if (event.key === 'id') {
+    console.log('User login state changed in another tab');
     loadUserDetails();
-  });
-} else {
-  console.warn('Supabase auth.onAuthStateChange not available - skipping subscription.');
-}
+    // Refresh calendar to show user-specific reservations
+    renderCalendar(currentDate);
+  }
+});
 
-function renderCalendar(date) {
+async function renderCalendar(date) {
   calendarGrid.innerHTML = "";
   const year = date.getFullYear();
   const month = date.getMonth();
@@ -128,33 +163,44 @@ function renderCalendar(date) {
     const day = document.createElement("div");
     day.classList.add("calendar-day");
 
-    // Get reservations for this day
-    const reservations = getReservationsForDay(year, month, d);
-
     day.innerHTML = `
       <div class="day-number">${d}</div>
       <div class="events"></div>
     `;
 
-    if (reservations.length > 0) {
-      day.classList.add("booked");
-      // Show all reservations for this day (facility, event title, time)
-      day.querySelector('.events').innerHTML = reservations.map(r =>
-        `<div>
-          <strong>${r.facility}</strong><br>
-          <span>${r.eventTitle ? r.eventTitle : ''}</span><br>
-          <span>${formatTime12hr(r.timeStart)} - ${formatTime12hr(r.timeEnd)}</span>
-        </div>`
-      ).join("<hr>");
-      day.title = "Reserved";
-      // Allow reserving even if there are existing reservations
-      day.addEventListener("click", () => {
-        const formattedDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-        showCustomConfirm("Do you want to reserve this date?", () => {
-          window.location.href = `VRF.html?date=${formattedDate}`;
+    // Get reservations for this day from database
+    try {
+      const reservations = await getReservationsForDay(year, month, d);
+
+      if (reservations.length > 0) {
+        day.classList.add("booked");
+        // Show all reservations for this day (facility, event title, time)
+        day.querySelector('.events').innerHTML = reservations.map(r =>
+          `<div>
+            <strong>${r.facility || 'Unknown Facility'}</strong><br>
+            <span>${r.title_of_the_event || ''}</span><br>
+            <span>${formatTime12hr(r.time_start)} - ${formatTime12hr(r.time_end)}</span>
+          </div>`
+        ).join("<hr>");
+        day.title = "Reserved";
+        // Allow reserving even if there are existing reservations
+        day.addEventListener("click", () => {
+          const formattedDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+          showCustomConfirm("Do you want to reserve this date?", () => {
+            window.location.href = `VRF.html?date=${formattedDate}`;
+          });
         });
-      });
-    } else {
+      } else {
+        day.addEventListener("click", () => {
+          const formattedDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+          showCustomConfirm("Are you sure you want to reserve this date?", () => {
+            window.location.href = `VRF.html?date=${formattedDate}`;
+          });
+        });
+      }
+    } catch (err) {
+      console.error('Error loading reservations for day', d, ':', err);
+      // Still allow clicking even if there's an error loading reservations
       day.addEventListener("click", () => {
         const formattedDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
         showCustomConfirm("Are you sure you want to reserve this date?", () => {
@@ -167,17 +213,20 @@ function renderCalendar(date) {
   }
 }
 
-function prevMonth() {
+async function prevMonth() {
   currentDate.setMonth(currentDate.getMonth() - 1);
-  renderCalendar(currentDate);
+  await renderCalendar(currentDate);
 }
 
-function nextMonth() {
+async function nextMonth() {
   currentDate.setMonth(currentDate.getMonth() + 1);
-  renderCalendar(currentDate);
+  await renderCalendar(currentDate);
 }
 
-renderCalendar(currentDate);
+// Initialize calendar when page loads
+(async function initCalendar() {
+  await renderCalendar(currentDate);
+})();
 
 // Custom Alert Modal
 function showCustomAlert(message) {
