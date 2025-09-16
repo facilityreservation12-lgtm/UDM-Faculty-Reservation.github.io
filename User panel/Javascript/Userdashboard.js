@@ -133,6 +133,15 @@ async function loadUserDetails() {
     console.error('Supabase client not initialized');
     return;
   }
+  
+  document.querySelectorAll('.menu a').forEach(link => {
+  if (
+    link.href &&
+    window.location.pathname.endsWith(link.getAttribute('href'))
+  ) {
+    link.classList.add('active');
+  }
+});
 
   const { data, error } = await supabase
     .from('users')
