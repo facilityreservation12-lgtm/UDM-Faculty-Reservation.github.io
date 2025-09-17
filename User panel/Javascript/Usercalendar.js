@@ -188,12 +188,12 @@ async function renderCalendar(date) {
     calendarGrid.appendChild(empty);
   }
 
-<<<<<<< HEAD
+   HEAD
    for (let d = 1; d <= daysInMonth; d++) {
-=======
+
   // Add actual days of the month
   for (let d = 1; d <= daysInMonth; d++) {
->>>>>>> refs/remotes/origin/main
+     refs/remotes/origin/main
     const day = document.createElement("div");
     day.classList.add("calendar-day");
   
@@ -201,7 +201,7 @@ async function renderCalendar(date) {
       <div class="day-number">${d}</div>
       <div class="events">Loading...</div>
     `;
-<<<<<<< HEAD
+      HEAD
   
     // Calculate the date for this day
     const thisDate = new Date(year, month, d);
@@ -255,7 +255,7 @@ async function renderCalendar(date) {
       }
     }
   
-=======
+
 
     // Add click event handler
     const formattedDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
@@ -266,7 +266,7 @@ async function renderCalendar(date) {
     });
 
     // Append the day first to maintain order
->>>>>>> refs/remotes/origin/main
+ refs/remotes/origin/main
     calendarGrid.appendChild(day);
     
     // Then asynchronously load reservations for this specific day
@@ -347,4 +347,5 @@ function showCustomConfirm(message, onConfirm) {
   };
 
   confirmBox.style.display = "flex";
+}
 }
