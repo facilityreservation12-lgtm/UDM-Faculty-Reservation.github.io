@@ -148,8 +148,12 @@ if (overlay) {
 
 async function loadUserDetails() {
   try {
-    const userId = localStorage.getItem('id');
-    console.log('userId from localStorage:', userId); // Debug
+    const userId = localStorage.getItem('user_id') || localStorage.getItem('id');
+    console.log('=== USER DETAILS DEBUG ===');
+    console.log('userId from localStorage:', userId);
+    console.log('All localStorage keys:', Object.keys(localStorage));
+    console.log('All localStorage data:', {...localStorage});
+    
     if (!userId) {
       if (document.getElementById('UserName')) document.getElementById('UserName').textContent = '';
       if (document.getElementById('UserRole')) document.getElementById('UserRole').textContent = '';
@@ -211,12 +215,9 @@ window.onload = async function() {
   console.log('Page loaded, starting initialization...');
   console.log('Current localStorage contents:', {...localStorage});
   
-  // Temporary auto-login for testing (remove this in production)
-  if (!localStorage.getItem('id')) {
-    console.log('No user logged in, setting test user...');
-    localStorage.setItem('id', 'O001'); // Replace with actual user ID from your database
-  }
-  
+  // Check if user is actually logged in
+  const userId = localStorage.getItem('user_id') || localStorage.getItem('id');
+  console.log('User ID found:', userId);
   await loadUserDetails(); // Load user details first
   await loadReservations(); // Then load reservations
   updateDateTime();
@@ -294,5 +295,40 @@ async function fetchAndStoreUserIdByEmail(userEmail) {
     localStorage.setItem('id', data.id);
   } else {
     console.warn('No user found for email:', userEmail);
+  }
+}
+
+// Function to sign out user
+function signOutUser() {
+  // Show confirmation dialog
+  if (confirm('Are you sure you want to sign out?')) {
+    console.log('User signing out...');
+    
+    // Clear all user session data from localStorage
+    localStorage.removeItem('id');
+    localStorage.removeItem('user_id');
+    localStorage.removeItem('user_name');
+    localStorage.removeItem('user_role');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('reservations');
+    
+    // Clear any other session data
+    sessionStorage.clear();
+    
+    // Sign out from Supabase if available
+    const sb = getSupabase();
+    if (sb && sb.auth) {
+      sb.auth.signOut().catch(error => {
+        console.warn('Error signing out from Supabase:', error);
+      });
+    }
+    
+    console.log('User signed out successfully');
+    
+    // Redirect to landing page
+    window.location.href = '../landingPage.html';
   }
 }
