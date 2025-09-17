@@ -159,38 +159,58 @@ async function renderCalendar(date) {
     calendarGrid.appendChild(empty);
   }
 
-  for (let d = 1; d <= daysInMonth; d++) {
+   for (let d = 1; d <= daysInMonth; d++) {
     const day = document.createElement("div");
     day.classList.add("calendar-day");
-
+  
     day.innerHTML = `
       <div class="day-number">${d}</div>
       <div class="events"></div>
     `;
-
-    // Get reservations for this day from database
-    try {
-      const reservations = await getReservationsForDay(year, month, d);
-
-      if (reservations.length > 0) {
-        day.classList.add("booked");
-        // Show all reservations for this day (facility, event title, time)
-        day.querySelector('.events').innerHTML = reservations.map(r =>
-          `<div>
-            <strong>${r.facility || 'Unknown Facility'}</strong><br>
-            <span>${r.title_of_the_event || ''}</span><br>
-            <span>${formatTime12hr(r.time_start)} - ${formatTime12hr(r.time_end)}</span>
-          </div>`
-        ).join("<hr>");
-        day.title = "Reserved";
-        // Allow reserving even if there are existing reservations
-        day.addEventListener("click", () => {
-          const formattedDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-          showCustomConfirm("Do you want to reserve this date?", () => {
-            window.location.href = `VRF.html?date=${formattedDate}`;
+  
+    // Calculate the date for this day
+    const thisDate = new Date(year, month, d);
+    const today = new Date();
+    today.setHours(0,0,0,0); // Ignore time for comparison
+  
+    // If the date has already passed, disable reservation
+    if (thisDate < today) {
+      day.classList.add("disabled-day");
+      day.title = "Cannot reserve past dates";
+      day.style.opacity = "0.5";
+      day.style.cursor = "not-allowed";
+      // No click event
+    } else {
+      // Get reservations for this day from database
+      try {
+        const reservations = await getReservationsForDay(year, month, d);
+  
+        if (reservations.length > 0) {
+          day.classList.add("booked");
+          day.querySelector('.events').innerHTML = reservations.map(r =>
+            `<div>
+              <strong>${r.facility || 'Unknown Facility'}</strong><br>
+              <span>${r.title_of_the_event || ''}</span><br>
+              <span>${formatTime12hr(r.time_start)} - ${formatTime12hr(r.time_end)}</span>
+            </div>`
+          ).join("<hr>");
+          day.title = "Reserved";
+          day.addEventListener("click", () => {
+            const formattedDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+            showCustomConfirm("Do you want to reserve this date?", () => {
+              window.location.href = `VRF.html?date=${formattedDate}`;
+            });
           });
-        });
-      } else {
+        } else {
+          day.addEventListener("click", () => {
+            const formattedDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+            showCustomConfirm("Are you sure you want to reserve this date?", () => {
+              window.location.href = `VRF.html?date=${formattedDate}`;
+            });
+          });
+        }
+      } catch (err) {
+        console.error('Error loading reservations for day', d, ':', err);
         day.addEventListener("click", () => {
           const formattedDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
           showCustomConfirm("Are you sure you want to reserve this date?", () => {
@@ -198,17 +218,8 @@ async function renderCalendar(date) {
           });
         });
       }
-    } catch (err) {
-      console.error('Error loading reservations for day', d, ':', err);
-      // Still allow clicking even if there's an error loading reservations
-      day.addEventListener("click", () => {
-        const formattedDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-        showCustomConfirm("Are you sure you want to reserve this date?", () => {
-          window.location.href = `VRF.html?date=${formattedDate}`;
-        });
-      });
     }
-
+  
     calendarGrid.appendChild(day);
   }
 }

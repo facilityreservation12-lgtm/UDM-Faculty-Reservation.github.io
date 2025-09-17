@@ -381,6 +381,48 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 		const reservationForm = document.getElementById('reservationForm');
 		if (!reservationForm) return;
+				// Signature drag & drop + preview
+		const dropArea = document.getElementById('signatureDropArea');
+		const fileInput = document.getElementById('signature');
+		const previewImg = document.getElementById('signaturePreview');
+		
+		if (dropArea && fileInput && previewImg) {
+		  dropArea.addEventListener('click', () => fileInput.click());
+		
+		  dropArea.addEventListener('dragover', (e) => {
+			e.preventDefault();
+			dropArea.classList.add('dragover');
+		  });
+		
+		  dropArea.addEventListener('dragleave', () => {
+			dropArea.classList.remove('dragover');
+		  });
+		
+		  dropArea.addEventListener('drop', (e) => {
+			e.preventDefault();
+			dropArea.classList.remove('dragover');
+			if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+			  fileInput.files = e.dataTransfer.files;
+			  showSignaturePreview(fileInput.files[0]);
+			}
+		  });
+		
+		  fileInput.addEventListener('change', () => {
+			if (fileInput.files && fileInput.files[0]) {
+			  showSignaturePreview(fileInput.files[0]);
+			}
+		  });
+		
+		  function showSignaturePreview(file) {
+			if (!file.type.startsWith('image/')) return;
+			const reader = new FileReader();
+			reader.onload = function(e) {
+			  previewImg.src = e.target.result;
+			  previewImg.style.display = 'block';
+			};
+			reader.readAsDataURL(file);
+		  }
+		}
 
 		const dateFiledInput = reservationForm.querySelector('input[name="dateFiled"], input#dateFiled, input[id="dateFiled"]');
 		const dateReceivedInput = reservationForm.querySelector('input[name="dateReceived"], input#dateReceived, input[id="dateReceived"]');
@@ -435,6 +477,13 @@ document.addEventListener('DOMContentLoaded', async function() {
 			if (!dateOfEventVal) {
 				alert("Please choose a valid Date of Event.");
 				return;
+			}
+			
+			// Prevent reservation for past dates
+			const todayYMD = toYMD(new Date());
+			if (dateOfEventVal < todayYMD) {
+			  alert("You cannot reserve a date that has already passed.");
+			  return;
 			}
 
 			// Time validation

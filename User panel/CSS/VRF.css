@@ -8,22 +8,27 @@
 
 body {
   background-color: #f4f4f4;
-  height: 100vh;
+  height: 110vh;
   display: flex;
   flex-direction: row;
 }
 
 .sidebar {
-  width: 15%;
-  background-color: #315C3A;
+  width: 210px;
+  min-width: 180px;
+  max-width: 240px;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background: #315C3A;
   color: white;
-  padding: 30px 20px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  position: sticky;
-  top: 0;
+  padding: 30px 20px;
   z-index: 2;
+  box-sizing: border-box;
 }
 
 .user-photo {
@@ -91,26 +96,11 @@ body {
   transition: left 0.4s ease-in-out;
   padding: 20px;
   overflow-y: auto;
+  z-index: 1;
 }
 
 .notification-panel.active {
-  left: 13%;
-}
-
-/* Optional overlay when panel is open */
-.notification-overlay {
-  position: fixed;
-  top: 0;
-  left: 40%;
-  width: 100vw;
-  height: 100vh;
-  z-index: 1;
-  display: none;
-}
-
-/* Show overlay */
-.notification-overlay.active {
-  display: block;
+  left: 15%;
 }
 
 .notification-item {
@@ -127,13 +117,15 @@ body {
 
 /* === MAIN CONTENT AREA === */
 main {
+  margin-left: 200px;   /* <-- Push main content to the right of sidebar */
   padding: 2rem;
   background-color: #f5f5f5;
   min-height: 100vh;
+  width: calc(100vw - 210px);
   display: flex;
-  justify-content: center;
-  width: 100%;
-  padding: 30px;
+  flex-direction: column;
+  align-items: stretch;
+  box-sizing: border-box;
 }
 
 
@@ -189,23 +181,37 @@ label {
   font-size: 14px;
 }
 
-/* === DROPDOWNS === */
-
+/* --- Facility Dropdown Polish --- */
 .dropdown {
   position: relative;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
   width: 100%;
+  background: #f8f8f8;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(35, 71, 52, 0.07);
+  border: 1px solid #d9d9d9;
+  transition: box-shadow 0.2s;
 }
 
 .dropdown-btn {
   width: 100%;
-  padding: 10px;
-  background: #f2f2f2;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 1rem;
+  padding: 12px 18px;
+  background: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  color: #234734;
+  font-weight: 600;
   cursor: pointer;
   text-align: left;
+  box-shadow: 0 1px 4px rgba(35, 71, 52, 0.05);
+  transition: background 0.2s;
+}
+
+.dropdown-btn:hover,
+.dropdown-btn:focus {
+  background: #fffbe6;
+  outline: none;
 }
 
 .dropdown-content {
@@ -215,13 +221,19 @@ label {
   top: 110%;
   width: 100%;
   background: #fff;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  border: 1px solid #F7CF52;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(35, 71, 52, 0.10);
   z-index: 10;
   padding: 1rem;
   max-height: 260px;
   overflow-y: auto;
+  animation: fadeIn 0.2s;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px);}
+  to { opacity: 1; transform: translateY(0);}
 }
 
 .dropdown.active .dropdown-content {
@@ -231,8 +243,25 @@ label {
 .dropdown-content label {
   display: flex;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
   font-size: 1rem;
+  color: #234734;
+  cursor: pointer;
+  transition: background 0.2s;
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+
+.dropdown-content label:hover {
+  background: #f7cf52;
+  color: #234734;
+}
+
+.dropdown-content input[type="radio"],
+.dropdown-content input[type="checkbox"] {
+  accent-color: #234734;
+  margin-right: 10px;
+  transform: scale(1.2);
 }
 
 .extra-input {
@@ -242,6 +271,22 @@ label {
   padding: 6px;
   border-radius: 4px;
   border: 1px solid #ccc;
+  background: #f8f8f8;
+  font-size: 0.95rem;
+}
+
+/* --- Facility Details Section Polish --- */
+.facility-details {
+  background: #f8f8f8;
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  padding: 1rem;
+  color: #234734;
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+  min-height: 48px;
+  box-shadow: 0 2px 8px rgba(35, 71, 52, 0.05);
+  transition: background 0.2s;
 }
 
 /* === SIGNATURE SECTION === */
@@ -316,16 +361,74 @@ label {
   border-radius: 8px;
   box-shadow: 0 2px 16px rgba(0,0,0,0.15);
 }
+.drop-area {
+  border: 2px dashed #234734;
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+  cursor: pointer;
+  background: #f9f9f9;
+  transition: border-color 0.2s;
+}
+.drop-area.dragover {
+  border-color: #F7CF52;
+  background: #fffbe6;
+}
+#signaturePreview {
+  display: block;
+  margin: 0 auto;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  max-width: 180px;
+  max-height: 120px;
+}
+/* Modern dropdown styling for time selection */
+.time-inputs select {
+  appearance: none;
+  background: #fff;
+  border: 2px solid #234734;
+  border-radius: 6px;
+  padding: 0.5rem 2.5rem 0.5rem 1rem;
+  font-size: 1rem;
+  color: #234734;
+  font-weight: 500;
+  margin-right: 1rem;
+  transition: border-color 0.2s;
+  box-shadow: 0 2px 8px rgba(35, 71, 52, 0.07);
+  cursor: pointer;
+  outline: none;
+  position: relative;
+}
 
-/* --- MEDIA QUERIES FOR RESPONSIVENESS --- */
+.time-inputs select:focus {
+  border-color: #F7CF52;
+  background: #fffbe6;
+}
+
+.time-inputs {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* Add a custom arrow for dropdowns */
+.time-inputs select {
+  background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' fill='none' stroke='%23234734' stroke-width='2' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1.2em;
+}/* --- MEDIA QUERIES FOR RESPONSIVENESS --- */
 @media (max-width: 1440px){
-  .sidebar {
-    padding: 20px;
-    width: 15%;
+ .sidebar {
+    width: 160px;
+    padding: 20px 10px;
   }
 
   .main {
-    padding: 20px;
+    margin-left: 180px;
+    padding: 1rem;
+    width: calc(100vw - 160px);
   }
 
   .notification-panel {
@@ -342,17 +445,32 @@ label {
 }
 
 @media (max-width: 1204px){
-  body {
+ body {
     flex-direction: column;
   }
 
   .sidebar {
-    width: 100%;
+    position: static;
+    width: 100vw;
+    height: auto;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
+    justify-content: flex-start;
+    padding: 10px 5px;
+    min-width: 0;
+    max-width: none;
   }
-
+    .main {
+    margin-left: 0;
+    padding: 1rem;
+    min-height: 100vh;
+    width: 100vw;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
   .user-photo {
     flex-direction: row;
     margin-bottom: 0;
@@ -366,22 +484,15 @@ label {
   .menu a {
     margin-bottom: 0;
   }
-
-  .logout-btn {
-    margin-top: 0;
-  }
-
-  .notification-panel {
+   .notification-panel {
     left: -40%;
     width: 40%;
+    top: 0;
+    height: 100vh;
   }
   .notification-panel.active {
     left: 0;
-    top: 14%;
-  }
-
-  .main {
-    padding: 15px;
+    top: 0;
   }
 
   .welcome-box {
@@ -396,9 +507,45 @@ label {
   table {
     min-width: 600px;
   }
+  .logout-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background-color: #ffffff;
+    color: #315C3A;
+    padding: 8px 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 6px;
+    z-index: 10;
+  }
 }
 
 @media (max-width: 600px){
+   body {
+    flex-direction: column;
+  } 
+  .sidebar {
+    position: static;
+    width: 100vw;
+    height: auto;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 10px 5px;
+    min-width: 0;
+    max-width: none;
+  }
+  .main {
+    margin-left: 0;
+    padding: 0.5rem;
+    min-height: 100vh;
+    width: 100vw;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
   .header{
     height: 15%;
   }
@@ -407,12 +554,19 @@ label {
   }
 
   .notification-panel {
-    left: -50%;
-    width: 50%;
+    left: -100vw;
+    width: 100vw;
+    top: 0;
+    height: 60vh;
+    min-width: 0;
+    max-width: none;
+    padding: 10px;
   }
   .notification-panel.active {
     left: 0;
-    top: 13%;
+    top: 0;
+    width: 100vw;
+    height: 60vh;
   }
 
 .date{
@@ -424,15 +578,7 @@ font-size:18px;
   .welcome-content button {
     width: 100%;
   }
-
-  .sidebar {
-    align-items: flex-start;
-  }
-
-  .menu {
-    gap: 5px;
-  }
-
+  
   .facility-table th, td { 
     font-size: 12px;
     padding: 15px;

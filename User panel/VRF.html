@@ -109,7 +109,11 @@
         <div class="signatures">
           <div class="signContainer">
             Requested by:<br>
-            <input type="file" id="signature" accept="image/*,.pdf">
+            <div id="signatureDropArea" class="drop-area">
+                <p>Drag & drop your signature image here, or click to select</p>
+                <input type="file" id="signature" name="signature" accept="image/*" style="display:none;">
+                 <img id="signaturePreview" style="display:none;max-width:180px;max-height:120px;margin-top:10px;border-radius:8px;">
+                    </div>
             <br>
             <div class="Personel">(Name and E-signature)<br>End-User/Requester/Event organizer   </div>
           </div>
