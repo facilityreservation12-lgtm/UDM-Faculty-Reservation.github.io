@@ -108,6 +108,7 @@ body {
   text-decoration: none;
   color: #1e3e2e; 
   transition: all 0.2s ease-in-out;
+  margin-bottom: 10px;
 }
 
 .nav-link:hover {

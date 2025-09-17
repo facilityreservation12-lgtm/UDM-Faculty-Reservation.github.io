@@ -9,14 +9,29 @@ function formatTime12hr(timeStr) {
   return `${hour}:${minute} ${ampm}`;
 }
 
+// helper to locate the initialized Supabase client
+function getSupabase() {
+  // most of your files use window.supabaseClient, some include the UMD as `supabase`
+  // prefer the initialized client first
+  if (typeof window !== 'undefined') {
+    if (window.supabaseClient) return window.supabaseClient;
+    if (window.supabase) return window.supabase;
+  }
+  // fallback to global variable `supabase` if present
+  if (typeof supabase !== 'undefined') return supabase;
+  return null;
+}
+
 async function loadReservations() {
   const tbody = document.getElementById('facilityTableBody');
   tbody.innerHTML = "<tr><td colspan='8'>Loading...</td></tr>";
 
-  // Get user details first
-  const userId = localStorage.getItem('user_id');
+  // Get user details first (users table based login)
+  const userId = localStorage.getItem('id');
   let userName = 'Unknown User';
   let userRole = 'Unknown Role';
+
+  console.log('Retrieved userId from localStorage:', userId);
 
   if (!userId) {
     tbody.innerHTML = "<tr><td colspan='8'>Please log in to view your reservations</td></tr>";
@@ -24,8 +39,15 @@ async function loadReservations() {
   }
 
   try {
+    const sb = getSupabase();
+    if (!sb) {
+      console.error('Supabase client not found');
+      tbody.innerHTML = "<tr><td colspan='8'>Database connection error</td></tr>";
+      return;
+    }
+
     // Get user details - try with basic columns first
-    let { data: userData, error: userError } = await supabase
+    let { data: userData, error: userError } = await sb
       .from('users')
       .select('*')
       .eq('id', userId);
@@ -53,7 +75,7 @@ async function loadReservations() {
     }
 
     // Fetch user's reservations from Supabase
-    const { data: reservations, error: reservationError } = await supabase
+    const { data: reservations, error: reservationError } = await sb
       .from('reservations')
       .select('*')
       .eq('id', userId)
@@ -109,52 +131,79 @@ async function loadReservations() {
   }
 }
 
+// Notification panel functionality (commented out - add HTML elements if needed)
+/*
 const panel = document.getElementById("notificationPanel");
-  const overlay = document.getElementById("notificationOverlay");
+const overlay = document.getElementById("notificationOverlay");
 
-  function toggleNotificationPanel() {
-    panel.classList.toggle("active");
-    overlay.classList.toggle("active");
-  }
+function toggleNotificationPanel() {
+  if (panel) panel.classList.toggle("active");
+  if (overlay) overlay.classList.toggle("active");
+}
 
+if (overlay) {
   overlay.addEventListener("click", toggleNotificationPanel);
+}
+*/
 
 async function loadUserDetails() {
-  const userId = localStorage.getItem('user_id');
-  console.log('user_id from localStorage:', userId); // Debug
-  if (!userId) {
-    if (document.getElementById('UserName')) document.getElementById('UserName').textContent = 'Unknown User';
-    if (document.getElementById('UserRole')) document.getElementById('UserRole').textContent = 'Unknown Role';
-    console.warn('No user_id found in localStorage');
-    return;
-  }
+  try {
+    const userId = localStorage.getItem('user_id') || localStorage.getItem('id');
+    console.log('=== USER DETAILS DEBUG ===');
+    console.log('userId from localStorage:', userId);
+    console.log('All localStorage keys:', Object.keys(localStorage));
+    console.log('All localStorage data:', {...localStorage});
+    
+    if (!userId) {
+      if (document.getElementById('UserName')) document.getElementById('UserName').textContent = '';
+      if (document.getElementById('UserRole')) document.getElementById('UserRole').textContent = '';
+      console.warn('No user ID found in localStorage - user not logged in');
+      return;
+    }
 
-  if (typeof supabase === 'undefined') {
-    console.error('Supabase client not initialized');
-    return;
-  }
+    const sb = getSupabase();
+    if (!sb) {
+      console.error('Supabase client not initialized');
+      return;
+    }
+    
+    document.querySelectorAll('.menu a').forEach(link => {
+      if (
+        link.href &&
+        window.location.pathname.endsWith(link.getAttribute('href'))
+      ) {
+        link.classList.add('active');
+      }
+    });
 
-  const { data, error } = await supabase
-    .from('users')
-    .select('id, first_name, last_name, role_name')
-    .eq('id', userId)
-    .single();
+    const { data, error } = await sb
+      .from('users')
+      .select('id, first_name, last_name, role_name')
+      .eq('id', userId)
+      .single();
 
-  if (error) {
-    console.error('Supabase error:', error);
-  }
-  console.log('Supabase user fetch result:', data); // Debug
-  if (data) {
-    const userName = `${data.first_name} ${data.last_name}`.trim() || 'Unknown User';
-    const firstName = data.first_name || 'Unknown';
-    if (document.getElementById('UserName')) document.getElementById('UserName').textContent = userName;
-    if (document.getElementById('UserRole')) document.getElementById('UserRole').textContent = data.role_name || 'Unknown Role';
-    if (document.getElementById('welcomeUserName')) document.getElementById('welcomeUserName').textContent = firstName;
-    console.log('User data:', data);
-  } else {
-    if (document.getElementById('UserName')) document.getElementById('UserName').textContent = 'Unknown User';
-    if (document.getElementById('UserRole')) document.getElementById('UserRole').textContent = 'Unknown Role';
-    console.warn('No user data found for id:', userId);
+    if (error) {
+      console.error('Supabase error:', error);
+      return;
+    }
+    
+    console.log('Supabase user fetch result:', data); // Debug
+    if (data) {
+      const userName = `${data.first_name} ${data.last_name}`.trim();
+      const firstName = data.first_name || '';
+      if (document.getElementById('UserName')) document.getElementById('UserName').textContent = userName;
+      if (document.getElementById('UserRole')) document.getElementById('UserRole').textContent = data.role_name || '';
+      if (document.getElementById('welcomeUserName')) document.getElementById('welcomeUserName').textContent = firstName;
+      console.log('User data:', data);
+      // Ensure localStorage has current user id
+      localStorage.setItem('id', data.id);
+    } else {
+      if (document.getElementById('UserName')) document.getElementById('UserName').textContent = '';
+      if (document.getElementById('UserRole')) document.getElementById('UserRole').textContent = '';
+      console.warn('No user data found for id:', userId);
+    }
+  } catch (err) {
+    console.error('loadUserDetails error:', err);
   }
 }
 
@@ -163,8 +212,16 @@ if (document.getElementById('UserName') && document.getElementById('UserRole')) 
 }
 
 window.onload = async function() {
-  await loadReservations();
+  console.log('Page loaded, starting initialization...');
+  console.log('Current localStorage contents:', {...localStorage});
+  
+  // Check if user is actually logged in
+  const userId = localStorage.getItem('user_id') || localStorage.getItem('id');
+  console.log('User ID found:', userId);
+  await loadUserDetails(); // Load user details first
+  await loadReservations(); // Then load reservations
   updateDateTime();
+  console.log('Dashboard initialization complete');
 };
 
 async function cancelReservation(requestId) {
@@ -173,8 +230,14 @@ async function cancelReservation(requestId) {
   }
 
   try {
+    const sb = getSupabase();
+    if (!sb) {
+      alert('Database connection error');
+      return;
+    }
+
     // Delete reservation from Supabase
-    const { error } = await supabase
+    const { error } = await sb
       .from('reservations')
       .delete()
       .eq('request_id', requestId);
@@ -201,19 +264,24 @@ function updateDateTime() {
   const timeElem = document.getElementById('currentTime');
   const now = new Date();
 
-  const dateOptions = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
-  dateElem.textContent = now.toLocaleDateString('en-US', dateOptions);
-
-  const timeOptions = { hour: '2-digit', minute: '2-digit', hour12: true };
-  timeElem.textContent = now.toLocaleTimeString('en-US', timeOptions);
+  if (dateElem) {
+    const dateOptions = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
+    dateElem.textContent = now.toLocaleDateString('en-US', dateOptions);
+  }
+  
+  if (timeElem) {
+    const timeOptions = { hour: '2-digit', minute: '2-digit', hour12: true };
+    timeElem.textContent = now.toLocaleTimeString('en-US', timeOptions);
+  }
 }
 
 setInterval(updateDateTime, 1000);
 
 // Call this after successful login, passing the user's email or username
 async function fetchAndStoreUserIdByEmail(userEmail) {
-  if (typeof supabase === 'undefined') return;
-  const { data, error } = await supabase
+  const sb = getSupabase();
+  if (!sb) return;
+  const { data, error } = await sb
     .from('users')
     .select('id')
     .eq('email', userEmail)
@@ -224,8 +292,43 @@ async function fetchAndStoreUserIdByEmail(userEmail) {
     return;
   }
   if (data && data.id) {
-    localStorage.setItem('user_id', data.id);
+    localStorage.setItem('id', data.id);
   } else {
     console.warn('No user found for email:', userEmail);
+  }
+}
+
+// Function to sign out user
+function signOutUser() {
+  // Show confirmation dialog
+  if (confirm('Are you sure you want to sign out?')) {
+    console.log('User signing out...');
+    
+    // Clear all user session data from localStorage
+    localStorage.removeItem('id');
+    localStorage.removeItem('user_id');
+    localStorage.removeItem('user_name');
+    localStorage.removeItem('user_role');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('reservations');
+    
+    // Clear any other session data
+    sessionStorage.clear();
+    
+    // Sign out from Supabase if available
+    const sb = getSupabase();
+    if (sb && sb.auth) {
+      sb.auth.signOut().catch(error => {
+        console.warn('Error signing out from Supabase:', error);
+      });
+    }
+    
+    console.log('User signed out successfully');
+    
+    // Redirect to landing page
+    window.location.href = '../landingPage.html';
   }
 }

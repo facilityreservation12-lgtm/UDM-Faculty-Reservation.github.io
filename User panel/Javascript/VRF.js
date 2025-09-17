@@ -270,6 +270,55 @@ async function deleteFileFromIDB(key) {
 	});
 }
 
+document.querySelectorAll('.menu a').forEach(link => {
+  if (
+    link.href &&
+    window.location.pathname.endsWith(link.getAttribute('href'))
+  ) {
+    link.classList.add('active');
+  }
+});
+
+  const panel = document.getElementById("notificationPanel");
+  const overlay = document.getElementById("notificationOverlay");
+
+  function toggleNotificationPanel() {
+    panel.classList.toggle("active");
+    overlay.classList.toggle("active");
+  }
+
+  overlay.addEventListener("click", toggleNotificationPanel);
+
+  function showConflictModal(messageHtml) {
+  const modal = document.getElementById('conflictModal');
+  const body = document.getElementById('conflictModalBody');
+  body.innerHTML = messageHtml;
+  modal.style.display = 'flex';
+
+  document.getElementById('conflictModalOkBtn').onclick =
+    document.getElementById('closeConflictModalBtn').onclick = function() {
+      modal.style.display = 'none';
+    };
+}
+
+// Auto-fill date from calendar selection
+window.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const dateOfEvent = urlParams.get('dateOfEvent');
+    
+    if (dateOfEvent) {
+        const dateInput = document.getElementById('dateOfEvent');
+        if (dateInput) {
+            dateInput.value = dateOfEvent;
+            console.log('Auto-filled date from calendar:', dateOfEvent);
+        } else {
+            console.error('dateOfEvent input field not found');
+        }
+    } else {
+        console.log('No dateOfEvent parameter in URL');
+    }
+});
+
 // Retry uploads for reservations saved locally with base64 files
 async function retryLocalUploads(sb) {
 	if (!sb) return;
