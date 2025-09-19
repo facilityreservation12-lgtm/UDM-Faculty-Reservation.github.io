@@ -188,85 +188,33 @@ async function renderCalendar(date) {
     calendarGrid.appendChild(empty);
   }
 
-   HEAD
-   for (let d = 1; d <= daysInMonth; d++) {
-
   // Add actual days of the month
   for (let d = 1; d <= daysInMonth; d++) {
-     refs/remotes/origin/main
     const day = document.createElement("div");
     day.classList.add("calendar-day");
-  
+
     day.innerHTML = `
       <div class="day-number">${d}</div>
       <div class="events">Loading...</div>
     `;
-      HEAD
-  
-    // Calculate the date for this day
-    const thisDate = new Date(year, month, d);
-    const today = new Date();
-    today.setHours(0,0,0,0); // Ignore time for comparison
-  
-    // If the date has already passed, disable reservation
-    if (thisDate < today) {
-      day.classList.add("disabled-day");
-      day.title = "Cannot reserve past dates";
-      day.style.opacity = "0.5";
-      day.style.cursor = "not-allowed";
-      // No click event
-    } else {
-      // Get reservations for this day from database
-      try {
-        const reservations = await getReservationsForDay(year, month, d);
-  
-        if (reservations.length > 0) {
-          day.classList.add("booked");
-          day.querySelector('.events').innerHTML = reservations.map(r =>
-            `<div>
-              <strong>${r.facility || 'Unknown Facility'}</strong><br>
-              <span>${r.title_of_the_event || ''}</span><br>
-              <span>${formatTime12hr(r.time_start)} - ${formatTime12hr(r.time_end)}</span>
-            </div>`
-          ).join("<hr>");
-          day.title = "Reserved";
-          day.addEventListener("click", () => {
-            const formattedDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-            showCustomConfirm("Do you want to reserve this date?", () => {
-              window.location.href = `VRF.html?date=${formattedDate}`;
-            });
-          });
-        } else {
-          day.addEventListener("click", () => {
-            const formattedDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-            showCustomConfirm("Are you sure you want to reserve this date?", () => {
-              window.location.href = `VRF.html?date=${formattedDate}`;
-            });
-          });
-        }
-      } catch (err) {
-        console.error('Error loading reservations for day', d, ':', err);
-        day.addEventListener("click", () => {
-          const formattedDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-          showCustomConfirm("Are you sure you want to reserve this date?", () => {
-            window.location.href = `VRF.html?date=${formattedDate}`;
-          });
-        });
-      }
-    }
-  
-
 
     // Add click event handler
     const formattedDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-    day.addEventListener("click", () => {
-      showCustomConfirm("Do you want to reserve this date?", () => {
-        window.location.href = `VRF.html?dateOfEvent=${formattedDate}`;
-      });
+    day.addEventListener("click", async () => {
+      // Check if it's a past date
+      const clickedDate = new Date(year, month, d);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      if (clickedDate < today) {
+        showCustomAlert("You cannot reserve a date that has already passed.");
+        return;
+      }
+      
+      await showAvailableSlots(year, month, d, formattedDate);
     });
 
     // Append the day first to maintain order
- refs/remotes/origin/main
     calendarGrid.appendChild(day);
     
     // Then asynchronously load reservations for this specific day
@@ -327,6 +275,111 @@ function closeAlert() {
   document.getElementById("customAlert").style.display = "none";
 }
 
+// Show available time slots for a specific date
+async function showAvailableSlots(year, month, day, formattedDate) {
+  try {
+    const sb = getSupabase();
+    if (!sb) {
+      showCustomAlert("Database connection error");
+      return;
+    }
+
+    // Get all reservations for this date (from all users)
+    const { data: reservations, error } = await sb
+      .from('reservations')
+      .select('time_start, time_end')
+      .eq('date', formattedDate)
+      .order('time_start', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching reservations:', error);
+      showCustomAlert("Error fetching reservations");
+      return;
+    }
+
+    // Calculate available slots
+    const availableSlots = calculateAvailableSlots(reservations || []);
+    
+    if (availableSlots.length === 0) {
+      showCustomAlert("No available time slots for this date.");
+      return;
+    }
+
+    // Format available slots for display
+    const slotsText = availableSlots.map(slot => 
+      `${formatTime12hr(slot.start)} - ${formatTime12hr(slot.end)}`
+    ).join('\n');
+
+    const message = `Available slots for this date:\n\n${slotsText}`;
+    
+    showCustomConfirm(message, () => {
+      // Redirect to VRF page with the selected date
+      window.location.href = `VRF.html?dateOfEvent=${formattedDate}`;
+    });
+
+  } catch (error) {
+    console.error('Error showing available slots:', error);
+    showCustomAlert("Error calculating available slots");
+  }
+}
+
+// Calculate available time slots based on existing reservations
+function calculateAvailableSlots(reservations) {
+  // Define operating hours (7 AM to 7 PM)
+  const OPERATING_START = "07:00";
+  const OPERATING_END = "19:00";
+  
+  // Convert time string to minutes since midnight for easier calculation
+  function timeToMinutes(timeStr) {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return hours * 60 + minutes;
+  }
+  
+  // Convert minutes since midnight back to time string
+  function minutesToTime(minutes) {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+  }
+  
+  const operatingStartMinutes = timeToMinutes(OPERATING_START);
+  const operatingEndMinutes = timeToMinutes(OPERATING_END);
+  
+  // Convert reservations to minutes and sort by start time
+  const reservedSlots = reservations
+    .map(reservation => ({
+      start: timeToMinutes(reservation.time_start),
+      end: timeToMinutes(reservation.time_end)
+    }))
+    .sort((a, b) => a.start - b.start);
+  
+  // Find available slots
+  const availableSlots = [];
+  let currentTime = operatingStartMinutes;
+  
+  for (const reservation of reservedSlots) {
+    // If there's a gap between current time and next reservation
+    if (currentTime < reservation.start) {
+      availableSlots.push({
+        start: minutesToTime(currentTime),
+        end: minutesToTime(reservation.start)
+      });
+    }
+    // Move current time to end of current reservation
+    currentTime = Math.max(currentTime, reservation.end);
+  }
+  
+  // Check if there's time left after the last reservation
+  if (currentTime < operatingEndMinutes) {
+    availableSlots.push({
+      start: minutesToTime(currentTime),
+      end: minutesToTime(operatingEndMinutes)
+    });
+  }
+  
+  return availableSlots;
+}
+
 // Custom Confirm Modal
 function showCustomConfirm(message, onConfirm) {
   const confirmBox = document.getElementById("customConfirm");
@@ -348,4 +401,25 @@ function showCustomConfirm(message, onConfirm) {
 
   confirmBox.style.display = "flex";
 }
+
+// Custom Confirm Modal
+function showCustomConfirm(message, onConfirm) {
+  const confirmBox = document.getElementById("customConfirm");
+  const confirmMessage = document.getElementById("confirmMessage");
+  confirmMessage.textContent = message;
+
+  const yesBtn = document.getElementById("confirmYes");
+  const clone = yesBtn.cloneNode(true);
+  yesBtn.parentNode.replaceChild(clone, yesBtn);
+
+  clone.addEventListener("click", () => {
+    confirmBox.style.display = "none";
+    onConfirm();
+  });
+
+  document.getElementById("confirmNo").onclick = () => {
+    confirmBox.style.display = "none";
+  };
+
+  confirmBox.style.display = "flex";
 }

@@ -627,10 +627,20 @@ function displayPaginatedUsers() {
     return;
   }
 
+  // Sort users to put current user at the top
+  const sortedUsers = [...filteredUsers].sort((a, b) => {
+    const aIsCurrentUser = a.id === currentLoggedInUserId;
+    const bIsCurrentUser = b.id === currentLoggedInUserId;
+    
+    if (aIsCurrentUser && !bIsCurrentUser) return -1; // a comes first
+    if (!aIsCurrentUser && bIsCurrentUser) return 1;  // b comes first
+    return 0; // maintain original order for others
+  });
+
   // Calculate pagination
   const startIndex = (currentPage - 1) * entriesPerPage;
-  const endIndex = Math.min(startIndex + entriesPerPage, filteredUsers.length);
-  const currentPageUsers = filteredUsers.slice(startIndex, endIndex);
+  const endIndex = Math.min(startIndex + entriesPerPage, sortedUsers.length);
+  const currentPageUsers = sortedUsers.slice(startIndex, endIndex);
 
   // Create rows for current page
   currentPageUsers.forEach(user => {
@@ -639,8 +649,8 @@ function displayPaginatedUsers() {
   });
 
   // Update pagination controls
-  updatePaginationInfo(startIndex + 1, endIndex, filteredUsers.length);
-  updatePaginationButtons();
+  updatePaginationInfo(startIndex + 1, endIndex, sortedUsers.length);
+  updatePaginationButtons(sortedUsers.length);
   
   // Update status after DOM update
   setTimeout(() => {
@@ -658,14 +668,14 @@ function updatePaginationInfo(start, end, total) {
 }
 
 // Update pagination buttons
-function updatePaginationButtons() {
+function updatePaginationButtons(totalCount = filteredUsers.length) {
   const prevBtn = document.getElementById('prevPage');
   const nextBtn = document.getElementById('nextPage');
   const pageNumbers = document.getElementById('pageNumbers');
 
-  if (!filteredUsers.length) return;
+  if (!totalCount) return;
 
-  const totalPages = Math.ceil(filteredUsers.length / entriesPerPage);
+  const totalPages = Math.ceil(totalCount / entriesPerPage);
   
   // Update previous button
   if (prevBtn) {
