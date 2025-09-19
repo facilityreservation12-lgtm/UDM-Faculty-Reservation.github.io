@@ -498,6 +498,21 @@ document.addEventListener('DOMContentLoaded', async function() {
 			localStorage.removeItem('selectedDate');
 		}
 
+		// Set time input restrictions (min/max) for operating hours
+		if (timeStartInput) {
+			timeStartInput.min = "07:00";
+			timeStartInput.max = "19:00";
+			timeStartInput.title = "Select time between 7:00 AM and 7:00 PM";
+			timeStartInput.placeholder = "HH:MM (07:00 - 19:00)";
+		}
+		
+		if (timeEndInput) {
+			timeEndInput.min = "07:00";
+			timeEndInput.max = "19:00";
+			timeEndInput.title = "Select time between 7:00 AM and 7:00 PM";
+			timeEndInput.placeholder = "HH:MM (07:00 - 19:00)";
+		}
+
 		// Form submission
 		reservationForm.addEventListener('submit', async function (e) {
 			e.preventDefault();
@@ -535,19 +550,43 @@ document.addEventListener('DOMContentLoaded', async function() {
 			  return;
 			}
 
-			// Time validation
-			const newStart = parseTimeToMinutes(timeStartInput && timeStartInput.value ? timeStartInput.value : null);
-			const newEnd = parseTimeToMinutes(timeEndInput && timeEndInput.value ? timeEndInput.value : null);
+			// Time validation - must be between 7:00 AM and 7:00 PM
+			const startTimeValue = timeStartInput && timeStartInput.value ? timeStartInput.value : null;
+			const endTimeValue = timeEndInput && timeEndInput.value ? timeEndInput.value : null;
+			
+			if (!startTimeValue || !endTimeValue) {
+				alert("Please provide valid start and end times.");
+				return;
+			}
+			
+			const newStart = parseTimeToMinutes(startTimeValue);
+			const newEnd = parseTimeToMinutes(endTimeValue);
+			
 			if (newStart === null || newEnd === null) {
 				alert("Please provide valid start and end times (HH:MM).");
 				return;
 			}
+			
+			// Validate operating hours (7:00 AM to 7:00 PM)
+			const operatingStart = 7 * 60; // 7:00 AM in minutes
+			const operatingEnd = 19 * 60;  // 7:00 PM in minutes
+			
+			if (newStart < operatingStart || newStart > operatingEnd) {
+				alert("Start time must be between 7:00 AM and 7:00 PM.");
+				return;
+			}
+			
+			if (newEnd < operatingStart || newEnd > operatingEnd) {
+				alert("End time must be between 7:00 AM and 7:00 PM.");
+				return;
+			}
+			
 			if (newStart >= newEnd) {
 				alert("Start time must be earlier than end time.");
 				return;
 			}
 
-						// Improved conflict check with recommendations
+			// Improved conflict check with recommendations
 			for (let facility of selectedFacilities) {
 			  // Query all reservations for this facility and date
 			  const { data, error } = await sb

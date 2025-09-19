@@ -284,12 +284,24 @@ async function showAvailableSlots(year, month, day, formattedDate) {
       return;
     }
 
-    // Get all reservations for this date (from all users)
-    const { data: reservations, error } = await sb
+    // List of all available facilities
+    const allFacilities = [
+      "Palma Hall",
+      "Right Wing Lobby", 
+      "Mehan Garden",
+      "Rooftop",
+      "Classroom",
+      "Basketball Court",
+      "Ground Floor Space",
+      "Others"
+    ];
+
+    // Get reservations for all facilities on this date
+    const { data: allReservations, error } = await sb
       .from('reservations')
-      .select('time_start, time_end')
+      .select('facility, time_start, time_end')
       .eq('date', formattedDate)
-      .order('time_start', { ascending: true });
+      .order('facility, time_start', { ascending: true });
 
     if (error) {
       console.error('Error fetching reservations:', error);
@@ -297,20 +309,53 @@ async function showAvailableSlots(year, month, day, formattedDate) {
       return;
     }
 
-    // Calculate available slots
-    const availableSlots = calculateAvailableSlots(reservations || []);
+    // Group reservations by facility
+    const reservationsByFacility = {};
+    (allReservations || []).forEach(reservation => {
+      if (!reservationsByFacility[reservation.facility]) {
+        reservationsByFacility[reservation.facility] = [];
+      }
+      reservationsByFacility[reservation.facility].push(reservation);
+    });
+
+    // Calculate available slots for each facility
+    const facilityAvailability = [];
     
-    if (availableSlots.length === 0) {
-      showCustomAlert("No available time slots for this date.");
+    for (const facility of allFacilities) {
+      const facilityReservations = reservationsByFacility[facility] || [];
+      const availableSlots = calculateAvailableSlots(facilityReservations);
+      
+      // Always add facility to the list, even if no slots are available
+      facilityAvailability.push({
+        facility: facility,
+        slots: availableSlots
+      });
+    }
+
+    // Check if ALL facilities are fully booked
+    const hasAnyAvailableSlots = facilityAvailability.some(item => item.slots.length > 0);
+    
+    if (!hasAnyAvailableSlots) {
+      showCustomAlert("All facilities are fully booked for this date.");
       return;
     }
 
-    // Format available slots for display
-    const slotsText = availableSlots.map(slot => 
-      `${formatTime12hr(slot.start)} - ${formatTime12hr(slot.end)}`
-    ).join('\n');
+    // Format the availability message
+    let message = `Available facilities and time slots for ${formattedDate}:\n\n`;
+    
+    facilityAvailability.forEach(item => {
+      message += `${item.facility}:\n`;
+      if (item.slots.length > 0) {
+        item.slots.forEach(slot => {
+          message += `• ${formatTime12hr(slot.start)} - ${formatTime12hr(slot.end)}\n`;
+        });
+      } else {
+        message += `• No available time slot\n`;
+      }
+      message += '\n';
+    });
 
-    const message = `Available slots for this date:\n\n${slotsText}`;
+    message += 'Would you like to make a reservation?';
     
     showCustomConfirm(message, () => {
       // Redirect to VRF page with the selected date
@@ -384,7 +429,16 @@ function calculateAvailableSlots(reservations) {
 function showCustomConfirm(message, onConfirm) {
   const confirmBox = document.getElementById("customConfirm");
   const confirmMessage = document.getElementById("confirmMessage");
-  confirmMessage.textContent = message;
+  
+  // Convert line breaks to HTML breaks and preserve formatting
+  const htmlMessage = message
+    .replace(/\n\n/g, '<br><br>')
+    .replace(/\n/g, '<br>')
+    .replace(/•/g, '&bull;');
+  
+  confirmMessage.innerHTML = htmlMessage;
+  confirmMessage.style.whiteSpace = 'pre-line';
+  confirmMessage.style.textAlign = 'left';
 
   const yesBtn = document.getElementById("confirmYes");
   const clone = yesBtn.cloneNode(true);
@@ -402,24 +456,321 @@ function showCustomConfirm(message, onConfirm) {
   confirmBox.style.display = "flex";
 }
 
-// Custom Confirm Modal
-function showCustomConfirm(message, onConfirm) {
-  const confirmBox = document.getElementById("customConfirm");
-  const confirmMessage = document.getElementById("confirmMessage");
-  confirmMessage.textContent = message;
-
-  const yesBtn = document.getElementById("confirmYes");
-  const clone = yesBtn.cloneNode(true);
-  yesBtn.parentNode.replaceChild(clone, yesBtn);
-
-  clone.addEventListener("click", () => {
-    confirmBox.style.display = "none";
-    onConfirm();
-  });
-
-  document.getElementById("confirmNo").onclick = () => {
-    confirmBox.style.display = "none";
-  };
-
-  confirmBox.style.display = "flex";
+// Notification panel toggle function
+function toggleNotificationPanel() {
+  const panel = document.getElementById("notificationPanel");
+  const overlay = document.getElementById("notificationOverlay");
+  
+  if (panel && overlay) {
+    panel.classList.toggle("active");
+    overlay.classList.toggle("active");
+  }
 }
+
+// Load and display user notifications
+async function loadUserNotifications() {
+  try {
+    const sb = getSupabase();
+    if (!sb) {
+      console.error('Supabase client not found');
+      return;
+    }
+
+    // Get current user ID
+    const userId = localStorage.getItem('id') || 
+                   localStorage.getItem('user_id') || 
+                   localStorage.getItem('userId') || 
+                   localStorage.getItem('currentUserId');
+
+    if (!userId) {
+      console.log('No user logged in, skipping notifications');
+      return;
+    }
+
+    // Fetch user's reservations with status information
+    const { data: reservations, error } = await sb
+      .from('reservations')
+      .select('facility, date, time_start, time_end, title_of_the_event, status')
+      .eq('id', userId)
+      .order('created_at', { ascending: false })
+      .limit(10); // Get latest 10 reservations
+
+    if (error) {
+      console.error('Error fetching user notifications:', error);
+      return;
+    }
+
+    // Display notifications
+    displayNotifications(reservations || []);
+
+  } catch (error) {
+    console.error('Error loading notifications:', error);
+  }
+}
+
+// Display notifications in the notification panel
+function displayNotifications(reservations) {
+  const notificationContainer = document.querySelector('.notification-container');
+  
+  if (!notificationContainer) {
+    console.log('Notification container not found');
+    return;
+  }
+
+  // Clear existing notifications
+  notificationContainer.innerHTML = '';
+
+  if (reservations.length === 0) {
+    notificationContainer.innerHTML = '<div class="notification-item">No notifications available</div>';
+    return;
+  }
+
+  // Create notification items
+  reservations.forEach(reservation => {
+    const notificationItem = createNotificationItem(reservation);
+    notificationContainer.appendChild(notificationItem);
+  });
+}
+
+// Create individual notification item
+function createNotificationItem(reservation) {
+  const div = document.createElement('div');
+  div.className = 'notification-item';
+  
+  // Add status-specific class for styling
+  const statusLower = reservation.status?.toLowerCase();
+  if (statusLower) {
+    div.classList.add(statusLower);
+  }
+  
+  // Format date
+  const date = new Date(reservation.date);
+  const formattedDate = date.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric'
+  });
+  
+  // Format time
+  const startTime = formatTime12hr(reservation.time_start);
+  const endTime = formatTime12hr(reservation.time_end);
+  
+  // Get status styling
+  const statusClass = getStatusClass(reservation.status);
+  
+  // Map status for display
+  const displayStatus = mapStatusForDisplay(reservation.status);
+  
+  // Create notification text - remove "currently" if approved
+  let notificationText;
+  if (displayStatus?.toLowerCase() === 'approved') {
+    notificationText = `Your Request for ${reservation.facility} on ${formattedDate} at ${startTime}-${endTime} is <span class="${statusClass}">${displayStatus}</span>`;
+  } else {
+    notificationText = `Your Request for ${reservation.facility} on ${formattedDate} at ${startTime}-${endTime} is currently <span class="${statusClass}">${displayStatus}</span>`;
+  }
+  
+  div.innerHTML = notificationText;
+  
+  return div;
+}
+
+// Get CSS class for different status types
+function getStatusClass(status) {
+  // Map "request" status to pending
+  const mappedStatus = mapStatusForDisplay(status);
+  
+  switch (mappedStatus?.toLowerCase()) {
+    case 'approved':
+      return 'status-approved';
+    case 'pending':
+      return 'status-pending';
+    case 'rejected':
+    case 'denied':
+      return 'status-rejected';
+    case 'cancelled':
+      return 'status-cancelled';
+    default:
+      return 'status-default';
+  }
+}
+
+// Map status for display purposes
+function mapStatusForDisplay(status) {
+  if (status?.toLowerCase() === 'request') {
+    return 'Pending';
+  }
+  return status;
+}
+
+// Check for status changes and show real-time notifications
+async function checkForStatusUpdates() {
+  try {
+    const sb = getSupabase();
+    if (!sb) return;
+
+    // Get current user ID
+    const userId = localStorage.getItem('id') || 
+                   localStorage.getItem('user_id') || 
+                   localStorage.getItem('userId') || 
+                   localStorage.getItem('currentUserId');
+
+    if (!userId) return;
+
+    // Get stored reservations from localStorage for comparison
+    const storedReservations = JSON.parse(localStorage.getItem('userReservations') || '[]');
+    
+    // Fetch current reservations
+    const { data: currentReservations, error } = await sb
+      .from('reservations')
+      .select('request_id, facility, date, time_start, time_end, status')
+      .eq('id', userId);
+
+    if (error) {
+      console.error('Error checking status updates:', error);
+      return;
+    }
+
+    // Check for status changes
+    if (storedReservations.length > 0) {
+      currentReservations?.forEach(current => {
+        const stored = storedReservations.find(s => s.request_id === current.request_id);
+        
+        if (stored && stored.status !== current.status) {
+          // Status changed - show notification
+          showStatusChangeNotification(current, stored.status, current.status);
+        }
+      });
+    }
+
+    // Update stored reservations
+    localStorage.setItem('userReservations', JSON.stringify(currentReservations || []));
+
+  } catch (error) {
+    console.error('Error checking status updates:', error);
+  }
+}
+
+// Show real-time status change notification
+function showStatusChangeNotification(reservation, oldStatus, newStatus) {
+  // Format date and time
+  const date = new Date(reservation.date);
+  const formattedDate = date.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric'
+  });
+  
+  const startTime = formatTime12hr(reservation.time_start);
+  const endTime = formatTime12hr(reservation.time_end);
+  
+  const message = `Status Update: Your request for ${reservation.facility} on ${formattedDate} at ${startTime}-${endTime} has been changed from "${oldStatus}" to "${newStatus}"`;
+  
+  // Show browser notification if supported
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification('Reservation Status Update', {
+      body: message,
+      icon: 'images/udm-logo.webp'
+    });
+  }
+  
+  // Also show in-app alert
+  showCustomAlert(message);
+  
+  // Refresh notifications panel
+  loadUserNotifications();
+}
+
+// Request notification permission
+function requestNotificationPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission().then(permission => {
+      console.log('Notification permission:', permission);
+    });
+  }
+}
+
+// Validate time conflicts for a specific date
+function hasTimeConflict(selectedDate, startTime, endTime, existingReservations) {
+  // Only check reservations for the same date
+  const sameeDateReservations = existingReservations.filter(reservation => 
+    reservation.date === selectedDate
+  );
+  
+  // Convert time strings to minutes for easier comparison
+  function timeToMinutes(timeStr) {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return hours * 60 + minutes;
+  }
+  
+  const newStartMinutes = timeToMinutes(startTime);
+  const newEndMinutes = timeToMinutes(endTime);
+  
+  // Check for conflicts with existing reservations on the same date
+  for (const reservation of sameeDateReservations) {
+    const existingStartMinutes = timeToMinutes(reservation.time_start);
+    const existingEndMinutes = timeToMinutes(reservation.time_end);
+    
+    // Check if there's an overlap
+    if (
+      (newStartMinutes < existingEndMinutes && newEndMinutes > existingStartMinutes) ||
+      (existingStartMinutes < newEndMinutes && existingEndMinutes > newStartMinutes)
+    ) {
+      return true; // Conflict found
+    }
+  }
+  
+  return false; // No conflict
+}
+
+// Comprehensive time validation function for restricted reservation times
+function validateReservationTime(selectedDate, startTime, endTime) {
+  // Only allow 7:00 AM or 7:00 PM as valid reservation times
+  if (!isValidReservationTime(startTime)) {
+    return {
+      valid: false,
+      message: `Invalid start time. You can only reserve at 7:00 AM or 7:00 PM. Selected: ${formatTime12hr(startTime)}`
+    };
+  }
+  
+  if (!isValidReservationTime(endTime)) {
+    return {
+      valid: false,
+      message: `Invalid end time. You can only reserve at 7:00 AM or 7:00 PM. Selected: ${formatTime12hr(endTime)}`
+    };
+  }
+  
+  // Check if end time is after start time
+  function timeToMinutes(timeStr) {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return hours * 60 + minutes;
+  }
+  
+  if (timeToMinutes(endTime) <= timeToMinutes(startTime)) {
+    return {
+      valid: false,
+      message: 'End time must be after start time'
+    };
+  }
+  
+  // Check if it's a valid time combination (7 AM to 7 PM only)
+  if (startTime === "07:00" && endTime === "19:00") {
+    return { valid: true, message: 'Valid reservation time: 7:00 AM to 7:00 PM' };
+  } else {
+    return {
+      valid: false,
+      message: 'Invalid time combination. You can only reserve from 7:00 AM to 7:00 PM (12-hour block)'
+    };
+  }
+}
+
+// Initialize notifications when page loads
+document.addEventListener('DOMContentLoaded', function() {
+  // Request notification permission
+  requestNotificationPermission();
+  
+  // Load initial notifications
+  setTimeout(loadUserNotifications, 1000); // Delay to ensure user is loaded
+  
+  // Check for status updates every 30 seconds
+  setInterval(checkForStatusUpdates, 30000);
+});

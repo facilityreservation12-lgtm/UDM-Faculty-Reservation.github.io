@@ -127,6 +127,13 @@ body {
   border-radius: 7px;
   opacity: 85%;
   pointer-events: none;
+  padding: 12px;
+  margin-bottom: 8px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border-left: 4px solid #ddd;
+  font-size: 14px;
+  line-height: 1.4;
 }
 
 /* 🔔 Alert/Confirm Modal Styling */
@@ -516,4 +523,83 @@ font-size:18px;
     font-size: 12px;
     padding: 15px;
   }
+}
+
+/* Notification Status Styles */
+.notification-item {
+    padding: 12px;
+    margin-bottom: 8px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border-left: 4px solid #ddd;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.notification-item:hover {
+    background: #e9ecef;
+}
+
+/* Status-specific styles */
+.status-approved {
+    color: #28a745;
+    font-weight: bold;
+}
+
+.status-pending {
+    color: #ffc107;
+    font-weight: bold;
+}
+
+.status-rejected {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.status-cancelled {
+    color: #6c757d;
+    font-weight: bold;
+}
+
+.status-default {
+    color: #007bff;
+    font-weight: bold;
+}
+
+/* Status-specific notification item borders */
+.notification-item:has(.status-approved) {
+    border-left-color: #28a745;
+}
+
+.notification-item:has(.status-pending) {
+    border-left-color: #ffc107;
+}
+
+.notification-item:has(.status-rejected) {
+    border-left-color: #dc3545;
+}
+
+.notification-item:has(.status-cancelled) {
+    border-left-color: #6c757d;
+}
+
+.notification-item:has(.status-default) {
+    border-left-color: #007bff;
+}
+
+/* Fallback for browsers that don't support :has() */
+.notification-item.approved {
+    border-left-color: #28a745;
+}
+
+.notification-item.pending {
+    border-left-color: #ffc107;
+}
+
+.notification-item.rejected {
+    border-left-color: #dc3545;
+}
+
+.notification-item.cancelled {
+    border-left-color: #6c757d;
 }
