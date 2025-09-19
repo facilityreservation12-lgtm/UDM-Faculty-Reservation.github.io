@@ -751,18 +751,15 @@ input, select {
 
 .password-group {
   position: relative;
-  display: flex;
-  align-items: stretch;
   width: 100%;
   margin-bottom: 10px;
 }
 
 .password-group input {
-  flex: 1;
-  padding: 10px;
+  width: 100%;
+  padding: 10px 40px 10px 10px;
   border: 2px solid #ddd;
-  border-radius: 5px 0 0 5px;
-  border-right: none;
+  border-radius: 5px;
   font-size: 14px;
   box-sizing: border-box;
   height: 42px;
@@ -773,25 +770,21 @@ input, select {
   border-color: #2196F3;
 }
 
-.toggle-pass {
-  background: #f8f9fa;
-  border: 2px solid #ddd;
-  border-left: none;
-  border-radius: 0 5px 5px 0;
-  padding: 0;
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
   cursor: pointer;
   font-size: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 45px;
-  width: 45px;
-  height: 42px;
-  transition: background-color 0.3s ease;
+  color: #666;
+  user-select: none;
+  transition: color 0.3s ease;
+  z-index: 10;
 }
 
-.toggle-pass:hover {
-  background-color: #e9ecef;
+.password-toggle:hover {
+  color: #333;
 }
 
 .modal-actions {

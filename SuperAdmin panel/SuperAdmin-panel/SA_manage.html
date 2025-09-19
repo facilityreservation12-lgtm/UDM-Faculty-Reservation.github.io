@@ -11,32 +11,36 @@
 </head>
 <body>
     <div class="sidebar">
-        <div class="user-photo">
-            <img src="img/peppa.jpg" alt="User Photo" />
-            <div>
-                <strong>Juan B. Batumbakal</strong><br/>
-                SUPER ADMIN
-            </div>
+    <div class="side-container">
+      <div class="user-photo">
+        <img src="img/peppa.jpg" alt="User Photo" />
+        <div>
+          <strong>Juan B. Batumbakal</strong><br/>
+          SUPER ADMIN
         </div>
         
-        <div class="menu">
-            <a href="SA_dashboard.html">Dashboard</a>
-            <a href="SA_manage.html" class="active">Manage Users</a>
-            <div class="reqs-sub-menu">
-                <a href="SA_requests.html">Requests</a>
-                <div class="sub-menu">
-                    <a href="SA_requests.html">Pending</a>
-                    <a href="SA_approved.html">Approved</a>
-                    <a href="SA_declined.html">Declined</a>
-                </div>
-            </div>
-            <a href="SA_rooms.html">Room Management</a>
-            <a href="SA_calendar.html">Calendar</a>
-            <a href="SA_reports.html">Reports</a>
-        </div>
-        
-        <button class="logout-btn" onclick="logout()">Logout</button>
+      </div>
+      <div class="menu">
+        <a href="SuperAdminDashboard.html">Dashboard</a>
+        <a href="SuperAdminVRF.html">VRF</a>
+        <div class="reqs-sub-menu">
+                <a href="#" class="sidebar-link">Request ▾</a>
+            <div class="sub-menu">
+                <a href="SA_REQ_IncomingRequest.html">IncomingRequest</a>
+                <a href="SA_Pending.html">Pending</a>
+                <a href="SA_Appproved.html">Approved</a>
+          </div> 
+        </div> 
+      <a href="SA_Otheruser.html">Other User</a>
+        <a href="SuperAdmincalendar.html">Calendar</a>
+        <a href="SA_manage.html">Manage</a>
+        <a href="SA_Settings.html">Settings</a>
+        <a href="SA_Activitylog.html">Logs</a>
+        <a href="SA_Reportbugs.html">Report Bugs</a>         
+      </div> 
     </div>
+<button onclick="window.location.href='../../User%20panel/LandingPage.html'" class="logout-btn">Log Out</button>  
+</div>
 
     <div class="main">
         <div class="main-container">
@@ -131,14 +135,14 @@
 
                 <label for="userPassword">New Password</label>
                 <div class="password-group">
-                    <input type="password" id="userPassword" required>
-                    <button type="button" class="toggle-pass" onclick="togglePassword('userPassword')">👁️</button>
+                    <input type="password" id="userPassword" placeholder="Enter password..." required>
+                    <span class="password-toggle" onclick="togglePassword('userPassword')">👁️</span>
                 </div>
 
                 <label for="userRePassword">Re-enter Password</label>
                 <div class="password-group">
-                    <input type="password" id="userRePassword" required>
-                    <button type="button" class="toggle-pass" onclick="togglePassword('userRePassword')">🙈</button>
+                    <input type="password" id="userRePassword" placeholder="Re-enter password..." required>
+                    <span class="password-toggle" onclick="togglePassword('userRePassword')">�️</span>
                 </div>
 
                 <label for="userRole">Role</label>

@@ -13,6 +13,12 @@ function getSupabase() {
 let onlineUsers = new Set();
 let currentLoggedInUserId = null;
 
+// Global variables for pagination and filtering
+let allUsers = [];
+let filteredUsers = [];
+let currentPage = 1;
+let entriesPerPage = 10;
+
 // Function to get current logged in user
 function getCurrentUser() {
   // Check multiple possible localStorage keys for user ID
@@ -82,14 +88,13 @@ async function loadUsers() {
       return;
     }
 
-    // Clear loading message
-    tbody.innerHTML = '';
-
-    // Create user rows
-    users.forEach(user => {
-      const row = createUserRow(user);
-      tbody.appendChild(row);
-    });
+    // Store users globally for filtering and pagination
+    allUsers = users;
+    filteredUsers = users;
+    currentPage = 1;
+    
+    // Display paginated users
+    displayPaginatedUsers();
 
     // Simulate online/offline status
     trackUserActivity();
@@ -182,6 +187,12 @@ function openAddModal() {
   document.getElementById('userForm').reset();
   currentEditingUserId = null;
   
+  // Set button text to "Add" for new user
+  const submitButton = document.querySelector('#userForm button[type="submit"]');
+  if (submitButton) {
+    submitButton.textContent = 'Add';
+  }
+  
   // Show all fields when adding new user
   const allLabels = document.querySelectorAll('label');
   allLabels.forEach(label => {
@@ -209,11 +220,11 @@ function openAddModal() {
     emailField.required = true;
   }
   if (passwordField && passwordField.parentElement) {
-    passwordField.parentElement.style.display = 'flex';
+    passwordField.parentElement.style.display = 'block';
     passwordField.required = true;
   }
   if (rePasswordField && rePasswordField.parentElement) {
-    rePasswordField.parentElement.style.display = 'flex';
+    rePasswordField.parentElement.style.display = 'block';
     rePasswordField.required = true;
   }
   if (roleField) {
@@ -233,6 +244,12 @@ function closeModal() {
 function openEditModal(user) {
   document.getElementById('userModal').style.display = 'block';
   document.getElementById('modalTitle').textContent = 'Edit User';
+  
+  // Set button text to "Save" for editing user
+  const submitButton = document.querySelector('#userForm button[type="submit"]');
+  if (submitButton) {
+    submitButton.textContent = 'Save';
+  }
   
   // Populate form with user data
   document.getElementById('userFirstName').value = user.first_name || '';
@@ -277,11 +294,11 @@ function openEditModal(user) {
     emailField.required = true;
   }
   if (passwordField && passwordField.parentElement) {
-    passwordField.parentElement.style.display = 'flex';
+    passwordField.parentElement.style.display = 'block';
     passwordField.required = false; // Not required when editing
   }
   if (rePasswordField && rePasswordField.parentElement) {
-    rePasswordField.parentElement.style.display = 'flex';
+    rePasswordField.parentElement.style.display = 'block';
     rePasswordField.required = false; // Not required when editing
   }
   if (roleField) {
@@ -383,10 +400,39 @@ document.getElementById('userForm').addEventListener('submit', async (e) => {
     }
   }
 
+  // Validation
+  if (!firstName || !lastName || !email || !role) {
+    alert('Please fill in all required fields');
+    return;
+  }
+
   // For new users, password is required
   if (!currentEditingUserId && !password) {
     alert('Password is required for new users');
     return;
+  }
+
+  // Email validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    alert('Please enter a valid email address');
+    return;
+  }
+
+  // Map role_name to role value
+  function getRoleValue(roleName) {
+    switch (roleName) {
+      case 'ADMIN':
+        return 'admin';
+      case 'SUPER ADMIN':
+        return 'super_admin';
+      case 'STUDENT ORGANIZATION':
+        return 'student_organization';
+      case 'FACULTY':
+        return 'faculty';
+      default:
+        return roleName.toLowerCase();
+    }
   }
 
   try {
@@ -396,13 +442,16 @@ document.getElementById('userForm').addEventListener('submit', async (e) => {
       return;
     }
 
+    const roleValue = getRoleValue(role);
+
     if (currentEditingUserId) {
       // Update existing user
       const updateData = {
         first_name: firstName,
         last_name: lastName,
         email: email,
-        role_name: role
+        role_name: role,
+        role: roleValue
       };
       
       // Only update password if provided
@@ -423,23 +472,92 @@ document.getElementById('userForm').addEventListener('submit', async (e) => {
 
       alert('User updated successfully');
     } else {
+      // Generate sequential user ID based on existing users
+      const generateSequentialUserId = async (roleName) => {
+        const rolePrefix = getRolePrefix(roleName);
+        
+        // Get all existing users with the same role prefix
+        const { data: existingUsers, error } = await sb
+          .from('users')
+          .select('id')
+          .like('id', `${rolePrefix}%`)
+          .order('id', { ascending: false });
+        
+        if (error) {
+          console.error('Error fetching existing users for ID generation:', error);
+          // Fallback to 001 if there's an error
+          return `${rolePrefix}001`;
+        }
+        
+        let nextNumber = 1;
+        
+        if (existingUsers && existingUsers.length > 0) {
+          // Extract the highest number from existing IDs
+          const numbers = existingUsers.map(user => {
+            const match = user.id.match(new RegExp(`^${rolePrefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\d+)$`));
+            return match ? parseInt(match[1], 10) : 0;
+          }).filter(num => !isNaN(num));
+          
+          if (numbers.length > 0) {
+            const maxNumber = Math.max(...numbers);
+            nextNumber = maxNumber + 1;
+          }
+        }
+        
+        // Format number with leading zeros (3 digits)
+        const formattedNumber = nextNumber.toString().padStart(3, '0');
+        return `${rolePrefix}${formattedNumber}`;
+      };
+      
+      const getRolePrefix = (roleName) => {
+        switch (roleName) {
+          case 'ADMIN':
+            return 'A';
+          case 'SUPER ADMIN':
+            return 'S';
+          case 'STUDENT ORGANIZATION':
+            return 'O';
+          case 'FACULTY':
+            return 'F';
+          default:
+            return 'U';
+        }
+      };
+
+      // Generate sequential ID based on role
+      const newUserId = await generateSequentialUserId(role);
+      
       // Add new user
-      const { error } = await sb
+      const newUserData = {
+        id: newUserId, // Generate sequential ID
+        first_name: firstName,
+        last_name: lastName,
+        email: email,
+        role_name: role,
+        role: roleValue,
+        password: password // Note: In production, hash the password
+      };
+      
+      console.log('Adding new user with data:', newUserData);
+      
+      const { data, error } = await sb
         .from('users')
-        .insert({
-          first_name: firstName,
-          last_name: lastName,
-          email: email,
-          role_name: role,
-          password: password // Note: In production, hash the password
-        });
+        .insert(newUserData)
+        .select();
 
       if (error) {
         console.error('Error adding user:', error);
-        alert('Error adding user');
+        console.error('Error details:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+        alert(`Error adding user: ${error.message || 'Unknown error'}`);
         return;
       }
 
+      console.log('User added successfully:', data);
       alert('User added successfully');
     }
 
@@ -452,27 +570,17 @@ document.getElementById('userForm').addEventListener('submit', async (e) => {
   }
 });
 
-// Password toggle function with different icons for each field
+// Password toggle function for inline icons
 function togglePassword(inputId) {
   const input = document.getElementById(inputId);
-  const button = input.nextElementSibling;
+  const toggle = input.nextElementSibling;
   
   if (input.type === 'password') {
     input.type = 'text';
-    // Show different icons based on field when password is visible
-    if (inputId === 'userPassword') {
-      button.textContent = '🙈'; // New password shows see-no-evil when visible
-    } else {
-      button.textContent = '👁️'; // Re-enter password shows eye when visible
-    }
+    toggle.textContent = '🙈'; // Show hide icon when password is visible
   } else {
     input.type = 'password';
-    // Reset to default icons when password is hidden
-    if (inputId === 'userPassword') {
-      button.textContent = '👁️'; // New password default icon (eye)
-    } else {
-      button.textContent = '🙈'; // Re-enter password default icon (see-no-evil)
-    }
+    toggle.textContent = '👁️'; // Show eye icon when password is hidden
   }
 }
 
@@ -480,19 +588,19 @@ function togglePassword(inputId) {
 function initializePasswordIcons() {
   console.log('Initializing password icons...');
   
-  const passwordButton = document.querySelector('#userPassword + .toggle-pass');
-  const rePasswordButton = document.querySelector('#userRePassword + .toggle-pass');
+  const passwordToggle = document.querySelector('#userPassword + .password-toggle');
+  const rePasswordToggle = document.querySelector('#userRePassword + .password-toggle');
   
-  console.log('Password button found:', !!passwordButton);
-  console.log('Re-password button found:', !!rePasswordButton);
+  console.log('Password toggle found:', !!passwordToggle);
+  console.log('Re-password toggle found:', !!rePasswordToggle);
   
-  if (passwordButton) {
-    passwordButton.textContent = '👁️'; // New password default
+  if (passwordToggle) {
+    passwordToggle.textContent = '👁️'; // Default eye icon
     console.log('Set password icon to 👁️');
   }
-  if (rePasswordButton) {
-    rePasswordButton.textContent = '🙈'; // Re-enter password default
-    console.log('Set re-password icon to 🙈');
+  if (rePasswordToggle) {
+    rePasswordToggle.textContent = '�️'; // Default eye icon
+    console.log('Set re-password icon to �️');
   }
 }
 
@@ -507,6 +615,192 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log('SA_manage.js loaded, initializing...');
   loadUsers();
 });
+
+// Display paginated users
+function displayPaginatedUsers() {
+  const tbody = document.getElementById('userTableBody');
+  tbody.innerHTML = '';
+
+  if (!filteredUsers || filteredUsers.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">No users match the current filters</td></tr>';
+    updatePaginationInfo(0, 0, 0);
+    return;
+  }
+
+  // Calculate pagination
+  const startIndex = (currentPage - 1) * entriesPerPage;
+  const endIndex = Math.min(startIndex + entriesPerPage, filteredUsers.length);
+  const currentPageUsers = filteredUsers.slice(startIndex, endIndex);
+
+  // Create rows for current page
+  currentPageUsers.forEach(user => {
+    const row = createUserRow(user);
+    tbody.appendChild(row);
+  });
+
+  // Update pagination controls
+  updatePaginationInfo(startIndex + 1, endIndex, filteredUsers.length);
+  updatePaginationButtons();
+  
+  // Update status after DOM update
+  setTimeout(() => {
+    trackUserActivity();
+    updateOnlineStatus();
+  }, 100);
+}
+
+// Update pagination info display
+function updatePaginationInfo(start, end, total) {
+  const paginationInfo = document.getElementById('paginationInfo');
+  if (paginationInfo) {
+    paginationInfo.textContent = `Showing ${start} to ${end} of ${total} entries`;
+  }
+}
+
+// Update pagination buttons
+function updatePaginationButtons() {
+  const prevBtn = document.getElementById('prevPage');
+  const nextBtn = document.getElementById('nextPage');
+  const pageNumbers = document.getElementById('pageNumbers');
+
+  if (!filteredUsers.length) return;
+
+  const totalPages = Math.ceil(filteredUsers.length / entriesPerPage);
+  
+  // Update previous button
+  if (prevBtn) {
+    prevBtn.disabled = currentPage <= 1;
+  }
+  
+  // Update next button
+  if (nextBtn) {
+    nextBtn.disabled = currentPage >= totalPages;
+  }
+  
+  // Update page numbers
+  if (pageNumbers) {
+    pageNumbers.innerHTML = '';
+    
+    for (let i = 1; i <= totalPages; i++) {
+      const pageBtn = document.createElement('button');
+      pageBtn.textContent = i;
+      pageBtn.onclick = () => goToPage(i);
+      
+      if (i === currentPage) {
+        pageBtn.classList.add('active');
+      }
+      
+      pageNumbers.appendChild(pageBtn);
+    }
+  }
+}
+
+// Navigation functions
+function goToPage(page) {
+  const totalPages = Math.ceil(filteredUsers.length / entriesPerPage);
+  if (page >= 1 && page <= totalPages) {
+    currentPage = page;
+    displayPaginatedUsers();
+  }
+}
+
+function previousPage() {
+  if (currentPage > 1) {
+    currentPage--;
+    displayPaginatedUsers();
+  }
+}
+
+function nextPage() {
+  const totalPages = Math.ceil(filteredUsers.length / entriesPerPage);
+  if (currentPage < totalPages) {
+    currentPage++;
+    displayPaginatedUsers();
+  }
+}
+
+// Change entries per page
+function changeEntriesPerPage() {
+  const select = document.getElementById('entriesPerPage');
+  if (select) {
+    entriesPerPage = parseInt(select.value);
+    currentPage = 1; // Reset to first page
+    displayPaginatedUsers();
+  }
+}
+
+// Filter functions
+function applyFilters() {
+  const idFilter = document.getElementById('filterID')?.value.toLowerCase() || '';
+  const nameFilter = document.getElementById('filterName')?.value.toLowerCase() || '';
+  const roleFilter = document.getElementById('filterRole')?.value || '';
+  const statusFilter = document.getElementById('filterStatus')?.value || '';
+
+  filteredUsers = allUsers.filter(user => {
+    // ID filter
+    if (idFilter && !user.id.toLowerCase().includes(idFilter)) {
+      return false;
+    }
+
+    // Name/Email filter
+    if (nameFilter) {
+      const fullName = `${user.first_name || ''} ${user.last_name || ''}`.toLowerCase();
+      const email = (user.email || '').toLowerCase();
+      if (!fullName.includes(nameFilter) && !email.includes(nameFilter)) {
+        return false;
+      }
+    }
+
+    // Role filter
+    if (roleFilter && user.role_name !== roleFilter) {
+      return false;
+    }
+
+    // Status filter
+    if (statusFilter) {
+      const isOnline = onlineUsers.has(user.id);
+      if ((statusFilter === 'Online' && !isOnline) || (statusFilter === 'Offline' && isOnline)) {
+        return false;
+      }
+    }
+
+    return true;
+  });
+
+  // Reset to first page
+  currentPage = 1;
+  displayPaginatedUsers();
+}
+
+// Individual filter functions (called from HTML)
+function filterByID() {
+  applyFilters();
+}
+
+function filterByName() {
+  applyFilters();
+}
+
+function filterByRole() {
+  applyFilters();
+}
+
+function filterByStatus() {
+  applyFilters();
+}
+
+function clearFilters() {
+  // Clear all filter inputs
+  document.getElementById('filterID').value = '';
+  document.getElementById('filterName').value = '';
+  document.getElementById('filterRole').value = '';
+  document.getElementById('filterStatus').value = '';
+  
+  // Reset filtered users to show all
+  filteredUsers = allUsers;
+  currentPage = 1;
+  displayPaginatedUsers();
+}
 
 // Close modal when clicking outside
 window.onclick = function(event) {
