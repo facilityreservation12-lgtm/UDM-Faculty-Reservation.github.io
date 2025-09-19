@@ -537,7 +537,7 @@ function createNotificationItem(reservation) {
   const div = document.createElement('div');
   div.className = 'notification-item';
   
-  // Add status-specific class for styling
+  // Add status-specific class for styling (simple)
   const statusLower = reservation.status?.toLowerCase();
   if (statusLower) {
     div.classList.add(statusLower);
@@ -561,18 +561,23 @@ function createNotificationItem(reservation) {
   // Map status for display
   const displayStatus = mapStatusForDisplay(reservation.status);
   
-  // Create notification text - remove "currently" if approved
+  // Get status color based on status type
+  const statusColor = getStatusColor(reservation.status);
+  
+  // Create notification text with inline styling
   let notificationText;
   if (displayStatus?.toLowerCase() === 'approved') {
-    notificationText = `Your Request for ${reservation.facility} on ${formattedDate} at ${startTime}-${endTime} is <span class="${statusClass}">${displayStatus}</span>`;
+    notificationText = `Your Request for <b>${reservation.facility}</b> on <b>${formattedDate}</b> at <b>${startTime}-${endTime}</b> is <span style="color: ${statusColor}; font-weight: bold;">${displayStatus}</span>`;
   } else {
-    notificationText = `Your Request for ${reservation.facility} on ${formattedDate} at ${startTime}-${endTime} is currently <span class="${statusClass}">${displayStatus}</span>`;
+    notificationText = `Your Request for <b>${reservation.facility}</b> on <b>${formattedDate}</b> at <b>${startTime}-${endTime}</b> is currently <span style="color: ${statusColor}; font-weight: bold;">${displayStatus}</span>`;
   }
   
   div.innerHTML = notificationText;
   
   return div;
 }
+
+
 
 // Get CSS class for different status types
 function getStatusClass(status) {
@@ -600,6 +605,25 @@ function mapStatusForDisplay(status) {
     return 'Pending';
   }
   return status;
+}
+
+// Get status color for inline styling
+function getStatusColor(status) {
+  const mappedStatus = mapStatusForDisplay(status);
+  
+  switch (mappedStatus?.toLowerCase()) {
+    case 'approved':
+      return '#2e7d32'; // Green
+    case 'pending':
+      return '#e65100'; // Orange
+    case 'rejected':
+    case 'denied':
+      return '#c62828'; // Red
+    case 'cancelled':
+      return '#616161'; // Gray
+    default:
+      return '#424242'; // Dark gray
+  }
 }
 
 // Check for status changes and show real-time notifications
@@ -663,7 +687,11 @@ function showStatusChangeNotification(reservation, oldStatus, newStatus) {
   const startTime = formatTime12hr(reservation.time_start);
   const endTime = formatTime12hr(reservation.time_end);
   
-  const message = `Status Update: Your request for ${reservation.facility} on ${formattedDate} at ${startTime}-${endTime} has been changed from "${oldStatus}" to "${newStatus}"`;
+  // Map statuses for display
+  const displayOldStatus = mapStatusForDisplay(oldStatus);
+  const displayNewStatus = mapStatusForDisplay(newStatus);
+  
+  const message = `Status Update: Your request for ${reservation.facility} on ${formattedDate} at ${startTime}-${endTime} has been changed from "${displayOldStatus}" to "${displayNewStatus}"`;
   
   // Show browser notification if supported
   if ('Notification' in window && Notification.permission === 'granted') {
@@ -689,79 +717,7 @@ function requestNotificationPermission() {
   }
 }
 
-// Validate time conflicts for a specific date
-function hasTimeConflict(selectedDate, startTime, endTime, existingReservations) {
-  // Only check reservations for the same date
-  const sameeDateReservations = existingReservations.filter(reservation => 
-    reservation.date === selectedDate
-  );
-  
-  // Convert time strings to minutes for easier comparison
-  function timeToMinutes(timeStr) {
-    const [hours, minutes] = timeStr.split(':').map(Number);
-    return hours * 60 + minutes;
-  }
-  
-  const newStartMinutes = timeToMinutes(startTime);
-  const newEndMinutes = timeToMinutes(endTime);
-  
-  // Check for conflicts with existing reservations on the same date
-  for (const reservation of sameeDateReservations) {
-    const existingStartMinutes = timeToMinutes(reservation.time_start);
-    const existingEndMinutes = timeToMinutes(reservation.time_end);
-    
-    // Check if there's an overlap
-    if (
-      (newStartMinutes < existingEndMinutes && newEndMinutes > existingStartMinutes) ||
-      (existingStartMinutes < newEndMinutes && existingEndMinutes > newStartMinutes)
-    ) {
-      return true; // Conflict found
-    }
-  }
-  
-  return false; // No conflict
-}
 
-// Comprehensive time validation function for restricted reservation times
-function validateReservationTime(selectedDate, startTime, endTime) {
-  // Only allow 7:00 AM or 7:00 PM as valid reservation times
-  if (!isValidReservationTime(startTime)) {
-    return {
-      valid: false,
-      message: `Invalid start time. You can only reserve at 7:00 AM or 7:00 PM. Selected: ${formatTime12hr(startTime)}`
-    };
-  }
-  
-  if (!isValidReservationTime(endTime)) {
-    return {
-      valid: false,
-      message: `Invalid end time. You can only reserve at 7:00 AM or 7:00 PM. Selected: ${formatTime12hr(endTime)}`
-    };
-  }
-  
-  // Check if end time is after start time
-  function timeToMinutes(timeStr) {
-    const [hours, minutes] = timeStr.split(':').map(Number);
-    return hours * 60 + minutes;
-  }
-  
-  if (timeToMinutes(endTime) <= timeToMinutes(startTime)) {
-    return {
-      valid: false,
-      message: 'End time must be after start time'
-    };
-  }
-  
-  // Check if it's a valid time combination (7 AM to 7 PM only)
-  if (startTime === "07:00" && endTime === "19:00") {
-    return { valid: true, message: 'Valid reservation time: 7:00 AM to 7:00 PM' };
-  } else {
-    return {
-      valid: false,
-      message: 'Invalid time combination. You can only reserve from 7:00 AM to 7:00 PM (12-hour block)'
-    };
-  }
-}
 
 // Initialize notifications when page loads
 document.addEventListener('DOMContentLoaded', function() {

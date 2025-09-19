@@ -1,4 +1,3 @@
-
 * {
   margin: 0;
   padding: 0;
@@ -582,5 +581,97 @@ font-size:18px;
   .facility-table th, td { 
     font-size: 12px;
     padding: 15px;
+  }
+}
+
+/* Signature Drop Area Styles */
+.signature-drop-area {
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: #f9f9f9;
+  margin: 10px 0;
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.signature-drop-area:hover {
+  border-color: #234734;
+  background-color: #f0f5f0;
+}
+
+.signature-drop-area.dragover {
+  border-color: #234734;
+  background-color: #e8f5e8;
+  transform: scale(1.02);
+}
+
+.drop-text {
+  color: #666;
+  font-size: 14px;
+}
+
+.drop-text p {
+  margin: 0 0 5px 0;
+  font-weight: 500;
+  color: #234734;
+}
+
+.drop-text small {
+  color: #888;
+  font-size: 12px;
+}
+
+.signature-preview {
+  max-width: 200px;
+  max-height: 100px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-top: 10px;
+  object-fit: contain;
+  background-color: white;
+  padding: 5px;
+}
+
+/* When signature is uploaded, hide drop text and show preview */
+.signature-drop-area:has(.signature-preview[style*="block"]) .drop-text {
+  display: none;
+}
+
+/* Fallback for browsers that don't support :has() */
+.signature-drop-area.has-image .drop-text {
+  display: none;
+}
+
+.signature-drop-area.has-image {
+  border-color: #234734;
+  background-color: #f0f5f0;
+  border-style: solid;
+}
+
+/* Responsive design for signature area */
+@media (max-width: 768px) {
+  .signature-drop-area {
+    padding: 15px;
+    min-height: 80px;
+  }
+  
+  .signature-preview {
+    max-width: 150px;
+    max-height: 75px;
+  }
+  
+  .drop-text p {
+    font-size: 13px;
+  }
+  
+  .drop-text small {
+    font-size: 11px;
   }
 }
