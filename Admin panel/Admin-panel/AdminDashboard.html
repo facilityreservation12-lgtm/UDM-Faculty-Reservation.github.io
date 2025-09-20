@@ -6,8 +6,10 @@
   <title>Admin Dashboard</title>
   <link rel="stylesheet" href="css/AdminDashboard.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="java/AdminDashboard.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="../../supabaseConfig.js"></script>
+  <script src="java/AdminDashboard_new.js"></script>
 </head>
 <body>
 <div class="sidebar">
@@ -15,8 +17,8 @@
       <div class="user-photo">
         <img src="img/peppa.jpg" alt="User Photo" />
         <div>
-          <strong>Juan B. Batumbakal</strong><br />
-          ADMIN
+          <b><p class="UserName" id="UserName">Loading...</p></b>
+          <p class="UserRole" id="UserRole">Loading...</p>
         </div>
       </div>
       <div class="menu">
@@ -34,7 +36,7 @@
         </div>        
       </div>
     </div>
-    <button onclick="window.location.href='landingPage.html'" class="logout-btn">Log Out</button>
+    <button onclick="signOutUser()" class="logout-btn">Log Out</button>
   </div>
 
   <div class="main">  
