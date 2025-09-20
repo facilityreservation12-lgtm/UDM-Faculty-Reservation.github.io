@@ -12,20 +12,20 @@
       <div class="user-photo">
         <img src="img/peppa.jpg" alt="User Photo" />
         <div>
-          <strong>Juan B. Batumbakal</strong><br />
-          ADMIN
+          <strong id="UserName">Loading...</strong><br />
+          <span id="UserRole">Loading...</span>
         </div>
       </div>
       <div class="menu">
-        <a href="AdminDashboard.html">Dashboard</a>
-        <a href="AdminVRF.html">VRF</a>
-        <a href="Admincalendar.html">Calendar</a>
+        <a href="SuperAdminDashboard.html">Dashboard</a>
+        <a href="SuperAdminVRF.html">VRF</a>
+        <a href="SuperAdmincalendar.html">Calendar</a>
             <div class="reqs-sub-menu">
                 <a href="#" class="sidebar-link">Request ▾</a>
             <div class="sub-menu">
-                <a href="AD_REQ_IncomingRequest.html">IncomingRequest</a>
-                <a href="AD_Pending.html">Pending</a>
-                <a href="AD_Appproved.html">Approved</a>
+                <a href="SA_REQ_IncomingRequest.html">IncomingRequest</a>
+                <a href="SA_Pending.html">Pending</a>
+                <a href="SA_Appproved.html">Approved</a>
           </div>
         </div>   
         <a href="SA_Otheruser.html">Other User</a>
@@ -36,7 +36,7 @@
         <a href="SA_Reportbugs.html">Report Bugs</a>         
       </div>
     </div>
-    <button onclick="window.location.href='landingPage.html'" class="logout-btn">Log Out</button>
+        <button onclick="signOutUser()" class="logout-btn">Log Out</button>
   </div>
 
   <div class="main-content">
@@ -66,7 +66,9 @@
     </div>
   </div>
 
-   <script src="java/UDMfacility.js"></script>
+   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+   <script src="../../supabaseConfig.js"></script>
+   <script src="../../Admin panel/Admin-panel/java/UDMfacility_new.js"></script>
      <script>
 document.querySelectorAll('.menu a').forEach(link => {
   if (
