@@ -301,6 +301,7 @@ document.querySelectorAll('.menu a').forEach(link => {
     };
 }
 
+
 // Auto-fill date from calendar selection
 window.addEventListener('DOMContentLoaded', function() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -377,8 +378,234 @@ async function retryLocalUploads(sb) {
 	}
 }
 
+// Load and display user notifications
+async function loadUserNotifications() {
+  try {
+    const sb = getSupabase();
+    if (!sb) {
+      console.error('Supabase client not found');
+      return;
+    }
+
+    // Get current user ID
+    const userId = localStorage.getItem('user_id') || localStorage.getItem('id');
+
+    if (!userId) {
+      console.log('No user logged in, skipping notifications');
+      return;
+    }
+
+    // Fetch user's reservations with status information
+    const { data: reservations, error } = await sb
+      .from('reservations')
+      .select('facility, date, time_start, time_end, title_of_the_event, status')
+      .eq('id', userId)
+      .order('created_at', { ascending: false })
+      .limit(10); // Get latest 10 reservations
+
+    if (error) {
+      console.error('Error fetching user notifications:', error);
+      return;
+    }
+
+    // Display notifications
+    displayNotifications(reservations || []);
+
+  } catch (error) {
+    console.error('Error loading notifications:', error);
+  }
+}
+
+// Display notifications in the notification panel
+function displayNotifications(reservations) {
+  const notificationContainer = document.querySelector('.notification-container');
+  
+  if (!notificationContainer) {
+    console.log('Notification container not found');
+    return;
+  }
+
+  // Clear existing notifications
+  notificationContainer.innerHTML = '';
+
+  if (reservations.length === 0) {
+    notificationContainer.innerHTML = '<div class="notification-item">No notifications available</div>';
+    return;
+  }
+
+  // Create notification items
+  reservations.forEach(reservation => {
+    const notificationItem = createNotificationItem(reservation);
+    notificationContainer.appendChild(notificationItem);
+  });
+}
+
+// Create individual notification item
+function createNotificationItem(reservation) {
+  const div = document.createElement('div');
+  div.className = 'notification-item';
+  
+  // Format date
+  const date = new Date(reservation.date);
+  const formattedDate = date.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric'
+  });
+  
+  // Format time
+  const startTime = formatTime12hr(reservation.time_start);
+  const endTime = formatTime12hr(reservation.time_end);
+  
+  // Map status for display and get color
+  let displayStatus = reservation.status;
+  if (reservation.status?.toLowerCase() === 'request') {
+    displayStatus = 'Pending';
+  }
+  
+  const statusColor = getStatusColor(reservation.status);
+  
+  // Create notification text with inline styling
+  let notificationText;
+  if (displayStatus?.toLowerCase() === 'approved') {
+    notificationText = `Your Request for <b>${reservation.facility}</b> on <b>${formattedDate}</b> at <b>${startTime}-${endTime}</b> is <span style="color: ${statusColor}; font-weight: bold;">${displayStatus}</span>`;
+  } else {
+    notificationText = `Your Request for <b>${reservation.facility}</b> on <b>${formattedDate}</b> at <b>${startTime}-${endTime}</b> is currently <span style="color: ${statusColor}; font-weight: bold;">${displayStatus}</span>`;
+  }
+  
+  div.innerHTML = notificationText;
+  
+  return div;
+}
+
+// Format time to 12-hour format
+function formatTime12hr(timeStr) {
+  if (!timeStr) return "";
+  let [hour, minute] = timeStr.split(":");
+  hour = parseInt(hour, 10);
+  const ampm = hour >= 12 ? "PM" : "AM";
+  hour = hour % 12 || 12;
+  return `${hour}:${minute} ${ampm}`;
+}
+
+// Get status color for inline styling
+function getStatusColor(status) {
+  const mappedStatus = status?.toLowerCase() === 'request' ? 'pending' : status?.toLowerCase();
+  
+  switch (mappedStatus) {
+    case 'approved':
+      return '#2e7d32'; // Green
+    case 'pending':
+      return '#e65100'; // Orange
+    case 'rejected':
+    case 'denied':
+      return '#c62828'; // Red
+    case 'cancelled':
+      return '#616161'; // Gray
+    default:
+      return '#424242'; // Dark gray
+  }
+}
+
+// Check for status changes and show real-time notifications
+async function checkForStatusUpdates() {
+  try {
+    const sb = getSupabase();
+    if (!sb) return;
+
+    // Get current user ID
+    const userId = localStorage.getItem('user_id') || localStorage.getItem('id');
+
+    if (!userId) return;
+
+    // Get stored reservations from localStorage for comparison
+    const storedReservations = JSON.parse(localStorage.getItem('userReservations') || '[]');
+    
+    // Fetch current reservations
+    const { data: currentReservations, error } = await sb
+      .from('reservations')
+      .select('request_id, facility, date, time_start, time_end, status')
+      .eq('id', userId);
+
+    if (error) {
+      console.error('Error checking status updates:', error);
+      return;
+    }
+
+    // Check for status changes
+    if (storedReservations.length > 0) {
+      currentReservations?.forEach(current => {
+        const stored = storedReservations.find(s => s.request_id === current.request_id);
+        
+        if (stored && stored.status !== current.status) {
+          // Status changed - show notification
+          showStatusChangeNotification(current, stored.status, current.status);
+        }
+      });
+    }
+
+    // Update stored reservations
+    localStorage.setItem('userReservations', JSON.stringify(currentReservations || []));
+
+  } catch (error) {
+    console.error('Error checking status updates:', error);
+  }
+}
+
+// Show real-time status change notification
+function showStatusChangeNotification(reservation, oldStatus, newStatus) {
+  // Format date and time
+  const date = new Date(reservation.date);
+  const formattedDate = date.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric'
+  });
+  
+  const startTime = formatTime12hr(reservation.time_start);
+  const endTime = formatTime12hr(reservation.time_end);
+  
+  // Map statuses for display
+  const displayOldStatus = oldStatus?.toLowerCase() === 'request' ? 'Pending' : oldStatus;
+  const displayNewStatus = newStatus?.toLowerCase() === 'request' ? 'Pending' : newStatus;
+  
+  const message = `Status Update: Your request for ${reservation.facility} on ${formattedDate} at ${startTime}-${endTime} has been changed from "${displayOldStatus}" to "${displayNewStatus}"`;
+  
+  // Show browser notification if supported
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification('Reservation Status Update', {
+      body: message,
+      icon: 'images/udm-logo.webp'
+    });
+  }
+  
+  // Also show in-app alert
+  alert(message);
+  
+  // Refresh notifications panel
+  loadUserNotifications();
+}
+
+// Request notification permission
+function requestNotificationPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission().then(permission => {
+      console.log('Notification permission:', permission);
+    });
+  }
+}
+
 document.addEventListener('DOMContentLoaded', async function() {
 	try {
+		// Request notification permission
+		requestNotificationPermission();
+		
+		// Load initial notifications
+		setTimeout(loadUserNotifications, 1000); // Delay to ensure user is loaded
+		
+		// Check for status updates every 30 seconds
+		setInterval(checkForStatusUpdates, 30000);
+
 		// Acquire safe client once per page load
 		const sb = getSupabase();
 		if (!sb) {
@@ -1006,6 +1233,43 @@ async function createReservationNotification(sb, reservationData) {
 	} catch (error) {
 		console.error('Error creating notification:', error);
 	}
+}
+
+// Function to sign out user
+function signOutUser() {
+  // Show confirmation dialog
+  if (confirm('Are you sure you want to sign out?')) {
+    console.log('User signing out...');
+    
+    // Clear all user session data from localStorage
+    localStorage.removeItem('id');
+    localStorage.removeItem('user_id');
+    localStorage.removeItem('user_name');
+    localStorage.removeItem('user_role');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('reservations');
+    localStorage.removeItem('userReservations');
+    localStorage.removeItem('selectedDate');
+    
+    // Clear any other session data
+    sessionStorage.clear();
+    
+    // Sign out from Supabase if available
+    const sb = getSupabase();
+    if (sb && sb.auth) {
+      sb.auth.signOut().catch(error => {
+        console.warn('Error signing out from Supabase:', error);
+      });
+    }
+    
+    console.log('User signed out successfully');
+    
+    // Redirect to landing page
+    window.location.href = 'landingPage.html';
+  }
 }
 
 // Custom Alert Modal (using browser's native alert instead)
