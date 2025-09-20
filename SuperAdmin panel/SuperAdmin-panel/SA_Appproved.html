@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SuperAdmin Approved</title>
   <link rel="stylesheet" href="css/SA_Approved.css"/>
+  
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    window.SUPABASE_URL = 'https://hfasujvdkbjpllwohqcc.supabase.co';
+    window.SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhmYXN1anZka2JqcGxsd29ocWNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ2NjA4ODgsImV4cCI6MjA3MDIzNjg4OH0.Wo6eqzObQ_sI_qebCi0F6iGyyP7TYcHCyxSoOZQOpPM';
+  </script>
+  <script defer src="java/SA_Approved.js"></script>
 </head>
 <body>
 <div class="sidebar">
@@ -56,32 +64,8 @@
         <th>Slip</th>
       </tr>
     </thead>
-    <tbody>
-      <tr>
-        <td>Erika Ramos</td>
-        <td><strong>Palma Hall</strong></td>
-        <td>June 10, 2025</td>
-        <td>9:00 AM</td>
-        <td>Student council strategic planning meeting</td>
-        <td><button onclick="window.location.href='SA_Slip.html'" class="slip-btn">View Slip</button></td>
-      </tr>
-      <tr>
-        <td>Miko Javier</td>
-        <td><strong>Palma Hall</strong></td>
-        <td>June 14, 2025</td>
-        <td>10:30 AM</td>
-        <td>Department of Social Sciences general assembly</td>
-        <td><button onclick="window.location.href='SA_Slip.html'" class="slip-btn">View Slip</button></td>
-      </tr>
-      <tr>
-        <td>Trisha Lim</td>
-        <td><strong>Classroom</strong></td>
-        <td>June 15, 2025</td>
-        <td>8:00 AM</td>
-        <td>Thesis defense presentation</td>
-        <td><button onclick="window.location.href='SA_Slip.html'" class="slip-btn">View Slip</button></td>
-      </tr>
-      <!-- More rows as needed -->
+    <tbody id="approvedTableBody">
+      <!-- populated by java/AD_pending.js -> loadApprovedRequests() -->
     </tbody>
   </table>
 </div>

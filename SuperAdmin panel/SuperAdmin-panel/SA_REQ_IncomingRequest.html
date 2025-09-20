@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SuperAdmin Incoming Request</title>
   <link rel="stylesheet" href="css/SA_IncomingRequest.css"/>
+  <!-- Supabase Client Scripts -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="../../supabaseConfig.js"></script>
+  <script defer src="java/SA_REQ_IncomingRequest.js"></script>
 </head>
 <body>
 <div class="sidebar">
@@ -52,36 +56,12 @@
         <th>Venue</th>
         <th>Date</th>
         <th>Time</th>
-        <th>Details</th>
+        <th>Title of the Event</th>
         <th>Print VRF</th>
       </tr>
     </thead>
-    <tbody>
-      <tr>
-        <td>Erika Ramos</td>
-        <td><strong>Palma Hall</strong></td>
-        <td>June 10, 2025</td>
-        <td>9:00 AM</td>
-        <td>Student council strategic planning meeting</td>
-        <td><button class="print-btn">Print</button></td>
-      </tr>
-      <tr>
-        <td>Nathan Cruz</td>
-        <td><strong>Basketball Court</strong></td>
-        <td>June 11, 2025</td>
-        <td>4:30 PM</td>
-        <td>College of Engineering varsity tryouts</td>
-        <td><button class="print-btn">Print</button></td>
-      </tr>
-      <tr>
-        <td>Bianca Torres</td>
-        <td><strong>Mehan Garden</strong></td>
-        <td>June 20, 2025</td>
-        <td>2:00 PM</td>
-        <td>On-site sketching for architecture class</td>
-        <td><button class="print-btn">Print</button></td>
-      </tr>
-      <!-- Add more rows as needed -->
+    <tbody id="requestTableBody">
+      <!-- Data will be populated dynamically -->
     </tbody>
   </table>
 </div>
