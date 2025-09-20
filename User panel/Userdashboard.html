@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>User Dashboard</title>
   <link rel="stylesheet" href="CSS/Userdasboard.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.min.js"></script>
+  <script src="../supabaseClient.js"></script>
+  <script src="Javascript/Userdashboard.js"></script>
 </head>
 <body>
 
@@ -38,7 +41,7 @@
         <a onclick="toggleNotificationPanel()">Notification</a>
       </div>
     </div>
-    <button onclick="window.location.href='landingPage.html'" class="logout-btn">Log Out</button>
+    <button onclick="signOutUser()" class="logout-btn">Log Out</button>
   </div>
 
   <div class="main">  
@@ -83,19 +86,7 @@
       </table>
     </div>
   </div>
- 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.min.js"></script>
-  <script src="../supabaseClient.js"></script>
-  <script src="Javascript/Userdashboard.js"></script>
-    <script>
-document.querySelectorAll('.menu a').forEach(link => {
-  if (
-    link.href &&
-    window.location.pathname.endsWith(link.getAttribute('href'))
-  ) {
-    link.classList.add('active');
-  }
-});
-</script>
+
+
 </body>
 </html>

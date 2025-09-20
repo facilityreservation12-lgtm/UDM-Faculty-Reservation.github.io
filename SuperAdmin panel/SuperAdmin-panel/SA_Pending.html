@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SuperAdmin Pending</title>
   <link rel="stylesheet" href="css/SA_Pending.css"/>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    window.SUPABASE_URL = 'https://hfasujvdkbjpllwohqcc.supabase.co';
+    window.SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhmYXN1anZka2JqcGxsd29ocWNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ2NjA4ODgsImV4cCI6MjA3MDIzNjg4OH0.Wo6eqzObQ_sI_qebCi0F6iGyyP7TYcHCyxSoOZQOpPM';
+  </script>
+  <script defer src="java/SA_Pending.js"></script>
 </head>
 <body>
 <div class="sidebar">
@@ -39,13 +46,24 @@
        <button onclick="window.location.href='landingPage.html'" class="logout-btn">Log Out</button> 
   </div>
 
+    <div id="statusModal" class="modal" style="display:none;">
+      <div class="modal-content">
+        <span class="close" id="closeStatusModalBtn">&times;</span>
+        <h2>Do you want to?</h2>
+        <div style="margin: 20px 0;">
+          <button id="approveBtn" class="modal-action-btn" style="background:#184C2F;color:#fff;margin-right:10px;">Accept</button>
+          <button id="disapproveBtn" class="modal-action-btn" style="background:#ad332b;color:#fff;">Reject</button>
+        </div>
+      </div>
+    </div>
+
   <div class="content-area">
   <h1 class="page-title">
       <button class="back-btn" onclick="history.back()">←</button>
       Pending
     </h1>
 
-
+    
   <table class="pending-table">
     <thead>
       <tr>
@@ -53,36 +71,12 @@
         <th>Venue</th>
         <th>Date</th>
         <th>Time</th>
-        <th>Details</th>
+        <th>Title of the Event</th>
         <th>Status</th>
       </tr>
     </thead>
-    <tbody>
-      <tr>
-        <td>Erika Ramos</td>
-        <td><strong>Palma Hall</strong></td>
-        <td>June 10, 2025</td>
-        <td>9:00 AM</td>
-        <td>Student council strategic planning meeting</td>
-        <td><button class="status-btn">Accept / Reject</button></td>
-      </tr>
-      <tr>
-        <td>Gwen Santos</td>
-        <td><strong>Right Wing Lobby</strong></td>
-        <td>July 5, 2025</td>
-        <td>11:00 AM</td>
-        <td>Informational booth for student elections</td>
-        <td><button class="status-btn">Accept / Reject</button></td>
-      </tr>
-      <tr>
-        <td>Darren Velasco</td>
-        <td><strong>Classroom</strong></td>
-        <td>July 10, 2025</td>
-        <td>1:00 PM</td>
-        <td>Crash course in public speaking</td>
-        <td><button class="status-btn">Accept / Reject</button></td>
-      </tr>
-      <!-- Add more rows as needed -->
+    <tbody id="pendingTableBody">
+      <!-- populated by java/AD_pending.js -->
     </tbody>
   </table>
 </div>

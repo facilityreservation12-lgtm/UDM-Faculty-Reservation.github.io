@@ -6,6 +6,12 @@
   <title>SuperAdmin Dashboard</title>
   <link rel="stylesheet" href="css/SuperAdminDashboard.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Chart.js Datalabels Plugin -->
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+  <!-- Supabase Client -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="../../supabaseConfig.js"></script>
+  <script src="java/SuperAdminDashboard.js"></script>
 </head>
 <body>
 <div class="sidebar">
@@ -13,8 +19,8 @@
       <div class="user-photo">
         <img src="img/peppa.jpg" alt="User Photo" />
         <div>
-          <strong>Juan B. Batumbakal</strong><br/>
-          SUPER ADMIN
+          <strong id="UserName">Loading...</strong><br/>
+          <span id="UserRole">Loading...</span>
         </div>
         
       </div>
@@ -42,7 +48,7 @@
 
   <div class="main">  
   <div class="card">
-      <h2  id="usage-title">USAGE PERCENTAGE OF FACILITIES FOR THE MONTH OF ______</h2>
+      <h2 id="usage-title">USAGE PERCENTAGE OF FACILITIES FOR THE MONTH OF ______</h2>
       <div class="chart-legend-container">
         <canvas id="UsagePieChart"></canvas>
         <ul>
@@ -159,83 +165,6 @@
       </table>
     </div>
   </div>
-    <!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<!-- Chart.js Datalabels Plugin -->
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
-<script>
-const ctx = document.getElementById('UsagePieChart').getContext('2d');
 
-new Chart(ctx, {
-  type: 'pie',
-  data: {
-    labels: [
-      'Palma Hall',
-      'Right Wing Lobby',
-      'Mehan Garden',
-      'Rooftop',
-      'Classroom',
-      'Basketball Court',
-      'Space at the Ground Floor',
-      'Others'
-    ],
-    datasets: [{
-      data: [30, 20, 15, 14, 6, 5, 5, 5],
-      backgroundColor: [
-        '#FFCC00',
-        '#A1C181',
-        '#E8E288',
-        '#92DCE5',
-        '#FFDCC1',
-        '#A7C6ED',
-        '#FFABAB',
-        '#CCCCCC'
-      ]
-    }]
-  },
-  options: {
-    responsive: false,
-    plugins: {
-      legend: {
-        display: false
-      },
-      datalabels: {
-        color: '#000', // text color
-        font: {
-          weight: 'bold',
-          size: 14
-        },
-        formatter: (value, ctx) => {
-          let sum = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-          let percentage = (value * 100 / sum).toFixed(1) + "%";
-          return percentage;
-        }
-      }
-    }
-  },
-  plugins: [ChartDataLabels]
-});
- function updateUsageTitle() {
-    const titleElement = document.getElementById('usage-title');
-    const now = new Date();
-    const monthName = now.toLocaleString('default', { month: 'long' });
-    const year = now.getFullYear();
-    titleElement.textContent = `USAGE PERCENTAGE OF FACILITIES FOR THE MONTH OF ${monthName.toUpperCase()} ${year}`;
-  }
-
-  updateUsageTitle();
-
-  setInterval(updateUsageTitle, 24 * 60 * 60 * 1000);
-</script>
-<script>
-document.querySelectorAll('.menu a').forEach(link => {
-  if (
-    link.href &&
-    window.location.pathname.endsWith(link.getAttribute('href'))
-  ) {
-    link.classList.add('active');
-  }
-});
-</script>
 </body>
 </html>

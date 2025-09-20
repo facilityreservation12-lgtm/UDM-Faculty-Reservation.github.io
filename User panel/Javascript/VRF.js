@@ -68,6 +68,22 @@ function getSupabase() {
 	return null;
 }
 
+// Supabase conflict check for reservations
+async function checkConflict(sb, facility, date, start, end) {
+  const { data, error } = await sb
+    .from("reservations")
+    .select("*")
+    .eq("facility", facility)
+    .eq("date", date)
+    .or(`and(time_start <= '${end}', time_end >= '${start}')`);
+
+  if (error) {
+    console.error('Conflict check error:', error);
+    return false;
+  }
+  return data && data.length > 0;
+}
+
 // Replace loadUserDetails to use safe client
 async function loadUserDetails() {
   try {
@@ -254,6 +270,56 @@ async function deleteFileFromIDB(key) {
 	});
 }
 
+document.querySelectorAll('.menu a').forEach(link => {
+  if (
+    link.href &&
+    window.location.pathname.endsWith(link.getAttribute('href'))
+  ) {
+    link.classList.add('active');
+  }
+});
+
+  const panel = document.getElementById("notificationPanel");
+  const overlay = document.getElementById("notificationOverlay");
+
+  function toggleNotificationPanel() {
+    panel.classList.toggle("active");
+    overlay.classList.toggle("active");
+  }
+
+  overlay.addEventListener("click", toggleNotificationPanel);
+
+  function showConflictModal(messageHtml) {
+  const modal = document.getElementById('conflictModal');
+  const body = document.getElementById('conflictModalBody');
+  body.innerHTML = messageHtml;
+  modal.style.display = 'flex';
+
+  document.getElementById('conflictModalOkBtn').onclick =
+    document.getElementById('closeConflictModalBtn').onclick = function() {
+      modal.style.display = 'none';
+    };
+}
+
+
+// Auto-fill date from calendar selection
+window.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const dateOfEvent = urlParams.get('dateOfEvent');
+    
+    if (dateOfEvent) {
+        const dateInput = document.getElementById('dateOfEvent');
+        if (dateInput) {
+            dateInput.value = dateOfEvent;
+            console.log('Auto-filled date from calendar:', dateOfEvent);
+        } else {
+            console.error('dateOfEvent input field not found');
+        }
+    } else {
+        console.log('No dateOfEvent parameter in URL');
+    }
+});
+
 // Retry uploads for reservations saved locally with base64 files
 async function retryLocalUploads(sb) {
 	if (!sb) return;
@@ -312,36 +378,234 @@ async function retryLocalUploads(sb) {
 	}
 }
 
-// Create notification for reservation
-async function createReservationNotification(sb, reservationData) {
-	try {
-		const notification = {
-			id: reservationData.userId,
-			facility: reservationData.facility,
-			date: reservationData.date,
-			time_start: reservationData.timeStart,
-			time_end: reservationData.timeEnd,
-			status: 'Pending'
-		};
-		
-		console.log('Creating notification:', notification);
-		
-		const { error: notificationError } = await sb
-			.from('notifications')
-			.insert([notification]);
-			
-		if (notificationError) {
-			console.error('Failed to create notification:', notificationError);
-		} else {
-			console.log('Notification created successfully');
-		}
-	} catch (error) {
-		console.error('Error creating notification:', error);
-	}
+// Load and display user notifications
+async function loadUserNotifications() {
+  try {
+    const sb = getSupabase();
+    if (!sb) {
+      console.error('Supabase client not found');
+      return;
+    }
+
+    // Get current user ID
+    const userId = localStorage.getItem('user_id') || localStorage.getItem('id');
+
+    if (!userId) {
+      console.log('No user logged in, skipping notifications');
+      return;
+    }
+
+    // Fetch user's reservations with status information
+    const { data: reservations, error } = await sb
+      .from('reservations')
+      .select('facility, date, time_start, time_end, title_of_the_event, status')
+      .eq('id', userId)
+      .order('created_at', { ascending: false })
+      .limit(10); // Get latest 10 reservations
+
+    if (error) {
+      console.error('Error fetching user notifications:', error);
+      return;
+    }
+
+    // Display notifications
+    displayNotifications(reservations || []);
+
+  } catch (error) {
+    console.error('Error loading notifications:', error);
+  }
+}
+
+// Display notifications in the notification panel
+function displayNotifications(reservations) {
+  const notificationContainer = document.querySelector('.notification-container');
+  
+  if (!notificationContainer) {
+    console.log('Notification container not found');
+    return;
+  }
+
+  // Clear existing notifications
+  notificationContainer.innerHTML = '';
+
+  if (reservations.length === 0) {
+    notificationContainer.innerHTML = '<div class="notification-item">No notifications available</div>';
+    return;
+  }
+
+  // Create notification items
+  reservations.forEach(reservation => {
+    const notificationItem = createNotificationItem(reservation);
+    notificationContainer.appendChild(notificationItem);
+  });
+}
+
+// Create individual notification item
+function createNotificationItem(reservation) {
+  const div = document.createElement('div');
+  div.className = 'notification-item';
+  
+  // Format date
+  const date = new Date(reservation.date);
+  const formattedDate = date.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric'
+  });
+  
+  // Format time
+  const startTime = formatTime12hr(reservation.time_start);
+  const endTime = formatTime12hr(reservation.time_end);
+  
+  // Map status for display and get color
+  let displayStatus = reservation.status;
+  if (reservation.status?.toLowerCase() === 'request') {
+    displayStatus = 'Pending';
+  }
+  
+  const statusColor = getStatusColor(reservation.status);
+  
+  // Create notification text with inline styling
+  let notificationText;
+  if (displayStatus?.toLowerCase() === 'approved') {
+    notificationText = `Your Request for <b>${reservation.facility}</b> on <b>${formattedDate}</b> at <b>${startTime}-${endTime}</b> is <span style="color: ${statusColor}; font-weight: bold;">${displayStatus}</span>`;
+  } else {
+    notificationText = `Your Request for <b>${reservation.facility}</b> on <b>${formattedDate}</b> at <b>${startTime}-${endTime}</b> is currently <span style="color: ${statusColor}; font-weight: bold;">${displayStatus}</span>`;
+  }
+  
+  div.innerHTML = notificationText;
+  
+  return div;
+}
+
+// Format time to 12-hour format
+function formatTime12hr(timeStr) {
+  if (!timeStr) return "";
+  let [hour, minute] = timeStr.split(":");
+  hour = parseInt(hour, 10);
+  const ampm = hour >= 12 ? "PM" : "AM";
+  hour = hour % 12 || 12;
+  return `${hour}:${minute} ${ampm}`;
+}
+
+// Get status color for inline styling
+function getStatusColor(status) {
+  const mappedStatus = status?.toLowerCase() === 'request' ? 'pending' : status?.toLowerCase();
+  
+  switch (mappedStatus) {
+    case 'approved':
+      return '#2e7d32'; // Green
+    case 'pending':
+      return '#e65100'; // Orange
+    case 'rejected':
+    case 'denied':
+      return '#c62828'; // Red
+    case 'cancelled':
+      return '#616161'; // Gray
+    default:
+      return '#424242'; // Dark gray
+  }
+}
+
+// Check for status changes and show real-time notifications
+async function checkForStatusUpdates() {
+  try {
+    const sb = getSupabase();
+    if (!sb) return;
+
+    // Get current user ID
+    const userId = localStorage.getItem('user_id') || localStorage.getItem('id');
+
+    if (!userId) return;
+
+    // Get stored reservations from localStorage for comparison
+    const storedReservations = JSON.parse(localStorage.getItem('userReservations') || '[]');
+    
+    // Fetch current reservations
+    const { data: currentReservations, error } = await sb
+      .from('reservations')
+      .select('request_id, facility, date, time_start, time_end, status')
+      .eq('id', userId);
+
+    if (error) {
+      console.error('Error checking status updates:', error);
+      return;
+    }
+
+    // Check for status changes
+    if (storedReservations.length > 0) {
+      currentReservations?.forEach(current => {
+        const stored = storedReservations.find(s => s.request_id === current.request_id);
+        
+        if (stored && stored.status !== current.status) {
+          // Status changed - show notification
+          showStatusChangeNotification(current, stored.status, current.status);
+        }
+      });
+    }
+
+    // Update stored reservations
+    localStorage.setItem('userReservations', JSON.stringify(currentReservations || []));
+
+  } catch (error) {
+    console.error('Error checking status updates:', error);
+  }
+}
+
+// Show real-time status change notification
+function showStatusChangeNotification(reservation, oldStatus, newStatus) {
+  // Format date and time
+  const date = new Date(reservation.date);
+  const formattedDate = date.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric'
+  });
+  
+  const startTime = formatTime12hr(reservation.time_start);
+  const endTime = formatTime12hr(reservation.time_end);
+  
+  // Map statuses for display
+  const displayOldStatus = oldStatus?.toLowerCase() === 'request' ? 'Pending' : oldStatus;
+  const displayNewStatus = newStatus?.toLowerCase() === 'request' ? 'Pending' : newStatus;
+  
+  const message = `Status Update: Your request for ${reservation.facility} on ${formattedDate} at ${startTime}-${endTime} has been changed from "${displayOldStatus}" to "${displayNewStatus}"`;
+  
+  // Show browser notification if supported
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification('Reservation Status Update', {
+      body: message,
+      icon: 'images/udm-logo.webp'
+    });
+  }
+  
+  // Also show in-app alert
+  alert(message);
+  
+  // Refresh notifications panel
+  loadUserNotifications();
+}
+
+// Request notification permission
+function requestNotificationPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission().then(permission => {
+      console.log('Notification permission:', permission);
+    });
+  }
 }
 
 document.addEventListener('DOMContentLoaded', async function() {
 	try {
+		// Request notification permission
+		requestNotificationPermission();
+		
+		// Load initial notifications
+		setTimeout(loadUserNotifications, 1000); // Delay to ensure user is loaded
+		
+		// Check for status updates every 30 seconds
+		setInterval(checkForStatusUpdates, 30000);
+
 		// Acquire safe client once per page load
 		const sb = getSupabase();
 		if (!sb) {
@@ -393,6 +657,48 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 		const reservationForm = document.getElementById('reservationForm');
 		if (!reservationForm) return;
+				// Signature drag & drop + preview
+		const dropArea = document.getElementById('signatureDropArea');
+		const fileInput = document.getElementById('signature');
+		const previewImg = document.getElementById('signaturePreview');
+		
+		if (dropArea && fileInput && previewImg) {
+		  dropArea.addEventListener('click', () => fileInput.click());
+		
+		  dropArea.addEventListener('dragover', (e) => {
+			e.preventDefault();
+			dropArea.classList.add('dragover');
+		  });
+		
+		  dropArea.addEventListener('dragleave', () => {
+			dropArea.classList.remove('dragover');
+		  });
+		
+		  dropArea.addEventListener('drop', (e) => {
+			e.preventDefault();
+			dropArea.classList.remove('dragover');
+			if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+			  fileInput.files = e.dataTransfer.files;
+			  showSignaturePreview(fileInput.files[0]);
+			}
+		  });
+		
+		  fileInput.addEventListener('change', () => {
+			if (fileInput.files && fileInput.files[0]) {
+			  showSignaturePreview(fileInput.files[0]);
+			}
+		  });
+		
+		  function showSignaturePreview(file) {
+			if (!file.type.startsWith('image/')) return;
+			const reader = new FileReader();
+			reader.onload = function(e) {
+			  previewImg.src = e.target.result;
+			  previewImg.style.display = 'block';
+			};
+			reader.readAsDataURL(file);
+		  }
+		}
 
 		const dateFiledInput = reservationForm.querySelector('input[name="dateFiled"], input#dateFiled, input[id="dateFiled"]');
 		const dateReceivedInput = reservationForm.querySelector('input[name="dateReceived"], input#dateReceived, input[id="dateReceived"]');
@@ -422,6 +728,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 		// Form submission
 		reservationForm.addEventListener('submit', async function (e) {
 			e.preventDefault();
+	 let reservations = JSON.parse(localStorage.getItem('reservations') || "[]");
 
 			const form = e.target;
 
@@ -447,6 +754,13 @@ document.addEventListener('DOMContentLoaded', async function() {
 				alert("Please choose a valid Date of Event.");
 				return;
 			}
+			
+			// Prevent reservation for past dates
+			const todayYMD = toYMD(new Date());
+			if (dateOfEventVal < todayYMD) {
+			  alert("You cannot reserve a date that has already passed.");
+			  return;
+			}
 
 			// Time validation
 			const newStart = parseTimeToMinutes(timeStartInput && timeStartInput.value ? timeStartInput.value : null);
@@ -460,24 +774,219 @@ document.addEventListener('DOMContentLoaded', async function() {
 				return;
 			}
 
-			// Check conflicts
-			let reservations = JSON.parse(localStorage.getItem('reservations') || "[]");
+						// Improved conflict check with recommendations
 			for (let facility of selectedFacilities) {
-				const conflict = reservations.some(r => {
-					const rDate = toYMD(r.dateOfEvent) || r.dateOfEvent;
-					if (rDate !== dateOfEventVal) return false;
-					const rFacilities = facilityListFromString(r.facility || "");
-					if (!rFacilities.includes(facility)) return false;
-					const rStart = parseTimeToMinutes(r.timeStart);
-					const rEnd = parseTimeToMinutes(r.timeEnd);
-					if (rStart === null || rEnd === null) return true;
-					return (newStart < rEnd && newEnd > rStart);
-				});
-				if (conflict) {
-					alert(`The facility "${facility}" is already reserved for ${dateOfEventVal} during the selected time.`);
-					return;
+			  // Query all reservations for this facility and date
+			  const { data, error } = await sb
+				.from("reservations")
+				.select("time_start, time_end")
+				.eq("facility", facility)
+				.eq("date", dateOfEventVal);
+			
+			  if (error) {
+				alert("Error checking reservation conflicts. Please try again later.");
+				console.error('Conflict check error:', error);
+				return;
+			  }
+			
+			  // Check if any reservation overlaps
+			  const requestedStart = parseTimeToMinutes(timeStartInput.value);
+			  const requestedEnd = parseTimeToMinutes(timeEndInput.value);
+			
+			  const conflict = data.some(r => {
+				const existingStart = parseTimeToMinutes(r.time_start);
+				const existingEnd = parseTimeToMinutes(r.time_end);
+				return requestedStart < existingEnd && requestedEnd > existingStart;
+			  });
+			
+			  // Find available slots for recommendation
+			  let slots = [];
+			  const sorted = data
+				.map(r => ({
+				  start: parseTimeToMinutes(r.time_start),
+				  end: parseTimeToMinutes(r.time_end)
+				}))
+				.sort((a, b) => a.start - b.start);
+			
+			  let lastEnd = 7 * 60;
+			  for (const res of sorted) {
+				if (res.start > lastEnd) {
+				  slots.push({
+					start: lastEnd,
+					end: res.start
+				  });
 				}
+				lastEnd = Math.max(lastEnd, res.end);
+			  }
+			  if (lastEnd < 19 * 60) {
+				slots.push({
+				  start: lastEnd,
+				  end: 19 * 60
+				});
+			  }
+			
+			  if (conflict) {
+				// If no slots for this facility, recommend another facility
+				if (slots.length === 0) {
+				  // Get all facilities
+				  const allFacilities = Object.keys(facilityCodes);
+				  let foundFacility = null;
+				  let foundSlots = null;
+			
+				  for (let altFacility of allFacilities) {
+					if (altFacility === facility) continue;
+					const { data: altData } = await sb
+					  .from("reservations")
+					  .select("time_start, time_end")
+					  .eq("facility", altFacility)
+					  .eq("date", dateOfEventVal);
+			
+					// Find slots for alt facility
+					let altSlots = [];
+					const altSorted = (altData || [])
+					  .map(r => ({
+						start: parseTimeToMinutes(r.time_start),
+						end: parseTimeToMinutes(r.time_end)
+					  }))
+					  .sort((a, b) => a.start - b.start);
+			
+					let altLastEnd = 7 * 60;
+					for (const res of altSorted) {
+					  if (res.start > altLastEnd) {
+						altSlots.push({
+						  start: altLastEnd,
+						  end: res.start
+						});
+					  }
+					  altLastEnd = Math.max(altLastEnd, res.end);
+					}
+					if (altLastEnd < 19 * 60) {
+					  altSlots.push({
+						start: altLastEnd,
+						end: 19 * 60
+					  });
+					}
+			
+					if (altSlots.length > 0) {
+					  foundFacility = altFacility;
+					  foundSlots = altSlots;
+					  break;
+					}
+				  }
+			
+				  if (foundFacility) {
+					const slotStr = foundSlots.map(s => `<li>${pad(Math.floor(s.start / 60))}:${pad(s.start % 60)} - ${pad(Math.floor(s.end / 60))}:${pad(s.end % 60)}</li>`).join('');
+					const messageHtml = `
+					  <strong>No slots available for "<span style="color:#234734">${facility}</span>" on <span style="color:#234734">${dateOfEventVal}</span>.</strong>
+					  <br><br>
+					  <span>Recommended facility: <b>${foundFacility}</b></span>
+					  <br><br>
+					  <span style="font-weight:bold;">Available slots:</span>
+					  <ul style="margin:0 0 0 1.2em;padding:0;">${slotStr}</ul>
+					`;
+					showConflictModal(messageHtml);
+					return;
+				  } else {
+					// If all facilities are full for this date, recommend another date
+					let nextDate = null;
+					for (let offset = 1; offset <= 7; offset++) {
+					  const tryDate = new Date(dateOfEventVal);
+					  tryDate.setDate(tryDate.getDate() + offset);
+					  const tryDateYMD = toYMD(tryDate);
+			
+					  let found = false;
+					  for (let altFacility of allFacilities) {
+						const { data: altData } = await sb
+						  .from("reservations")
+						  .select("time_start, time_end")
+						  .eq("facility", altFacility)
+						  .eq("date", tryDateYMD);
+			
+						let altSlots = [];
+						const altSorted = (altData || [])
+						  .map(r => ({
+							start: parseTimeToMinutes(r.time_start),
+							end: parseTimeToMinutes(r.time_end)
+						  }))
+						  .sort((a, b) => a.start - b.start);
+			
+						let altLastEnd = 7 * 60;
+						for (const res of altSorted) {
+						  if (res.start > altLastEnd) {
+							altSlots.push({
+							  start: altLastEnd,
+							  end: res.start
+							});
+						  }
+						  altLastEnd = Math.max(altLastEnd, res.end);
+						}
+						if (altLastEnd < 19 * 60) {
+						  altSlots.push({
+							start: altLastEnd,
+							end: 19 * 60
+						  });
+						}
+			
+						if (altSlots.length > 0) {
+						  nextDate = tryDateYMD;
+						  found = true;
+						  break;
+						}
+					  }
+					  if (found) break;
+					}
+			
+					if (nextDate) {
+					  const messageHtml = `
+						<strong>All facilities are fully booked for <span style="color:#234734">${dateOfEventVal}</span>.</strong>
+						<br><br>
+						<span>Recommended date: <b>${nextDate}</b></span>
+						<br><br>
+						<span>Please try reserving for this date.</span>
+					  `;
+					  showConflictModal(messageHtml);
+					  return;
+					} else {
+					  // If all dates in the next week are full, recommend next month
+					  const currentDate = new Date(dateOfEventVal);
+					  let nextMonth = currentDate.getMonth() + 1;
+					  let nextYear = currentDate.getFullYear();
+					  if (nextMonth > 11) {
+						nextMonth = 0;
+						nextYear += 1;
+					  }
+					  const firstDayNextMonth = new Date(nextYear, nextMonth, 1);
+					  const nextMonthYMD = toYMD(firstDayNextMonth);
+			
+					  const messageHtml = `
+						<strong>All facilities and dates are fully booked for this week.</strong>
+						<br><br>
+						<span>Recommended month: <b>${pad(nextMonth + 1)}-${nextYear}</b></span>
+						<br><br>
+						<span>Please try reserving for next month.</span>
+					  `;
+					  showConflictModal(messageHtml);
+					  return;
+					}
+				  }
+				} else {
+				  // If there are available slots for the selected facility, show them
+				  const slotStr = slots.map(s => `<li>${pad(Math.floor(s.start / 60))}:${pad(s.start % 60)} - ${pad(Math.floor(s.end / 60))}:${pad(s.end % 60)}</li>`).join('');
+				  const messageHtml = `
+					<strong>The facility "<span style="color:#234734">${facility}</span>" is already reserved for <span style="color:#234734">${dateOfEventVal}</span> during the selected time.</strong>
+					<br><br>
+					<span>Please pick another time.</span>
+					<br><br>
+					<span style="font-weight:bold;">Available slots for this date:</span>
+					<ul style="margin:0 0 0 1.2em;padding:0;">${slotStr}</ul>
+				  `;
+				  showConflictModal(messageHtml);
+				  return;
+				}
+			  }
 			}
+			  
+			
 
 			// Generate sequential code for the facility locally
 			const firstFacility = selectedFacilities[0];
@@ -532,10 +1041,75 @@ document.addEventListener('DOMContentLoaded', async function() {
 			};
 
 			try {
-				console.log('Working in local-only mode - no database calls to avoid notifications dependency');
+				console.log('Attempting to save to database and work locally');
 
-				// Skip all database operations to avoid notifications table dependency
-				// Work entirely with local storage and file uploads
+				// Create reservation object for database
+				const dbReservation = {
+					id: localStorage.getItem('user_id'),
+					request_id: codeId,
+					facility: selectedFacilities.join(", "),
+					date: dateOfEventVal,
+					time_start: timeStartInput && timeStartInput.value ? timeStartInput.value : "",
+					time_end: timeEndInput && timeEndInput.value ? timeEndInput.value : "",
+					title_of_the_event: eventTitle,
+					unit: unitOffice || '',
+					attendees: attendees || '',
+					additional_req: additionalReq || '',
+					set_up_details: setupDetails || '',
+					pdf_url: '',
+					status: 'request'
+				};
+
+				// Try database insert with network retry
+				let dbSuccess = false;
+				let retryCount = 0;
+				const maxRetries = 2;
+				
+				while (!dbSuccess && retryCount <= maxRetries) {
+					try {
+						console.log(`Database insert attempt ${retryCount + 1}:`, dbReservation);
+						
+						const { error } = await sb
+							.from('reservations')
+							.insert(dbReservation);
+
+						if (error) {
+							console.error('Database insert failed:', error);
+							if (error.message.includes('Failed to fetch') || error.code === '') {
+								if (retryCount < maxRetries) {
+									console.log(`Network error, retrying in 2 seconds... (attempt ${retryCount + 2})`);
+									await new Promise(resolve => setTimeout(resolve, 2000));
+									retryCount++;
+									continue;
+								}
+							}
+							break;
+						} else {
+							console.log('Database insert successful!');
+							dbSuccess = true;
+							
+							// Create notification after successful reservation
+							await createReservationNotification(sb, {
+								facility: selectedFacilities.join(", "),
+								date: dateOfEventVal,
+								timeStart: timeStartInput && timeStartInput.value ? timeStartInput.value : "",
+								timeEnd: timeEndInput && timeEndInput.value ? timeEndInput.value : "",
+								userId: localStorage.getItem('user_id')
+							});
+						}
+					} catch (dbError) {
+						console.error('Database operation exception:', dbError);
+						if (retryCount < maxRetries && 
+							(dbError.message.includes('Failed to fetch') || 
+							 dbError.message.includes('ERR_CONNECTION_CLOSED'))) {
+							console.log(`Network error, retrying in 2 seconds... (attempt ${retryCount + 2})`);
+							await new Promise(resolve => setTimeout(resolve, 2000));
+							retryCount++;
+						} else {
+							break;
+						}
+					}
+				}
 
 				// Try file upload(s). If upload fails, save in IndexedDB
 				const fileInput = document.getElementById('signature');
@@ -595,12 +1169,16 @@ document.addEventListener('DOMContentLoaded', async function() {
 					}
 				}
 
-				// Save everything locally
+				// Save everything locally as backup
 				reservations.push(reservation);
 				localStorage.setItem('reservations', JSON.stringify(reservations));
 				localStorage.removeItem('selectedDate');
 
-				alert('Reservation submitted successfully! Saved locally with PDF generated.');
+				if (dbSuccess) {
+					alert('Reservation submitted successfully! Saved to database with notification created.');
+				} else {
+					alert('Reservation submitted successfully! Saved locally (network issues). Will sync when connection improves.');
+				}
 				window.location.href = "Userdashboard.html";
 			} catch (error) {
 				console.error('Error submitting form:', error);
@@ -608,74 +1186,6 @@ document.addEventListener('DOMContentLoaded', async function() {
 				reservations.push(reservation);
 				localStorage.setItem('reservations', JSON.stringify(reservations));
 				alert('An error occurred; reservation saved locally. Please contact admin or try again later.');
-			}
-
-			try {
-				console.log('Attempting to save to Supabase database');
-
-				// Create minimal reservation object for database
-				const dbReservation = {
-					id: localStorage.getItem('user_id'),
-					request_id: codeId,
-					facility: selectedFacilities.join(", "),
-					date: dateOfEventVal,
-					time_start: timeStartInput && timeStartInput.value ? timeStartInput.value : "",
-					time_end: timeEndInput && timeEndInput.value ? timeEndInput.value : "",
-					title_of_the_event: eventTitle,
-					unit: unitOffice || '',
-					attendees: attendees || '',
-					additional_req: additionalReq || '',
-					set_up_details: setupDetails || '',
-					pdf_url: '',
-					status: 'request'
-				};
-
-				// Try database insert with minimal approach
-				let dbSuccess = false;
-				try {
-					console.log('Attempting database insert:', dbReservation);
-					
-					// Use the most basic insert possible
-					const { error } = await sb
-						.from('reservations')
-						.insert(dbReservation);
-
-					if (error) {
-						console.error('Database insert failed:', error);
-						if (error.message.includes('notifications')) {
-							console.error('ISSUE: Database has notifications table dependency that needs to be fixed');
-						}
-					} else {
-						console.log('Database insert successful!');
-						dbSuccess = true;
-						
-						// Create notification after successful reservation
-						await createReservationNotification(sb, {
-							facility: selectedFacilities.join(", "),
-							date: dateOfEventVal,
-							timeStart: timeStartInput && timeStartInput.value ? timeStartInput.value : "",
-							timeEnd: timeEndInput && timeEndInput.value ? timeEndInput.value : "",
-							userId: localStorage.getItem('user_id')
-						});
-					}
-				} catch (dbError) {
-					console.error('Database insert exception:', dbError);
-				}
-
-				// Save everything locally (always as backup)
-				reservations.push(reservation);
-				localStorage.setItem('reservations', JSON.stringify(reservations));
-				localStorage.removeItem('selectedDate');
-
-				if (dbSuccess) {
-					alert('Reservation submitted successfully! Saved to database and PDF generated.');
-				} else {
-					alert('Reservation submitted successfully! Saved locally (database unavailable). PDF generated.');
-				}
-				window.location.href = "Userdashboard.html";
-			} catch (error) {
-				console.error('Error in final reservation processing:', error);
-				alert('Reservation saved locally due to an error. Please check your data and try again.');
 			}
 		});
 	} catch (error) {
@@ -695,4 +1205,85 @@ function selectDateFromCalendar(dateString) {
   // If not on form, store for later
   localStorage.setItem('selectedDate', normalized);
   window.location.href = "ReservationForm.html";
+}
+
+// Create notification for reservation
+async function createReservationNotification(sb, reservationData) {
+	try {
+		const notification = {
+			id: reservationData.userId,
+			facility: reservationData.facility,
+			date: reservationData.date,
+			time_start: reservationData.timeStart,
+			time_end: reservationData.timeEnd,
+			status: 'Pending'
+		};
+		
+		console.log('Creating notification:', notification);
+		
+		const { error: notificationError } = await sb
+			.from('notifications')
+			.insert([notification]);
+			
+		if (notificationError) {
+			console.error('Failed to create notification:', notificationError);
+		} else {
+			console.log('Notification created successfully');
+		}
+	} catch (error) {
+		console.error('Error creating notification:', error);
+	}
+}
+
+// Function to sign out user
+function signOutUser() {
+  // Show confirmation dialog
+  if (confirm('Are you sure you want to sign out?')) {
+    console.log('User signing out...');
+    
+    // Clear all user session data from localStorage
+    localStorage.removeItem('id');
+    localStorage.removeItem('user_id');
+    localStorage.removeItem('user_name');
+    localStorage.removeItem('user_role');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('reservations');
+    localStorage.removeItem('userReservations');
+    localStorage.removeItem('selectedDate');
+    
+    // Clear any other session data
+    sessionStorage.clear();
+    
+    // Sign out from Supabase if available
+    const sb = getSupabase();
+    if (sb && sb.auth) {
+      sb.auth.signOut().catch(error => {
+        console.warn('Error signing out from Supabase:', error);
+      });
+    }
+    
+    console.log('User signed out successfully');
+    
+    // Redirect to landing page
+    window.location.href = 'landingPage.html';
+  }
+}
+
+// Custom Alert Modal (using browser's native alert instead)
+function showCustomAlert(message) {
+  alert(message);
+}
+
+function closeAlert() {
+  // Not needed anymore, using native alert
+}
+
+// Custom Confirm Modal (using browser's native confirm instead)
+function showCustomConfirm(message, onConfirm) {
+  if (confirm(message)) {
+    onConfirm();
+  }
 }

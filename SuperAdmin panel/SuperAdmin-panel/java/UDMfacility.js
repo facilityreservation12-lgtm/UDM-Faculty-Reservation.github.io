@@ -1,105 +1,259 @@
+// UDM Facility Reservations - Real Database Integration
+
+// Facility names
 const facilities = [
-      {
-        name: "UDM - Palma Hall",
-        data: [
-          { code: "PH 000001", user: "Jasmine Cruz", date: "June 2, 2025", time: "9:00 AM", details: "Student council meeting" },
-        ]
-      },
-      {
-        name: "UDM - Right Wing Lobby",
-        data: [
-          { code: "RW 000001", user: "Elena Ramos", date: "June 3, 2025", time: "10:00 AM", details: "Art exhibit prep" }
-        ]
-      },
-      {
-        name: "UDM - Mehan Garden",
-        data: [
-          { code: "MG 000001", user: "Jon Santos", date: "June 5, 2025", time: "1:30 PM", details: "Botanical tour" }
-        ]
-      },
-      {
-        name: "UDM - Rooftop",
-        data: [
-          { code: "RT 000001", user: "Sam Bautista", date: "June 6, 2025", time: "3:00 PM", details: "Photoshoot" }
-        ]
-      },
-      {
-        name: "UDM - Classrooms",
-        data: [
-          { code: "CR 101001", user: "Trixie Tan", date: "June 7, 2025", time: "8:00 AM", details: "Quiz Bee - Room 101" },
-          { code: "CR 102001", user: "Marco Dela Cruz", date: "June 7, 2025", time: "10:00 AM", details: "Thesis defense - Room 102" }
-        ]
-      },
-      {
-        name: "UDM - Basketball Court",
-        data: [
-          { code: "BC 000001", user: "Zeke Mendoza", date: "June 8, 2025", time: "2:00 PM", details: "Basketball tryouts" }
-        ]
-      },
-      {
-        name: "UDM - Space at the Ground Floor",
-        data: [
-          { code: "GF 000001", user: "Kim Uy", date: "June 10, 2025", time: "11:00 AM", details: "Merch booth setup" }
-        ]
-      },
-      {
-        name: "UDM - Others",
-        data: [
-          { code: "OT 000001", user: "Gelo Fernandez", date: "June 11, 2025", time: "9:00 AM", details: "External seminar" }
-        ]
-      }
-    ];
+  'Palma Hall',
+  'Right Wing Lobby', 
+  'Mehan Garden',
+  'Rooftop',
+  'Classroom',
+  'Basketball Court',
+  'Space at the Ground Floor',
+  'Others'
+];
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const facilityParam = urlParams.get('facility');
-    const facilityIndex = facilities.findIndex(f => f.name.toLowerCase() === `udm - ${facilityParam}`.toLowerCase());
-    let currentFacility = facilityIndex >= 0 ? facilityIndex : 0;
+let currentFacilityIndex = 0;
 
-    function renderTable() {
-      const venue = facilities[currentFacility];
-      document.getElementById("venue-title").textContent = venue.name;
-      document.getElementById("facilitySelect").value = currentFacility;
+// Helper to get Supabase client from supabaseConfig.js
+function getSupabaseClient() {
+  if (typeof window !== 'undefined' && window.supabaseClient) {
+    console.log('✅ Found supabaseClient from supabaseConfig.js');
+    return window.supabaseClient;
+  }
+  
+  if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+    console.log('✅ Found global supabaseClient variable');
+    return supabaseClient;
+  }
+  
+  console.error('❌ Supabase client not found');
+  return null;
+}
 
-      const table = document.getElementById("facility-table");
-      table.innerHTML = `
-        <thead>
-          <tr>
-            <th>Code</th>
-            <th>End User</th>
-            <th>Date</th>
-            <th>Time</th>
-            <th>Details</th>
-            <th>Requirements</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${venue.data.map(row => `
-            <tr>
-              <td>${row.code}</td>
-              <td><strong>${row.user}</strong></td>
-              <td>${row.date}</td>
-              <td>${row.time}</td>
-              <td>${row.details}</td>
-              <td><button onclick="window.location.href='SA_Relevantdocuments.html'"class="view-btn">View Requirements</button></td>
-            </tr>
-          `).join("")}
-        </tbody>
-      `;
+// Function to fetch approved reservations for a specific facility
+async function fetchApprovedReservations(facility) {
+  try {
+    const supabaseClient = getSupabaseClient();
+    
+    if (!supabaseClient) {
+      console.warn('Supabase client not available');
+      return [];
     }
 
-    function nextFacility() {
-      currentFacility = (currentFacility + 1) % facilities.length;
-      renderTable();
+    console.log(`🔍 Fetching approved reservations for ${facility}...`);
+
+    // Fetch approved reservations for the specific facility with user data
+    const { data: reservations, error } = await supabaseClient
+      .from('reservations')
+      .select(`
+        request_id,
+        date,
+        time_start,
+        time_end,
+        title_of_the_event,
+        facility,
+        status,
+        users!inner(first_name, last_name)
+      `)
+      .eq('status', 'approved')
+      .eq('facility', facility)
+      .order('date', { ascending: true })
+      .order('time_start', { ascending: true });
+
+    if (error) {
+      console.error('❌ Error fetching reservations:', error);
+      return [];
     }
 
-    function prevFacility() {
-      currentFacility = (currentFacility - 1 + facilities.length) % facilities.length;
-      renderTable();
-    }
+    console.log(`✅ Found ${reservations?.length || 0} approved reservations for ${facility}`);
+    return reservations || [];
+  } catch (err) {
+    console.error('❌ Error in fetchApprovedReservations:', err);
+    return [];
+  }
+}
 
-    function jumpToFacility() {
-      currentFacility = parseInt(document.getElementById("facilitySelect").value);
-      renderTable();
-    }
+// Function to format time from 24-hour to 12-hour format
+function formatTime(time) {
+  if (!time) return 'N/A';
+  
+  // If time is already in 12-hour format, return as is
+  if (time.includes('AM') || time.includes('PM')) {
+    return time;
+  }
+  
+  // Convert from 24-hour to 12-hour format
+  const [hours, minutes] = time.split(':');
+  const hour = parseInt(hours);
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+  
+  return `${displayHour}:${minutes} ${ampm}`;
+}
 
-    window.onload = renderTable;
+// Function to format date
+function formatDate(dateString) {
+  if (!dateString) return 'N/A';
+  
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+}
+
+// Function to populate the facility table
+async function populateFacilityTable() {
+  const facility = facilities[currentFacilityIndex];
+  const reservations = await fetchApprovedReservations(facility);
+  
+  const table = document.getElementById('facility-table');
+  if (!table) {
+    console.error('Facility table not found');
+    return;
+  }
+
+  // Clear existing content
+  table.innerHTML = '';
+
+  // Create table header
+  const headerRow = table.insertRow();
+  headerRow.innerHTML = `
+    <th>Code</th>
+    <th>End User</th>
+    <th>Date</th>
+    <th>Time</th>
+    <th>Details</th>
+    <th>Action</th>
+  `;
+  headerRow.style.backgroundColor = '#f5f5f5';
+
+  if (reservations.length === 0) {
+    // Show "no reservations" row
+    const noDataRow = table.insertRow();
+    noDataRow.innerHTML = `
+      <td colspan="6" style="text-align: center; padding: 20px; color: #666; font-style: italic;">
+        No approved reservations for ${facility}
+      </td>
+    `;
+    return;
+  }
+
+  // Populate with real reservation data
+  reservations.forEach(reservation => {
+    const row = table.insertRow();
+    
+    // Combine first_name and last_name
+    const userName = `${reservation.users.first_name || ''} ${reservation.users.last_name || ''}`.trim();
+    
+    // Format time range
+    const startTime = formatTime(reservation.time_start);
+    const endTime = formatTime(reservation.time_end);
+    const timeRange = `${startTime} - ${endTime}`;
+    
+    // Format date
+    const formattedDate = formatDate(reservation.date);
+
+    row.innerHTML = `
+      <td>${reservation.request_id || 'N/A'}</td>
+      <td>${userName || 'Unknown User'}</td>
+      <td>${formattedDate}</td>
+      <td>${timeRange}</td>
+      <td>${reservation.title_of_the_event || 'No details provided'}</td>
+      <td>
+        <button class="view-btn" onclick="viewRequirements('${reservation.request_id}')">
+          View Requirements
+        </button>
+      </td>
+    `;
+  });
+
+  console.log(`📊 Populated ${facility} table with ${reservations.length} approved reservations`);
+}
+
+// Function to update the venue title
+function updateVenueTitle() {
+  const facility = facilities[currentFacilityIndex];
+  const titleElement = document.getElementById('venue-title');
+  if (titleElement) {
+    titleElement.textContent = `UDM - ${facility}`;
+  }
+  
+  // Update the select dropdown
+  const select = document.getElementById('facilitySelect');
+  if (select) {
+    select.value = currentFacilityIndex;
+  }
+}
+
+// Function to jump to a specific facility
+async function jumpToFacility() {
+  const select = document.getElementById('facilitySelect');
+  if (select) {
+    currentFacilityIndex = parseInt(select.value);
+    updateVenueTitle();
+    await populateFacilityTable();
+  }
+}
+
+// Function to go to previous facility
+async function prevFacility() {
+  currentFacilityIndex = currentFacilityIndex > 0 ? 
+    currentFacilityIndex - 1 : 
+    facilities.length - 1;
+  
+  updateVenueTitle();
+  await populateFacilityTable();
+}
+
+// Function to go to next facility
+async function nextFacility() {
+  currentFacilityIndex = currentFacilityIndex < facilities.length - 1 ? 
+    currentFacilityIndex + 1 : 
+    0;
+  
+  updateVenueTitle();
+  await populateFacilityTable();
+}
+
+// Function to view requirements (placeholder - you can implement this)
+function viewRequirements(reservationId) {
+  console.log('View requirements for reservation:', reservationId);
+  // You can implement this to show detailed requirements
+  alert(`Viewing requirements for reservation ID: ${reservationId}`);
+}
+
+// Wait for Supabase client to be ready, then initialize
+function waitForSupabaseAndInit() {
+  const client = getSupabaseClient();
+  if (client) {
+    console.log('✅ Supabase client ready, initializing facility view...');
+    updateVenueTitle();
+    populateFacilityTable();
+  } else {
+    console.log('⏳ Waiting for Supabase client to initialize...');
+    setTimeout(waitForSupabaseAndInit, 200);
+  }
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('UDM Facility - DOM loaded, waiting for Supabase client...');
+  setTimeout(waitForSupabaseAndInit, 500);
+});
+
+// Also initialize immediately if DOM is already loaded
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(waitForSupabaseAndInit, 500);
+  });
+} else {
+  setTimeout(waitForSupabaseAndInit, 500);
+}
+
+// Make functions globally available
+window.jumpToFacility = jumpToFacility;
+window.prevFacility = prevFacility;
+window.nextFacility = nextFacility;
+window.viewRequirements = viewRequirements;

@@ -6,14 +6,16 @@
   <title>SuperAdmin Manage</title>
   <link rel="stylesheet" href="css/SA_manage.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.min.js"></script>
+  <script src="../../supabaseClient.js"></script>
 </head>
 <body>
-<div class="sidebar">
+    <div class="sidebar">
     <div class="side-container">
       <div class="user-photo">
         <img src="img/peppa.jpg" alt="User Photo" />
         <div>
-          <strong>Juan B. Batumbakal</strong><br />
+          <strong>Juan B. Batumbakal</strong><br/>
           SUPER ADMIN
         </div>
         
@@ -29,56 +31,141 @@
                 <a href="SA_Appproved.html">Approved</a>
           </div> 
         </div> 
-        <a href="SA_Otheruser.html">Other User</a>
+      <a href="SA_Otheruser.html">Other User</a>
         <a href="SuperAdmincalendar.html">Calendar</a>
         <a href="SA_manage.html">Manage</a>
         <a href="SA_Settings.html">Settings</a>
         <a href="SA_Activitylog.html">Logs</a>
-        <a href="SA_Reportbugs.html">Report Bugs</a>
+        <a href="SA_Reportbugs.html">Report Bugs</a>         
       </div> 
     </div>
-       <button onclick="window.location.href='landingPage.html'" class="logout-btn">Log Out</button> 
-  </div>
+<button onclick="window.location.href='../../User%20panel/LandingPage.html'" class="logout-btn">Log Out</button>  
+</div>
 
-  <div class="main">  
- <div class="main-container">
-    <div class="header-bar">
-      <h2><button class="back-btn" onclick="history.back()">←</button>Manage User</h2>
+    <div class="main">
+        <div class="main-container">
+            <div class="header-bar">
+                <button class="back-btn" onclick="history.back()">←</button>
+                <span>Manage Users</span>
+            </div>
+
+            <div class="table-controls">
+                <div class="entries-control">
+                    <label for="entriesPerPage">Show:</label>
+                    <select id="entriesPerPage" onchange="changeEntriesPerPage()">
+                        <option value="10">10 entries</option>
+                        <option value="20">20 entries</option>
+                    </select>
+                </div>
+                
+                <button class="add-admin-btn" onclick="openAddModal()">Add User</button>
+            </div>
+
+            <table class="user-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Role</th>
+                        <th>Active Status</th>
+                        <th>Actions</th>
+                    </tr>
+                    <tr class="filter-row">
+                        <th>
+                            <input type="text" id="filterID" placeholder="Filter by ID..." onkeyup="filterByID()" />
+                        </th>
+                        <th>
+                            <input type="text" id="filterName" placeholder="Filter by name/email..." onkeyup="filterByName()" />
+                        </th>
+                        <th>
+                            <select id="filterRole" onchange="filterByRole()">
+                                <option value="">All Roles</option>
+                                <option value="ADMIN">ADMIN</option>
+                                <option value="SUPER ADMIN">SUPER ADMIN</option>
+                                <option value="FACULTY">FACULTY</option>
+                                <option value="STUDENT ORGANIZATION">STUDENT ORGANIZATION</option>
+                            </select>
+                        </th>
+                        <th>
+                            <select id="filterStatus" onchange="filterByStatus()">
+                                <option value="">All Status</option>
+                                <option value="Online">Online</option>
+                                <option value="Offline">Offline</option>
+                            </select>
+                        </th>
+                        <th>
+                            <button onclick="clearFilters()" class="clear-filters-btn">Clear All</button>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="userTableBody">
+                    <tr>
+                        <td colspan="5" style="text-align: center;">Loading users...</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="pagination-container">
+                <div class="pagination-info">
+                    <span id="paginationInfo">Showing 0 to 0 of 0 entries</span>
+                </div>
+                <div class="pagination-controls">
+                    <button id="prevPage" onclick="previousPage()" disabled>← Previous</button>
+                    <div id="pageNumbers" class="page-numbers"></div>
+                    <button id="nextPage" onclick="nextPage()" disabled>Next →</button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <table class="user-table">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>User</th>
-          <th>Role</th>
-          <th>Active Status</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="userTableBody">
-        <!-- Sample user rows will be injected by JS -->
-      </tbody>
-    </table>
+    <!-- User Modal -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">×</span>
+            <h3 id="modalTitle">Add User</h3>
+            <form id="userForm">
+                <label for="userFirstName">First Name</label>
+                <input type="text" id="userFirstName" required>
 
+<<<<<<< HEAD
     <button class="add-admin-btn" onclick="openAddModal()">Add USER</button>
   </div>
+=======
+                <label for="userLastName">Last Name</label>
+                <input type="text" id="userLastName" required>
+>>>>>>> 571274a7dc429244547a40bcc72854b7e24dfe8e
 
-  <!-- Add/Edit Modal -->
-  <div id="userModal" class="modal">
-    <div class="modal-content">
-      <span class="close-btn" onclick="closeModal()">&times;</span>
-      <h3 id="modalTitle">Add Admin</h3>
-      <form id="userForm">
-        <label>Name</label>
-        <input type="text" id="userName" required />
-        <label>Email</label>
-        <input type="email" id="userEmail" required />
-        <label>Password</label>
-        <div class="password-group">
-          <input type="password" id="userPassword" required />
-          <button type="button" class="toggle-pass" onclick="togglePassword('userPassword')">👁️</button>
+                <label for="userEmail">Email</label>
+                <input type="email" id="userEmail" required>
+
+                <label for="userPassword">New Password</label>
+                <div class="password-group">
+                    <input type="password" id="userPassword" placeholder="Enter password..." required>
+                    <span class="password-toggle" onclick="togglePassword('userPassword')">👁️</span>
+                </div>
+
+                <label for="userRePassword">Re-enter Password</label>
+                <div class="password-group">
+                    <input type="password" id="userRePassword" placeholder="Re-enter password..." required>
+                    <span class="password-toggle" onclick="togglePassword('userRePassword')">�️</span>
+                </div>
+
+                <label for="userRole">Role</label>
+                <select id="userRole" required>
+                    <option value="">Select Role</option>
+                    <option value="ADMIN">ADMIN</option>
+                    <option value="SUPER ADMIN">SUPER ADMIN</option>
+                    <option value="FACULTY">FACULTY</option>
+                    <option value="STUDENT ORGANIZATION">STUDENT ORGANIZATION</option>
+                </select>
+
+                <div class="modal-actions">
+                    <button type="submit">Add</button>
+                    <button type="button" class="cancel-btn" onclick="closeModal()">Cancel</button>
+                </div>
+            </form>
         </div>
+<<<<<<< HEAD
         <label>Re-enter Password</label>
         <div class="password-group">
           <input type="password" id="userRePassword" required />
@@ -97,30 +184,57 @@
           <button type="button" class="cancel-btn" onclick="closeModal()">Cancel</button>
         </div>
       </form>
+=======
+>>>>>>> 571274a7dc429244547a40bcc72854b7e24dfe8e
     </div>
-  </div>
 
-  <!-- Confirmation Popup -->
-  <div id="confirmPopup" class="confirm-popup">
-    <div class="popup-content">
-      <p id="confirmMessage">Are you sure you want to delete this user?</p>
-      <div class="popup-actions">
-        <button id="confirmYes">Yes</button>
-        <button class="no-btn" onclick="closeConfirm()">No</button>
-      </div>
+    <!-- Confirmation Popup -->
+    <div id="confirmPopup" class="confirm-popup">
+        <div class="popup-content">
+            <h3>Confirm Action</h3>
+            <p id="confirmMessage">Are you sure you want to delete this user?</p>
+            <div class="popup-actions">
+                <button id="confirmYes">Yes</button>
+                <button class="no-btn" onclick="closeConfirm()">No</button>
+            </div>
+        </div>
     </div>
-  </div>
-  <script src="java/SA_manage.js"></script>
-  </div>
+
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="../../supabaseConfig.js"></script>
     <script>
-document.querySelectorAll('.menu a').forEach(link => {
-  if (
-    link.href &&
-    window.location.pathname.endsWith(link.getAttribute('href'))
-  ) {
-    link.classList.add('active');
-  }
-});
-</script>
+        // Development mode - set to false to use real database
+        const USE_MOCK_DATA = false;
+        window.USE_MOCK_DATA = USE_MOCK_DATA;
+        
+        // Override loadCurrentUserInfo to prevent all errors
+        window.loadCurrentUserInfo = async function() {
+            console.log('ℹ️ loadCurrentUserInfo disabled - account section removed');
+            return Promise.resolve();
+        };
+        
+        // Override after all scripts load
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                // Force override the function
+                if (window.loadCurrentUserInfo) {
+                    window.loadCurrentUserInfo = async function() {
+                        console.log('ℹ️ Account section removed - function disabled');
+                        return Promise.resolve();
+                    };
+                }
+                // Also override global function
+                if (typeof loadCurrentUserInfo !== 'undefined') {
+                    loadCurrentUserInfo = async function() {
+                        console.log('ℹ️ Account section removed - function disabled'); 
+                        return Promise.resolve();
+                    };
+                }
+            }, 50);
+        });
+        
+        console.log('🔄 Page loaded - supabaseConfig.js should handle Supabase initialization');
+    </script>
+    <script src="java/SA_manage.js"></script>
 </body>
 </html>

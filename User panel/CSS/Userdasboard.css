@@ -14,16 +14,21 @@ body {
 }
 
 .sidebar {
-  width: 15%;
-  background-color: #315C3A;
+  width: 210px;
+  min-width: 180px;
+  max-width: 240px;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background: #315C3A;
   color: white;
-  padding: 30px 20px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  position: sticky;
-  top: 0;
+  padding: 30px 20px;
   z-index: 2;
+  box-sizing: border-box;
 }
 
 .user-photo {
@@ -86,7 +91,7 @@ body {
   background-color: #719479;
   color: white;
   box-shadow: 2px 0 10px rgba(0,0,0,0.2);
-  z-index: 1;
+  z-index: 1000;
   transition: left 0.4s ease-in-out;
   padding: 20px;
   overflow-y: auto;
@@ -125,12 +130,15 @@ body {
 }
 
 .main {
-  flex: 1;
-  padding: 30px;
+  margin-left: 210px;
+  padding: 2rem;
+  min-height: 100vh;
+  background: #f4f4f4;
+  width: calc(100vw - 210px);
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 30px;
-  z-index: 0;
+  align-items: stretch;
 }
 .welcome-box {
   background-color: #315C3A;
@@ -277,16 +285,48 @@ tr:nth-child(even) {
   align-items: center;
   justify-content: center;
 }
+.disabled-day {
+  pointer-events: none;
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.disabled-day {
+  position: relative;
+}
+
+.disabled-day::after {
+  content: "You cannot reserve a date that has already passed.";
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  transform: translateX(-50%);
+  background: #315C3A;
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.01s;
+  z-index: 40;
+}
+
+.disabled-day:hover::after {
+  opacity: 1;
+}
 
 /* --- MEDIA QUERIES FOR RESPONSIVENESS --- */
 @media (max-width: 1440px){
-  .sidebar {
-    padding: 20px;
-    width: 15%;
+ .sidebar {
+    width: 160px;
+    padding: 20px 10px;
   }
 
   .main {
-    padding: 20px;
+    margin-left: 180px;
+    padding: 1rem;
+    width: calc(100vw - 160px);
   }
 
   .notification-panel {
@@ -303,17 +343,27 @@ tr:nth-child(even) {
 }
 
 @media (max-width: 1204px){
-  body {
+ body {
     flex-direction: column;
   }
 
   .sidebar {
-    width: 100%;
+    position: static;
+    width: 100vw;
+    height: auto;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
+    justify-content: flex-start;
+    padding: 10px 5px;
+    min-width: 0;
+    max-width: none;
   }
-
+  .main {
+    margin-left: 0;
+    padding: 0.5rem;
+    width: 100vw;
+  }
   .user-photo {
     flex-direction: row;
     margin-bottom: 0;
@@ -357,9 +407,25 @@ tr:nth-child(even) {
   table {
     min-width: 600px;
   }
+
+  .logout-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background-color: #ffffff;
+    color: #315C3A;
+    padding: 8px 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 6px;
+    z-index: 10;
+  }
 }
 
 @media (max-width: 600px){
+   body {
+    flex-direction: column;
+  }
   .header{
     height: 15%;
   }
@@ -387,11 +453,20 @@ font-size:18px;
   }
 
   .sidebar {
-    align-items: flex-start;
+    position: static;
+    width: 100vw;
+    height: auto;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 10px 5px;
+    min-width: 0;
+    max-width: none;
   }
-
-  .menu {
-    gap: 5px;
+  .main {
+    margin-left: 0;
+    padding: 0.5rem;
+    width: 100vw;
   }
 
   .facility-table th, td { 
