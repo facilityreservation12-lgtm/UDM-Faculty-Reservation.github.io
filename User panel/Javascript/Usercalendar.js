@@ -2,6 +2,9 @@ let calendarGrid;
 let monthYear;
 let currentDate = new Date();
 
+// Add global variable to store reservations
+let userReservations = [];
+
 function formatTime12hr(timeStr) {
   if (!timeStr) return "";
   let [hour, minute] = timeStr.split(":");
@@ -28,28 +31,11 @@ async function getReservationsForDay(year, month, day) {
     // Format the target date
     const targetDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
-    if (!userId) {
-      // No user logged in, show all reservations
-      // Fetch all reservations for the date if no user is logged in
-      const { data: reservations, error } = await sb
-        .from('reservations')
-        .select('facility, time_start, time_end, title_of_the_event')
-        .eq('date', targetDate);
-
-      if (error) {
-        console.error('Error fetching reservations:', error);
-        return [];
-      }
-
-      return reservations || [];
-    }
-
-    // Fetch reservations from database for the specific user and date
-    // Note: id in reservations table is FK to users.id, request_id is the PK
+    // Always fetch ALL reservations for the date to show complete availability
+    // This shows what facilities/times are booked regardless of who booked them
     const { data: reservations, error } = await sb
       .from('reservations')
       .select('facility, time_start, time_end, title_of_the_event')
-      .eq('id', userId)
       .eq('date', targetDate);
 
     if (error) {
@@ -97,6 +83,7 @@ async function loadUserDetails() {
     console.log('All localStorage keys:', Object.keys(localStorage));
     console.log('localStorage contents:', {...localStorage});
     console.log('Retrieved userId from localStorage:', userId);
+    console.log('Type of userId:', typeof userId);
 
     if (!userId) {
       console.log('No user ID found in localStorage. User not logged in.');
@@ -106,12 +93,18 @@ async function loadUserDetails() {
       return;
     }
 
+    // Debug: Check what user we're trying to fetch
+    console.log('About to fetch user with ID:', userId);
+
     // Fetch profile from users table
     const { data, error } = await sb
       .from('users')
       .select('id, first_name, last_name, role_name')
       .eq('id', userId)
       .single();
+
+    console.log('User query result:', { data, error });
+    console.log('Fetched user data:', data);
 
     if (error) {
       console.error('Supabase error fetching user:', error);
@@ -147,6 +140,47 @@ window.addEventListener('storage', (event) => {
   }
 });
 
+async function fetchUserReservations() {
+  try {
+    const sb = getSupabase();
+    if (!sb) {
+      console.error('Supabase client not found');
+      return [];
+    }
+
+    // Get current user ID from localStorage (same as other functions)
+    const userId = localStorage.getItem('id') || 
+                   localStorage.getItem('user_id') || 
+                   localStorage.getItem('userId') || 
+                   localStorage.getItem('currentUserId');
+
+    if (!userId) {
+      console.log('No user ID found in localStorage');
+      return [];
+    }
+
+    console.log('fetchUserReservations: Using userId:', userId);
+
+    // Fetch reservations using 'id' column as the foreign key
+    const { data, error } = await sb
+      .from('reservations')
+      .select('*')
+      .eq('id', userId);
+
+    console.log('fetchUserReservations: id query result:', { data, error, count: data?.length });
+
+    if (error) {
+      console.error('Error fetching reservations:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching reservations:', error);
+    return [];
+  }
+}
+
 async function renderCalendar(date) {
   // Initialize elements when needed to ensure DOM is ready
   if (!calendarGrid) {
@@ -180,6 +214,9 @@ async function renderCalendar(date) {
   calendarGrid.style.gap = '5px';
 
   monthYear.textContent = `${monthName} ${year}`;
+
+  // Fetch user reservations FIRST so data is available when creating days
+  userReservations = await fetchUserReservations();
 
   // Add empty cells for days before the first day of the month
   for (let i = 0; i < firstDayIndex; i++) {
@@ -228,6 +265,26 @@ async function loadReservationsForDay(dayElement, year, month, day) {
     const reservations = await getReservationsForDay(year, month, day);
     const eventsDiv = dayElement.querySelector('.events');
     
+    // Check if current user has reservations on this day
+    const dayDate = new Date(year, month, day);
+    const dayDateString = dayDate.toISOString().split('T')[0];
+    
+    console.log(`Checking day ${day} (${dayDateString}) against ${userReservations.length} user reservations`);
+    
+    const userDayReservations = userReservations.filter(reservation => {
+      const reservationDate = new Date(reservation.date).toISOString().split('T')[0];
+      const matches = reservationDate === dayDateString;
+      console.log(`  Reservation date: ${reservationDate}, Day date: ${dayDateString}, Matches: ${matches}`);
+      return matches;
+    });
+    
+    // Add user reservation indicator
+    if (userDayReservations.length > 0) {
+      console.log(`Adding has-reservation class to day ${day} - found ${userDayReservations.length} reservations`);
+      dayElement.classList.add('has-reservation');
+      dayElement.title = `You have ${userDayReservations.length} reservation(s) on this day`;
+    }
+    
     if (reservations.length > 0) {
       dayElement.classList.add("booked");
       eventsDiv.innerHTML = reservations.map(r =>
@@ -237,7 +294,13 @@ async function loadReservationsForDay(dayElement, year, month, day) {
           <span>${formatTime12hr(r.time_start)} - ${formatTime12hr(r.time_end)}</span>
         </div>`
       ).join("<hr>");
-      dayElement.title = "Reserved";
+      
+      // Update title to show both general bookings and user reservations
+      if (userDayReservations.length > 0) {
+        dayElement.title = `You have ${userDayReservations.length} reservation(s). Total bookings: ${reservations.length}`;
+      } else {
+        dayElement.title = `${reservations.length} booking(s) on this day`;
+      }
     } else {
       eventsDiv.innerHTML = "";
     }
@@ -492,7 +555,7 @@ async function loadUserNotifications() {
       return;
     }
 
-    // Fetch user's reservations with status information
+    // Fetch user's reservations with status information using 'id' column
     const { data: reservations, error } = await sb
       .from('reservations')
       .select('facility, date, time_start, time_end, title_of_the_event, status')
@@ -648,7 +711,7 @@ async function checkForStatusUpdates() {
     // Get stored reservations from localStorage for comparison
     const storedReservations = JSON.parse(localStorage.getItem('userReservations') || '[]');
     
-    // Fetch current reservations
+    // Fetch current reservations using 'id' column
     const { data: currentReservations, error } = await sb
       .from('reservations')
       .select('request_id, facility, date, time_start, time_end, status')
