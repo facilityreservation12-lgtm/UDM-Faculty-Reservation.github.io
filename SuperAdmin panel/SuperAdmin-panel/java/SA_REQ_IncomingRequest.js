@@ -1,23 +1,8 @@
-// Helper to get Supabase client from supabaseConfig.js
-function getSupabaseClient() {
-  if (typeof window !== 'undefined' && window.supabaseClient) {
-    console.log('✅ Found supabaseClient from supabaseConfig.js');
-    return window.supabaseClient;
-  }
-  
-  if (typeof supabaseClient !== 'undefined' && supabaseClient) {
-    console.log('✅ Found global supabaseClient variable');
-    return supabaseClient;
-  }
-  
-  console.error('❌ Supabase client not found.');
-  return null;
-}
-
-// Get Supabase client dynamically when needed
-function getSupabase() {
-  return getSupabaseClient();
-}
+// Initialize Supabase client
+const supabase = window.supabase.createClient(
+  window.SUPABASE_URL,
+  window.SUPABASE_KEY
+);
 
 // Function to format date
 function formatDate(dateString) {
@@ -46,12 +31,6 @@ async function getUserFullName(userId) {
     console.log(`Fetching user details for ID: ${userId}`);
     
     // First try to get all available columns to see what's in the users table
-    const supabase = getSupabase();
-    if (!supabase) {
-      console.error('Supabase client not available');
-      return `User ${userId}`;
-    }
-    
     let { data, error } = await supabase
       .from('users')
       .select('first_name, last_name, role')
@@ -96,12 +75,6 @@ let lastReservationCount = 0;
 // Function to check if there are new reservations
 async function checkForNewRequests() {
   try {
-    const supabase = getSupabase();
-    if (!supabase) {
-      console.error('Supabase client not available');
-      return false;
-    }
-    
     // count only reservations with status = 'request'
     const { count, error } = await supabase
       .from('reservations')
@@ -147,13 +120,6 @@ async function loadIncomingRequests(forceReload = false) {
     tableBody.innerHTML = '<tr><td colspan="6">Loading...</td></tr>';
 
     console.log('Fetching reservations from Supabase...');
-    
-    const supabase = getSupabase();
-    if (!supabase) {
-      console.error('Supabase client not available');
-      tableBody.innerHTML = '<tr><td colspan="6">Supabase client not available</td></tr>';
-      return;
-    }
     
     // Fetch only reservations with status 'request' from Supabase
     const { data: reservations, error } = await supabase
@@ -238,12 +204,6 @@ async function fetchWithTimeout(url, opts = {}, timeout = 5000) {
 // add helper to mark a reservation as PENDING and refresh the list
 async function markAsPending(requestId) {
   try {
-    const supabase = getSupabase();
-    if (!supabase) {
-      console.error('Supabase client not available');
-      return;
-    }
-    
     // set to lowercase 'pending' so it won't appear in the "request" list (which filters for 'request')
     const { error } = await supabase
       .from('reservations')
@@ -267,12 +227,6 @@ async function printVRF(requestId) {
   try {
     if (!requestId) {
       alert('Invalid request id');
-      return;
-    }
-
-    const supabase = getSupabase();
-    if (!supabase) {
-      alert('Supabase client not available');
       return;
     }
 
@@ -494,12 +448,6 @@ document.addEventListener('DOMContentLoaded', function() {
 async function testSupabaseConnection() {
   try {
     console.log('Testing Supabase connection...');
-    const supabase = getSupabase();
-    if (!supabase) {
-      console.error('Supabase client not available for testing');
-      return;
-    }
-    
     const { data, error } = await supabase
       .from('reservations')
       .select('count(*)', { count: 'exact', head: true });
