@@ -13,8 +13,8 @@
       <div class="user-photo">
         <img src="img/peppa.jpg" alt="User Photo" />
         <div>
-          <strong>Juan B. Batumbakal</strong><br />
-          SUPER ADMIN
+          <strong id="UserName">Loading...</strong><br />
+          <span id="UserRole">Loading...</span>
         </div>
         
       </div>
@@ -37,31 +37,30 @@
         <a href="SA_Reportbugs.html">Report Bugs</a>            
       </div> 
     </div>
-       <button onclick="window.location.href='LandingPage.html'" class="logout-btn">Log Out</button> 
+       <button onclick="signOutUser()" class="logout-btn">Log Out</button> 
   </div>
 
   <div class="main"> 
-<div class="panel-header">
+    <div class="panel-header">
       <button class="back-btn">←</button>
       <h2>Activity Logs</h2>
-    </div>
-
-    <div class="filter-box">
+      <div style="margin-left: 10px; display: flex; flex-wrap: wrap; gap: 5px;">
+        <button onclick="addTestLogs()" style="padding: 5px 10px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer;">Add Test Data</button>
+        <button onclick="debugActivityLogging()" style="padding: 5px 10px; background: #dc3545; color: white; border: none; border-radius: 3px; cursor: pointer;">Debug All</button>
+        <button onclick="forceLogRoleChange('S001', 'faculty', 'admin')" style="padding: 5px 10px; background: #28a745; color: white; border: none; border-radius: 3px; cursor: pointer;">Force Log Role</button>
+        <button onclick="loadActivityLogs()" style="padding: 5px 10px; background: #6c757d; color: white; border: none; border-radius: 3px; cursor: pointer;">Refresh Logs</button>
+      </div>
+    </div>    <div class="filter-box">
       <div class="filter-toggle" onclick="toggleFilter()">Activities Filters ▲</div>
       <div class="filters" id="filterSection">
         <label>Action
           <select id="actionFilter">
             <option value="All">All</option>
-            <option value="Logged In">Logged In</option>
-            <option value="Logged Out">Logged Out</option>
-            <option value="Edited">Edited</option>
           </select>
         </label>
         <label>User
           <select id="userFilter">
             <option value="All">All</option>
-            <option value="Juan B. Batumbakal">Juan B. Batumbakal</option>
-            <option value="Chloe M. Baldwin">Chloe M. Baldwin</option>
           </select>
         </label>
         <label>From Date
@@ -84,7 +83,9 @@
     </div>
   </div>
   </div>
-  <script src="java/SA_Activitylog.js"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="../../supabaseConfig.js"></script>
+  <script src="java/SA_Activitylog_updated.js"></script>
     <script>
 document.querySelectorAll('.menu a').forEach(link => {
   if (
