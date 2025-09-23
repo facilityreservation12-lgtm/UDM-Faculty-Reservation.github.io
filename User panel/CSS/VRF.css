@@ -80,7 +80,6 @@ body {
   color: white;
 }
 
-
 /*NOTIFICATION PANEL*/
 .notification-panel {
   position: fixed;
@@ -99,7 +98,7 @@ body {
 }
 
 .notification-panel.active {
-  left: 15%;
+  left: 13%;
 }
 
 .notification-item {
@@ -116,7 +115,7 @@ body {
 
 /* === MAIN CONTENT AREA === */
 main {
-  margin-left: 200px;   /* <-- Push main content to the right of sidebar */
+  margin-left: 200px;
   padding: 2rem;
   background-color: #f5f5f5;
   min-height: 100vh;
@@ -126,7 +125,6 @@ main {
   align-items: stretch;
   box-sizing: border-box;
 }
-
 
 /* === FORM STYLING === */
 .form-container {
@@ -309,14 +307,15 @@ label {
   border-radius: 10px;
   background-color: #ffffff;
 }
-.Personel{
+
+.Personel {
   text-align: center;
   font-size: 12px;
   background: #f8f8f8;
   border-top: 1px solid #7a7a7a;
   padding-top: 5px;
-
 }
+
 /* === SUBMIT BUTTON === */
 .submit-btn {
   display: block;
@@ -336,7 +335,7 @@ label {
   background-color: #1e3e2e;
 }
 
-.time-inputs{
+.time-inputs {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -347,19 +346,23 @@ label {
 .modal {
   position: fixed;
   z-index: 9999;
-  left: 0; top: 0;
-  width: 100%; height: 100%;
+  left: 0; 
+  top: 0;
+  width: 100%; 
+  height: 100%;
   overflow: auto;
   background: rgba(0,0,0,0.3);
   display: flex;
   align-items: center;
   justify-content: center;
 }
+
 .modal-content {
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 16px rgba(0,0,0,0.15);
 }
+
 .drop-area {
   border: 2px dashed #234734;
   border-radius: 8px;
@@ -369,10 +372,12 @@ label {
   background: #f9f9f9;
   transition: border-color 0.2s;
 }
+
 .drop-area.dragover {
   border-color: #F7CF52;
   background: #fffbe6;
 }
+
 #signaturePreview {
   display: block;
   margin: 0 auto;
@@ -381,6 +386,7 @@ label {
   max-width: 180px;
   max-height: 120px;
 }
+
 /* Modern dropdown styling for time selection */
 .time-inputs select {
   appearance: none;
@@ -417,16 +423,19 @@ label {
   background-repeat: no-repeat;
   background-position: right 1rem center;
   background-size: 1.2em;
-}/* --- MEDIA QUERIES FOR RESPONSIVENESS --- */
-@media (max-width: 1440px){
- .sidebar {
+}
+
+/* --- MEDIA QUERIES FOR RESPONSIVENESS --- */
+
+/* Large Desktop */
+@media (max-width: 1440px) {
+  .sidebar {
     width: 160px;
     padding: 20px 10px;
   }
 
-  .main {
-    margin-left: 180px;
-    padding: 1rem;
+  main {
+    margin-left: 160px;
     width: calc(100vw - 160px);
   }
 
@@ -434,77 +443,63 @@ label {
     left: -27%;
     width: 27%;
   }
+  
   .notification-panel.active {
-    left: 15%;
-  }
-
-  .welcome-content h2 {
-    font-size: 45px;
+    left: 12%;
   }
 }
 
-@media (max-width: 1204px){
- body {
+/* Tablet Layout */
+@media (max-width: 1280px) {
+  body {
     flex-direction: column;
   }
 
   .sidebar {
     position: static;
-    width: 100vw;
+    width: 100%;
     height: auto;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    justify-content: flex-start;
-    padding: 10px 5px;
+    padding: 15px 20px;
     min-width: 0;
     max-width: none;
   }
-    .main {
+
+  main {
     margin-left: 0;
-    padding: 1rem;
-    min-height: 100vh;
-    width: 100vw;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
+    width: 100%;
+    padding: 1.5rem;
   }
+
   .user-photo {
-    flex-direction: row;
     margin-bottom: 0;
   }
 
   .menu {
     display: flex;
     gap: 10px;
+    flex-wrap: wrap;
   }
 
   .menu a {
     margin-bottom: 0;
+    padding: 8px 12px;
+    font-size: 14px;
   }
-   .notification-panel {
+
+ 
+  .notification-panel {
     left: -40%;
     width: 40%;
-    top: 0;
-    height: 100vh;
   }
   .notification-panel.active {
     left: 0;
-    top: 0;
+    top: 15%;
   }
-
-  .welcome-box {
-    padding: 20px;
-  }
-
-  .welcome-content {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  table {
-    min-width: 600px;
+.notification-panel h1{
+    margin-top: 20px;
   }
   .logout-btn {
     position: absolute;
@@ -518,160 +513,309 @@ label {
     border-radius: 6px;
     z-index: 10;
   }
+
+  /* Form adjustments for tablet */
+  .form-container {
+    padding: 1.5rem;
+  }
+
+  .row {
+    gap: 0.5rem;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  input[type="date"],
+  input[type="datetime-local"],
+  input[type="file"],
+  select {
+    min-width: 200px;
+  }
+
+  label {
+    min-width: 200px;
+  }
 }
 
-@media (max-width: 600px){
-   body {
+/* Mobile Layout */
+@media (max-width: 868px) {
+  body {
     flex-direction: column;
-  } 
+    font-size: 16px; /* Prevent zoom on iOS */
+  }
+
   .sidebar {
     position: static;
-    width: 100vw;
+    width: 100%;
     height: auto;
     flex-direction: row;
     align-items: center;
-    justify-content: flex-start;
-    padding: 10px 5px;
+    justify-content: space-between;
+    padding: 10px 15px;
     min-width: 0;
     max-width: none;
   }
-  .main {
-    margin-left: 0;
-    padding: 0.5rem;
-    min-height: 100vh;
-    width: 100vw;
-    box-sizing: border-box;
+
+  .user-photo {
+    flex-shrink: 0;
+    margin-bottom: 0;
+    gap: 8px;
+  }
+
+  .user-photo img {
+    width: 40px;
+    height: 40px;
+  }
+
+  .user-photo div {
+    font-size: 12px;
+     /* Hide on very small screens */
+  }
+
+  .menu {
     display: flex;
-    flex-direction: column;
-    align-items: stretch;
+    gap: 5px;
+    flex-wrap: wrap;
+    justify-content: center;
+    flex-grow: 1;
+    margin: 0 10px;
   }
-  .header{
-    height: 15%;
+
+  .menu a {
+    margin-bottom: 0;
+    padding: 6px 8px;
+    font-size: 12px;
+    border-radius: 4px;
+    text-align: center;
+    min-width: auto;
   }
-  .welcome-content h2 {
-    font-size: 20px;
+
+  main {
+    margin-left: 0;
+    width: 100%;
+    padding: 1rem;
+    min-height: calc(100vh - 80px); /* Adjust for sidebar height */
   }
 
   .notification-panel {
-    left: -100vw;
-    width: 100vw;
-    top: 0;
-    height: 60vh;
-    min-width: 0;
-    max-width: none;
-    padding: 10px;
+    left: -85%;
+    width: 85%;
   }
+  
   .notification-panel.active {
     left: 0;
-    top: 0;
-    width: 100vw;
-    height: 60vh;
-  }
-
-.date{
-  font-size:14px;
-}
-.time{
-font-size:18px;
-}
-  .welcome-content button {
-    width: 100%;
+    top: 5%;
   }
   
-  .facility-table th, td { 
+  .notification-panel h1 {
+    padding-top: 25px;
+  }
+
+  .logout-btn {
+    position: static;
+    background-color: #fff;
+    color: #315C3A;
+    padding: 6px 12px;
+    font-weight: bold;
     font-size: 12px;
-    padding: 15px;
+    border: 1px solid #315C3A;
+    border-radius: 8px;
+    flex-shrink: 0;
   }
-}
 
-/* Signature Drop Area Styles */
-.signature-drop-area {
-  border: 2px dashed #ccc;
-  border-radius: 8px;
-  padding: 20px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  background-color: #f9f9f9;
-  margin: 10px 0;
-  min-height: 100px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-}
+  /* Form Mobile Optimizations */
+  .form-container {
+    padding: 1rem;
+    border-radius: 10px;
+    margin: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
 
-.signature-drop-area:hover {
-  border-color: #234734;
-  background-color: #f0f5f0;
-}
+  .form-container h2 {
+    font-size: 1.4rem;
+    margin-bottom: 1.5rem;
+  }
 
-.signature-drop-area.dragover {
-  border-color: #234734;
-  background-color: #e8f5e8;
-  transform: scale(1.02);
-}
+  .row {
+    flex-direction: column;
+    padding: 0.75rem 0;
+    gap: 0.5rem;
+    border-bottom: 1px solid #e0e0e0;
+  }
 
-.drop-text {
-  color: #666;
-  font-size: 14px;
-}
+  .row:last-child {
+    border-bottom: none;
+  }
 
-.drop-text p {
-  margin: 0 0 5px 0;
-  font-weight: 500;
-  color: #234734;
-}
+  /* Mobile Input Styling */
+  input[type="text"],
+  input[type="number"],
+  input[type="date"],
+  input[type="datetime-local"],
+  input[type="file"],
+  select {
+    width: 100%;
+    min-width: 100%;
+    padding: 12px 8px;
+    font-size: 16px; /* Prevent zoom on iOS */
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background-color: #fff;
+    margin-bottom: 8px;
+  }
 
-.drop-text small {
-  color: #888;
-  font-size: 12px;
-}
+  input[type="text"]:focus,
+  input[type="number"]:focus,
+  input[type="date"]:focus,
+  input[type="datetime-local"]:focus,
+  select:focus {
+    border-color: #F7CF52;
+    outline: none;
+    background-color: #fffbe6;
+  }
 
-.signature-preview {
-  max-width: 200px;
-  max-height: 100px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  margin-top: 10px;
-  object-fit: contain;
-  background-color: white;
-  padding: 5px;
-}
+  label {
+    width: 100%;
+    min-width: 100%;
+    font-size: 14px;
+    font-weight: 600;
+    color: #234734;
+    margin-bottom: 4px;
+    display: block;
+  }
 
-/* When signature is uploaded, hide drop text and show preview */
-.signature-drop-area:has(.signature-preview[style*="block"]) .drop-text {
-  display: none;
-}
+  /* Time Inputs Mobile */
+  .time-inputs {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: stretch;
+  }
 
-/* Fallback for browsers that don't support :has() */
-.signature-drop-area.has-image .drop-text {
-  display: none;
-}
+  .time-inputs select {
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 0.5rem;
+    padding: 12px 16px;
+    font-size: 16px;
+  }
 
-.signature-drop-area.has-image {
-  border-color: #234734;
-  background-color: #f0f5f0;
-  border-style: solid;
-}
+  /* Dropdown Mobile */
+  .dropdown-btn {
+    padding: 12px 16px;
+    font-size: 16px;
+  }
 
-/* Responsive design for signature area */
-@media (max-width: 768px) {
-  .signature-drop-area {
-    padding: 15px;
+  .dropdown-content {
+    max-height: 200px;
+    padding: 0.5rem;
+  }
+
+  .dropdown-content label {
+    font-size: 16px;
+    padding: 8px;
+    margin-bottom: 8px;
+  }
+
+  /* Signatures Mobile */
+  .signatures {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem 0;
+  }
+
+  .signContainer {
+    width: 100%;
     min-height: 80px;
+    padding: 0.75rem;
+    font-size: 14px;
   }
-  
-  .signature-preview {
-    max-width: 150px;
-    max-height: 75px;
-  }
-  
-  .drop-text p {
-    font-size: 13px;
-  }
-  
-  .drop-text small {
+
+  .Personel {
     font-size: 11px;
+  }
+
+  /* Submit Button Mobile */
+  .submit-btn {
+    width: 100%;
+    padding: 14px;
+    font-size: 16px;
+    margin: 1.5rem 0 0 0;
+    border-radius: 8px;
+  }
+
+  /* Modal Mobile */
+  .modal-content {
+    margin: 1rem;
+    max-width: calc(100% - 2rem);
+  }
+
+  .drop-area {
+    padding: 1.5rem 1rem;
+    font-size: 14px;
+  }
+}
+
+/* Extra Small Mobile */
+@media (max-width: 480px) {
+  .sidebar {
+    padding: 8px 10px;
+  }
+
+  .user-photo div {
+    display: none;
+  }
+
+  .menu a {
+    padding: 4px 6px;
+    font-size: 11px;
+  }
+
+  main {
+    padding: 0.75rem;
+  }
+
+  .form-container {
+    padding: 0.75rem;
+  }
+
+  .form-container h2 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  input[type="date"],
+  input[type="datetime-local"],
+  input[type="file"],
+  select {
+    padding: 10px 6px;
+  }
+
+  .signContainer {
+    padding: 0.5rem;
+    font-size: 12px;
+    min-height: 60px;
+  }
+
+  .submit-btn {
+    padding: 12px;
+  }
+}
+
+/* iPhone SE and similar small devices */
+@media (max-width: 375px) {
+  .menu {
+    gap: 3px;
+  }
+
+  .menu a {
+    padding: 3px 4px;
+    font-size: 10px;
+  }
+
+  .logout-btn {
+    padding: 4px 8px;
+    font-size: 10px;
   }
 }
