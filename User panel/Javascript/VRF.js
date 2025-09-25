@@ -1234,44 +1234,6 @@ async function createReservationNotification(sb, reservationData) {
 		console.error('Error creating notification:', error);
 	}
 }
-
-// Function to sign out user
-function signOutUser() {
-  // Show confirmation dialog
-  if (confirm('Are you sure you want to sign out?')) {
-    console.log('User signing out...');
-    
-    // Clear all user session data from localStorage
-    localStorage.removeItem('id');
-    localStorage.removeItem('user_id');
-    localStorage.removeItem('user_name');
-    localStorage.removeItem('user_role');
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('userName');
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('reservations');
-    localStorage.removeItem('userReservations');
-    localStorage.removeItem('selectedDate');
-    
-    // Clear any other session data
-    sessionStorage.clear();
-    
-    // Sign out from Supabase if available
-    const sb = getSupabase();
-    if (sb && sb.auth) {
-      sb.auth.signOut().catch(error => {
-        console.warn('Error signing out from Supabase:', error);
-      });
-    }
-    
-    console.log('User signed out successfully');
-    
-    // Redirect to landing page
-    window.location.href = 'landingPage.html';
-  }
-}
-
 // Custom Alert Modal (using browser's native alert instead)
 function showCustomAlert(message) {
   alert(message);
@@ -1287,3 +1249,119 @@ function showCustomConfirm(message, onConfirm) {
     onConfirm();
   }
 }
+function updateFacilityDisplay() {
+  const selectedRadio = document.querySelector('input[name="facility"]:checked');
+  const facilityDetails = document.getElementById("facilityDetails");
+
+  if (!facilityDetails) return;
+
+  if (selectedRadio) {
+    let text = selectedRadio.value;
+
+    if (selectedRadio.value === "Classroom") {
+      const roomInput = selectedRadio.parentElement.querySelector('.extra-input');
+      if (roomInput && roomInput.value.trim()) {
+        text += " - Room " + roomInput.value.trim();
+        showFacility(facilityDetails, text);
+      } else {
+        clearFacility(facilityDetails);
+      }
+      return;
+    }
+
+    if (selectedRadio.value === "Others") {
+      const specifyInput = selectedRadio.parentElement.querySelector('.extra-input');
+      if (specifyInput && specifyInput.value.trim()) {
+        text = "Others: " + specifyInput.value.trim();
+        showFacility(facilityDetails, text);
+      } else {
+        clearFacility(facilityDetails);
+      }
+      return;
+    }
+
+    // Normal facility
+    showFacility(facilityDetails, text);
+  } else {
+    clearFacility(facilityDetails);
+  }
+}
+
+function showFacility(container, text) {
+  container.innerHTML = `
+    <div class="facility-title">Selected Facility:</div>
+    <div class="facility-info">${text}</div>
+  `;
+  container.classList.add("has-selection");
+}
+
+function clearFacility(container) {
+  container.innerHTML = '<span class="placeholder-text">Pumili ng facility sa dropdown menu</span>';
+  container.classList.remove("has-selection");
+}
+
+function updateSetupDisplay() {
+  const selected = [];
+  document.querySelectorAll('input[name="setup"]:checked').forEach(cb => {
+    let text = cb.value;
+
+    if (cb.value === "Others") {
+      const specifyInput = cb.parentElement.querySelector('.extra-setup-input');
+      if (specifyInput && specifyInput.value.trim()) {
+        text = "Others: " + specifyInput.value.trim();
+        selected.push(text);
+      }
+      // kung walang input, huwag isama
+      return;
+    }
+
+    selected.push(text);
+  });
+
+  const setupDetails = document.getElementById("setupDetails");
+  if (setupDetails) {
+    if (selected.length > 0) {
+      setupDetails.innerHTML = `
+        <div class="facility-title">Selected Setup:</div>
+        <div class="facility-info">${selected.join(", ")}</div>
+      `;
+      setupDetails.classList.add("has-selection");
+    } else {
+      setupDetails.innerHTML = '<span class="placeholder-text">Pumili ng setup details sa dropdown menu</span>';
+      setupDetails.classList.remove("has-selection");
+    }
+  }
+}
+
+function toggleDropdown(dropdownId) {
+  const dropdown = document.getElementById(dropdownId);
+  if (dropdown) {
+    dropdown.classList.toggle('active');
+    document.querySelectorAll('.dropdown').forEach(d => {
+      if (d.id !== dropdownId) d.classList.remove('active');
+    });
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Facility (radio + inputs)
+  document.querySelectorAll('input[name="facility"]').forEach(radio => {
+    radio.addEventListener("change", updateFacilityDisplay);
+  });
+  document.querySelectorAll('.extra-input').forEach(input => {
+    input.addEventListener("input", updateFacilityDisplay);
+  });
+
+  // Setup (checkbox + inputs)
+  document.querySelectorAll('input[name="setup"]').forEach(cb => {
+    cb.addEventListener("change", updateSetupDisplay);
+  });
+  document.querySelectorAll('.extra-setup-input').forEach(input => {
+    input.addEventListener("input", updateSetupDisplay);
+  });
+
+  // Initial load
+  updateFacilityDisplay();
+  updateSetupDisplay();
+});
+

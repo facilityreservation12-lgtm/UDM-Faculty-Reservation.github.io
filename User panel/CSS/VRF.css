@@ -424,6 +424,101 @@ label {
   background-position: right 1rem center;
   background-size: 1.2em;
 }
+ #facilityDetails {
+      background: #f8f8f8;
+      border: 2px solid #234734;
+      border-radius: 8px;
+      padding: 1.5rem;
+      color: #234734;
+      font-size: 1.1rem;
+      margin-bottom: 1.5rem;
+      min-height: 60px;
+      box-shadow: 0 2px 8px rgba(35, 71, 52, 0.05);
+      transition: all 0.2s;
+      font-weight: 600;
+    }
+
+    #facilityDetails.has-selection {
+      background: #fffbe6;
+      border-color: #F7CF52;
+      color: #234734;
+    }
+
+    #facilityDetails .facility-title {
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+      color: #315C3A;
+    }
+
+    #facilityDetails .facility-info {
+      font-size: 1rem;
+      color: #234734;
+      font-weight: 600;
+    }
+
+    #facilityDetails .placeholder-text {
+      color: #999;
+      font-style: italic;
+      font-weight: normal;
+    }
+    .facility-option {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  margin-bottom: 6px;
+}
+
+.facility-option .extra-input {
+  flex: 1;
+}
+#setupDetails {
+      background: #f8f8f8;
+      border: 2px solid #234734;
+      border-radius: 8px;
+      padding: 1.5rem;
+      color: #234734;
+      font-size: 1.1rem;
+      margin-bottom: 1.5rem;
+      min-height: 60px;
+      box-shadow: 0 2px 8px rgba(35, 71, 52, 0.05);
+      transition: all 0.2s;
+      font-weight: 600;
+    }
+
+    #setupDetails.has-selection {
+      background: #fffbe6;
+      border-color: #F7CF52;
+      color: #234734;
+    }
+
+    #setupDetails .facility-title {
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+      color: #315C3A;
+    }
+
+    #setupDetails .facility-info {
+      font-size: 1rem;
+      color: #234734;
+      font-weight: 600;
+    }
+    #setupDetails .placeholder-text {
+      color: #999;
+      font-style: italic;
+      font-weight: normal;
+    }
+.setup-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.setup-option .extra-setup-input {
+  flex: 1;
+}
 
 /* --- MEDIA QUERIES FOR RESPONSIVENESS --- */
 
@@ -753,7 +848,22 @@ label {
     padding: 1.5rem 1rem;
     font-size: 14px;
   }
+   #facilityDetails {
+    padding: 1rem;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  #facilityDetails .facility-title {
+    font-size: 1.1rem;
+  }
+  
+  #facilityDetails .facility-info {
+    font-size: 0.95rem;
+  }
 }
+
+
 
 /* Extra Small Mobile */
 @media (max-width: 480px) {
@@ -801,6 +911,20 @@ label {
   .submit-btn {
     padding: 12px;
   }
+   #facilityDetails {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+  }
+  
+  #facilityDetails .facility-title {
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+  }
+  
+  #facilityDetails .facility-info {
+    font-size: 0.85rem;
+  }
+
 }
 
 /* iPhone SE and similar small devices */
