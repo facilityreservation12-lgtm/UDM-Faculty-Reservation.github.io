@@ -580,7 +580,7 @@ function showStatusChangeNotification(reservation, oldStatus, newStatus) {
   }
   
   // Also show in-app alert
-  alert(message);
+  showCustomAlert("Status Update", message, "info");
   
   // Refresh notifications panel
   loadUserNotifications();
@@ -744,21 +744,21 @@ document.addEventListener('DOMContentLoaded', async function() {
 				if (facilitySelect && facilitySelect.value) selectedFacilities = [facilitySelect.value.trim()];
 			}
 			if (selectedFacilities.length === 0) {
-				alert("Please select a facility.");
+				showCustomAlert('Validation Error', 'Please select a facility.', 'warning');
 				return;
 			}
 
 			// Date of Event
 			const dateOfEventVal = dateOfEventInput && dateOfEventInput.value ? toYMD(dateOfEventInput.value) : null;
 			if (!dateOfEventVal) {
-				alert("Please choose a valid Date of Event.");
+				showCustomAlert('Validation Error', 'Please choose a valid Date of Event.', 'warning');
 				return;
 			}
 			
 			// Prevent reservation for past dates
 			const todayYMD = toYMD(new Date());
 			if (dateOfEventVal < todayYMD) {
-			  alert("You cannot reserve a date that has already passed.");
+			 showCustomAlert('Invalid Date', 'You cannot reserve a date that has already passed.', 'error');
 			  return;
 			}
 
@@ -766,11 +766,11 @@ document.addEventListener('DOMContentLoaded', async function() {
 			const newStart = parseTimeToMinutes(timeStartInput && timeStartInput.value ? timeStartInput.value : null);
 			const newEnd = parseTimeToMinutes(timeEndInput && timeEndInput.value ? timeEndInput.value : null);
 			if (newStart === null || newEnd === null) {
-				alert("Please provide valid start and end times (HH:MM).");
+				showCustomAlert('Validation Error', 'Please provide valid start and end times (HH:MM).', 'warning');
 				return;
 			}
 			if (newStart >= newEnd) {
-				alert("Start time must be earlier than end time.");
+				showCustomAlert('Time Error', 'Start time must be earlier than end time.', 'warning');
 				return;
 			}
 
@@ -784,7 +784,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 				.eq("date", dateOfEventVal);
 			
 			  if (error) {
-				alert("Error checking reservation conflicts. Please try again later.");
+				showCustomAlert("Conflict Error", "Error checking reservation conflicts. Please try again later.", "error");
 				console.error('Conflict check error:', error);
 				return;
 			  }
@@ -1175,9 +1175,9 @@ document.addEventListener('DOMContentLoaded', async function() {
 				localStorage.removeItem('selectedDate');
 
 				if (dbSuccess) {
-					alert('Reservation submitted successfully! Saved to database with notification created.');
+					showCustomAlert("Success", "Reservation submitted successfully! Saved to database with notification created.", "success");
 				} else {
-					alert('Reservation submitted successfully! Saved locally (network issues). Will sync when connection improves.');
+					showCustomAlert("Saved Locally", "Reservation submitted successfully! Saved locally (network issues). Will sync when connection improves.", "info");
 				}
 				window.location.href = "Userdashboard.html";
 			} catch (error) {
@@ -1185,7 +1185,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 				// Fallback: save locally so user won't lose data
 				reservations.push(reservation);
 				localStorage.setItem('reservations', JSON.stringify(reservations));
-				alert('An error occurred; reservation saved locally. Please contact admin or try again later.');
+				showCustomAlert("Error", "An error occurred. Reservation saved locally. Please contact admin or try again later.", "error");
 			}
 		});
 	} catch (error) {
@@ -1234,21 +1234,7 @@ async function createReservationNotification(sb, reservationData) {
 		console.error('Error creating notification:', error);
 	}
 }
-// Custom Alert Modal (using browser's native alert instead)
-function showCustomAlert(message) {
-  alert(message);
-}
 
-function closeAlert() {
-  // Not needed anymore, using native alert
-}
-
-// Custom Confirm Modal (using browser's native confirm instead)
-function showCustomConfirm(message, onConfirm) {
-  if (confirm(message)) {
-    onConfirm();
-  }
-}
 function updateFacilityDisplay() {
   const selectedRadio = document.querySelector('input[name="facility"]:checked');
   const facilityDetails = document.getElementById("facilityDetails");
@@ -1364,4 +1350,3 @@ document.addEventListener("DOMContentLoaded", () => {
   updateFacilityDisplay();
   updateSetupDisplay();
 });
-

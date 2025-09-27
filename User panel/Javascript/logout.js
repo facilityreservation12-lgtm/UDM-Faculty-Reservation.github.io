@@ -1,10 +1,10 @@
-// Function to sign out user
+// logout.js
+
 function signOutUser() {
-  // Show confirmation dialog
-  if (confirm('Are you sure you want to sign out?')) {
-    console.log('User signing out...');
-    
-    // Clear all user session data from localStorage
+  showCustomConfirm('Sign out', 'Are you sure you want to sign out?', () => {
+    console.log('User signing out.');
+
+    // Clear local storage
     localStorage.removeItem('id');
     localStorage.removeItem('user_id');
     localStorage.removeItem('user_name');
@@ -16,21 +16,18 @@ function signOutUser() {
     localStorage.removeItem('reservations');
     localStorage.removeItem('userReservations');
     localStorage.removeItem('selectedDate');
-    
-    // Clear any other session data
+
+    // Clear session storage
     sessionStorage.clear();
-    
-    // Sign out from Supabase if available
+
+    // Supabase sign out
     const sb = getSupabase();
     if (sb && sb.auth) {
       sb.auth.signOut().catch(error => {
         console.warn('Error signing out from Supabase:', error);
       });
     }
-    
-    console.log('User signed out successfully');
-    
-    // Redirect to landing page
+
     window.location.href = 'LandingPage.html';
-  }
+  });
 }

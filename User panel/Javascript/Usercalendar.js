@@ -244,7 +244,7 @@ async function renderCalendar(date) {
       today.setHours(0, 0, 0, 0);
       
       if (clickedDate < today) {
-        showCustomAlert("You cannot reserve a date that has already passed.");
+       showCustomAlert("Invalid Date", "You cannot reserve a date that has already passed.", "warning");
         return;
       }
       
@@ -326,17 +326,7 @@ async function nextMonth() {
   await renderCalendar(currentDate);
 })();
 
-// Custom Alert Modal
-function showCustomAlert(message) {
-  const alertBox = document.getElementById("customAlert");
-  const alertMessage = document.getElementById("alertMessage");
-  alertMessage.textContent = message;
-  alertBox.style.display = "flex";
-}
 
-function closeAlert() {
-  document.getElementById("customAlert").style.display = "none";
-}
 
 // Show available time slots for a specific date
 async function showAvailableSlots(year, month, day, formattedDate) {
@@ -420,10 +410,10 @@ async function showAvailableSlots(year, month, day, formattedDate) {
 
     message += 'Would you like to make a reservation?';
     
-    showCustomConfirm(message, () => {
-      // Redirect to VRF page with the selected date
-      window.location.href = `VRF.html?dateOfEvent=${formattedDate}`;
-    });
+      showCustomConfirm("Make Reservation", message, () => {
+         window.location.href = `VRF.html?dateOfEvent=${formattedDate}`;
+});
+
 
   } catch (error) {
     console.error('Error showing available slots:', error);
@@ -489,40 +479,7 @@ function calculateAvailableSlots(reservations) {
 }
 
 // Custom Confirm Modal
-function showCustomConfirm(message, onConfirm) {
-  const confirmBox = document.getElementById("customConfirm");
-  const confirmMessage = document.getElementById("confirmMessage");
-  
-  // Convert line breaks to HTML breaks and preserve formatting
-  const htmlMessage = message
-    .replace(/\n\n/g, '<br><br>')
-    .replace(/\n/g, '<br>')
-    .replace(/•/g, '&bull;');
-  
-  confirmMessage.innerHTML = htmlMessage;
-  confirmMessage.style.whiteSpace = 'pre-line';
-  confirmMessage.style.textAlign = 'left';
 
-  const yesBtn = document.getElementById("confirmYes");
-  const noBtn = document.getElementById("confirmNo");
-  
-  // Remove existing event listeners by cloning
-  const newYesBtn = yesBtn.cloneNode(true);
-  const newNoBtn = noBtn.cloneNode(true);
-  yesBtn.parentNode.replaceChild(newYesBtn, yesBtn);
-  noBtn.parentNode.replaceChild(newNoBtn, noBtn);
-
-  newYesBtn.addEventListener("click", () => {
-    confirmBox.style.display = "none";
-    onConfirm();
-  });
-
-  newNoBtn.addEventListener("click", () => {
-    confirmBox.style.display = "none";
-  });
-
-  confirmBox.style.display = "flex";
-}
 
 // Notification panel toggle function
 function toggleNotificationPanel() {
