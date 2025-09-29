@@ -28,15 +28,20 @@ async function getReservationsForDay(year, month, day) {
                    localStorage.getItem('userId') || 
                    localStorage.getItem('currentUserId');
 
+    if (!userId) {
+      console.error('User ID not found in localStorage');
+      return [];
+    }
+
     // Format the target date
     const targetDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
-    // Always fetch ALL reservations for the date to show complete availability
-    // This shows what facilities/times are booked regardless of who booked them
+    // Fetch reservations for the logged-in user only
     const { data: reservations, error } = await sb
       .from('reservations')
       .select('facility, time_start, time_end, title_of_the_event')
-      .eq('date', targetDate);
+      .eq('date', targetDate)
+      .eq('id', userId); // Filter by user ID
 
     if (error) {
       console.error('Error fetching reservations:', error);
@@ -583,7 +588,7 @@ function createNotificationItem(reservation) {
   // Get status styling
   const statusClass = getStatusClass(reservation.status);
   
-  // Map status for display
+  // Map status for display purposes
   const displayStatus = mapStatusForDisplay(reservation.status);
   
   // Get status color based on status type
