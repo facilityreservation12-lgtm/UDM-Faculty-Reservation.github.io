@@ -1,3 +1,8 @@
+// Use the global Supabase client initialized in ../../supabaseClient.js
+function getSupabaseClient() {
+  return window.supabaseClient || null;
+}
+
 // Function to sign out user (for the logout button)
 function signOutUser() {
   // Show confirmation dialog
