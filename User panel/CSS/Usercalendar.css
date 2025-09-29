@@ -266,56 +266,6 @@ body {
   color: #555;
 }
 
-.modal-overlay {
-  position: fixed;
-  display: none;
-  justify-content: center;
-  align-items: center;
-  top: 0; 
-  left: 0;
-  width: 100vw; 
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 999;
-}
-
-.modal-content {
-  background: white;
-  padding: 25px 30px;
-  border-radius: 12px;
-  width: 90%;
-  max-width: 400px;
-  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-  text-align: center;
-  font-size: 16px;
-}
-
-.modal-content p {
-  margin-bottom: 20px;
-  color: #333;
-}
-
-.modal-content button {
-  justify-content: center;
-  align-items: center;
-  background-color: #315C3A;  
-  color: white;
-  padding: 8px 16px;
-  margin: 0 3px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: bold;
-  font-size: 20px;
-  transition: background 0.2s;
-  margin: 10px auto 0 auto; 
-  display: block;   
-}
-
-.modal-content button:hover {
-  background-color: #264b2e;
-}
-
 .main {
   margin-left: 230px;
   padding: 2rem;

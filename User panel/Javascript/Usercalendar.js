@@ -394,18 +394,18 @@ async function showAvailableSlots(year, month, day, formattedDate) {
     }
 
     // Format the availability message
-    let message = `Available facilities and time slots for ${formattedDate}:\n\n`;
+    let message = `Available facilities and time slots for ${formattedDate}:<br><br>`;
     
     facilityAvailability.forEach(item => {
-      message += `${item.facility}:\n`;
+      message += `${item.facility}`;
       if (item.slots.length > 0) {
         item.slots.forEach(slot => {
-          message += `• ${formatTime12hr(slot.start)} - ${formatTime12hr(slot.end)}\n`;
+          message += `• ${formatTime12hr(slot.start)} - ${formatTime12hr(slot.end)}<br>`;
         });
       } else {
-        message += `• No available time slot\n`;
+        message += `• No available time slot<br>`;
       }
-      message += '\n';
+      message += '<br>';
     });
 
     message += 'Would you like to make a reservation?';
@@ -741,10 +741,6 @@ function requestNotificationPermission() {
     });
   }
 }
-
-
-
-
 
 // Initialize notifications when page loads
 document.addEventListener('DOMContentLoaded', function() {
