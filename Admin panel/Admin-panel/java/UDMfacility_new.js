@@ -106,11 +106,14 @@ function formatDate(dateString) {
 // Function to populate the facility table
 async function populateFacilityTable() {
   const facility = facilities[currentFacilityIndex];
+  console.log(`🔄 Populating table for facility: ${facility}`);
+
   const reservations = await fetchApprovedReservations(facility);
-  
+  console.log(`✅ Reservations fetched:`, reservations);
+
   const table = document.getElementById('facility-table');
   if (!table) {
-    console.error('Facility table not found');
+    console.error('❌ Facility table not found in the DOM. Check if the table element exists with id="facility-table".');
     return;
   }
 
@@ -130,7 +133,7 @@ async function populateFacilityTable() {
   headerRow.style.backgroundColor = '#f5f5f5';
 
   if (reservations.length === 0) {
-    // Show "no reservations" row
+    console.warn(`⚠️ No approved reservations found for facility: ${facility}`);
     const noDataRow = table.insertRow();
     noDataRow.innerHTML = `
       <td colspan="6" style="text-align: center; padding: 20px; color: #666; font-style: italic;">
@@ -141,35 +144,62 @@ async function populateFacilityTable() {
   }
 
   // Populate with real reservation data
-  reservations.forEach(reservation => {
+  reservations.forEach((reservation, index) => {
+    console.log(`🔍 Processing reservation ${index + 1}:`, reservation);
+
     const row = table.insertRow();
-    
+
     // Combine first_name and last_name
-    const userName = `${reservation.users.first_name || ''} ${reservation.users.last_name || ''}`.trim();
-    
+    const userName = `${reservation.users?.first_name || ''} ${reservation.users?.last_name || ''}`.trim();
+    if (!userName) {
+      console.warn(`⚠️ User name missing for reservation ID: ${reservation.request_id}`);
+    }
+
     // Format time range
     const startTime = formatTime(reservation.time_start);
     const endTime = formatTime(reservation.time_end);
     const timeRange = `${startTime} - ${endTime}`;
-    
+
     // Format date
     const formattedDate = formatDate(reservation.date);
 
-    row.innerHTML = `
-      <td>${reservation.request_id || 'N/A'}</td>
-      <td>${userName || 'Unknown User'}</td>
-      <td>${formattedDate}</td>
-      <td>${timeRange}</td>
-      <td>${reservation.title_of_the_event || 'No details provided'}</td>
-      <td>
-        <button class="view-btn" onclick="viewRequirements('${reservation.request_id}')">
-          View Requirements
-        </button>
-      </td>
-    `;
+    // Create cells safely
+    const codeCell = row.insertCell();
+    codeCell.textContent = reservation.request_id || 'N/A';
+
+    const userCell = row.insertCell();
+    userCell.textContent = userName || 'Unknown User';
+
+    const dateCell = row.insertCell();
+    dateCell.textContent = formattedDate;
+
+    const timeCell = row.insertCell();
+    timeCell.textContent = timeRange;
+
+    const detailsCell = row.insertCell();
+    detailsCell.textContent = reservation.title_of_the_event || 'No details provided';
+
+    const actionCell = row.insertCell();
+    const btn = document.createElement('button');
+    btn.className = 'view-btn';
+    btn.type = 'button';
+    btn.textContent = 'View Requirements';
+    btn.addEventListener('click', async () => {
+      const reqId = reservation.request_id || '';
+      const url = `Relevantdocuments.html?request_id=${encodeURIComponent(reqId)}`;
+      console.log('View Requirements clicked. request_id=', reqId, 'url=', url);
+
+      try {
+        window.location.href = url;
+      } catch (navErr) {
+        console.error('❌ Navigation attempt failed for', url, navErr);
+        alert('Failed to navigate to Relevant Documents. See console for details.');
+      }
+    });
+    actionCell.appendChild(btn);
   });
 
-  console.log(`📊 Populated ${facility} table with ${reservations.length} approved reservations`);
+  console.log(`📊 Successfully populated ${facility} table with ${reservations.length} approved reservations.`);
 }
 
 // Function to update the venue title
@@ -224,6 +254,80 @@ function viewRequirements(reservationId) {
   alert(`Viewing requirements for reservation ID: ${reservationId}`);
 }
 
+// Function to update user details
+function updateUserDetails() {
+  const userNameElement = document.getElementById('UserName');
+  const userRoleElement = document.getElementById('UserRole');
+
+  if (!userNameElement) {
+    console.error('❌ UserName element not found in the DOM. Ensure an element with id="UserName" exists.');
+  }
+
+  if (!userRoleElement) {
+    console.error('❌ UserRole element not found in the DOM. Ensure an element with id="UserRole" exists.');
+  }
+
+  if (userNameElement) userNameElement.textContent = 'Loading...';
+  if (userRoleElement) userRoleElement.textContent = 'Loading...';
+
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    console.error('❌ Supabase client not initialized. Cannot fetch user details.');
+    if (userNameElement) userNameElement.textContent = 'Unknown User';
+    if (userRoleElement) userRoleElement.textContent = 'Unknown Role';
+    return;
+  }
+
+  const userId = localStorage.getItem('user_id');
+  if (!userId) {
+    console.warn('⚠️ No user_id found in localStorage. Defaulting to Unknown User.');
+    if (userNameElement) userNameElement.textContent = 'Unknown User';
+    if (userRoleElement) userRoleElement.textContent = 'Unknown Role';
+    return;
+  }
+
+  console.log(`🔍 Fetching user details for user_id: ${userId}`);
+
+  supabase
+    .from('users')
+    .select('first_name, last_name, role_name')
+    .eq('id', userId)
+    .single()
+    .then(({ data, error }) => {
+      if (error) {
+        console.error('❌ Error fetching user details:', error);
+        if (userNameElement) userNameElement.textContent = 'Unknown User';
+        if (userRoleElement) userRoleElement.textContent = 'Unknown Role';
+        return;
+      }
+
+      if (!data) {
+        console.warn('⚠️ No user data found for user_id:', userId);
+        if (userNameElement) userNameElement.textContent = 'Unknown User';
+        if (userRoleElement) userRoleElement.textContent = 'Unknown Role';
+        return;
+      }
+
+      const userName = `${data.first_name || ''} ${data.last_name || ''}`.trim();
+      const userRole = data.role_name || 'Unknown Role';
+
+      console.log(`✅ User details fetched: Name=${userName}, Role=${userRole}`);
+
+      if (userNameElement) {
+        userNameElement.textContent = userName || 'Unknown User';
+      }
+
+      if (userRoleElement) {
+        userRoleElement.textContent = userRole;
+      }
+    })
+    .catch((fetchError) => {
+      console.error('❌ Unexpected error fetching user details:', fetchError);
+      if (userNameElement) userNameElement.textContent = 'Unknown User';
+      if (userRoleElement) userRoleElement.textContent = 'Unknown Role';
+    });
+}
+
 // Wait for Supabase client to be ready, then initialize
 function waitForSupabaseAndInit() {
   const client = getSupabaseClient();
@@ -231,6 +335,7 @@ function waitForSupabaseAndInit() {
     console.log('✅ Supabase client ready, initializing facility view...');
     updateVenueTitle();
     populateFacilityTable();
+    updateUserDetails();
   } else {
     console.log('⏳ Waiting for Supabase client to initialize...');
     setTimeout(waitForSupabaseAndInit, 200);
@@ -251,6 +356,12 @@ if (document.readyState === 'loading') {
 } else {
   setTimeout(waitForSupabaseAndInit, 500);
 }
+
+// Call updateUserDetails on page load
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('🔄 Initializing user details update...');
+  updateUserDetails();
+});
 
 // Make functions globally available
 window.jumpToFacility = jumpToFacility;
