@@ -988,22 +988,52 @@ document.addEventListener('DOMContentLoaded', async function() {
 			  
 			
 
-			// Generate sequential code for the facility locally
+			// Generate sequential code for the facility (query DB for existing max, fallback to local)
 			const firstFacility = selectedFacilities[0];
 			const codePrefix = getCodePrefix(firstFacility);
-			
-			// Generate local sequence
-			const existingCodes = reservations
-				.filter(r => r.codeId && r.codeId.startsWith(codePrefix))
-				.map(r => parseInt(r.codeId.substring(3), 10))
-				.filter(n => !isNaN(n));
-			
-			let localSequence = 1;
-			if (existingCodes.length > 0) {
-				localSequence = Math.max(...existingCodes) + 1;
+			let codeId = null;
+			try {
+				// Query existing request_ids with this prefix
+				const { data: existingReqs, error: reqError } = await sb
+					.from('reservations')
+					.select('request_id')
+					.like('request_id', `${codePrefix}-%`);
+				console.log('Debug: existingReqs for prefix', codePrefix, existingReqs && existingReqs.length);
+				if (reqError) {
+					console.warn('Could not query existing request_ids for prefix, falling back to local:', reqError);
+				} else {
+					// existingReqs may be empty array; compute numeric parts safely
+					const nums = (existingReqs || [])
+						.map(r => {
+							if (!r || !r.request_id) return null;
+							const parts = String(r.request_id).split('-');
+							const num = parseInt(parts[1], 10);
+							return Number.isFinite(num) ? num : null;
+						})
+						.filter(n => n !== null && !isNaN(n) && n >= 0);
+					console.log('Debug: numeric parts extracted for prefix', codePrefix, nums);
+					const maxNum = nums.length ? Math.max(...nums) : 0;
+					const next = maxNum + 1;
+					console.log('Debug: next sequence for', codePrefix, next);
+					codeId = `${codePrefix}-${String(next).padStart(4, '0')}`;
+				}
+			} catch (err) {
+				console.warn('Error while computing next request_id from DB, will fallback to local sequence:', err);
 			}
-			
-			const codeId = `${codePrefix}-${String(localSequence).padStart(4, '0')}`;
+
+			// Fallback to local sequence if DB method did not set codeId
+			if (!codeId) {
+				// Generate local sequence
+				const existingCodes = reservations
+					.filter(r => r.codeId && r.codeId.startsWith(codePrefix))
+					.map(r => parseInt(r.codeId.split('-')[1], 10))
+					.filter(n => !isNaN(n));
+				let localSequence = 1;
+				if (existingCodes.length > 0) {
+					localSequence = Math.max(...existingCodes) + 1;
+				}
+				codeId = `${codePrefix}-${String(localSequence).padStart(4, '0')}`;
+			}
 
 			// Get all form data
 			const unitOffice = document.querySelector('#unitOffice, input[name="unitOffice"]').value;
@@ -1137,8 +1167,8 @@ document.addEventListener('DOMContentLoaded', async function() {
 					}
 				}
 
-				// Generate and upload PDF
-				const element = document.querySelector('main') || document.querySelector('.form-container');
+				// Generate and upload PDF (use .form-container explicitly)
+				const element = document.querySelector('.form-container');
 				const pdfOptions = {
 					margin: 1,
 					filename: `VRF-${codeId}.pdf`,
