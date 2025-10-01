@@ -112,13 +112,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (error) {
           console.log(`[LOGIN FAILED] UserID: ${userId}, Role: ${role}, Reason: Database error`, error);
-          alert('Database connection error. Please try again.');
+          showCustomAlert('Database Error', 'Database connection error. Please try again.', 'error');
           return;
         }
 
         if (!data || data.length === 0) {
           console.log(`[LOGIN FAILED] UserID: ${userId}, Role: ${role}, Reason: Invalid User ID or Role`);
-          alert('Invalid User ID or Role!');
+          showCustomAlert('Login Failed', 'Invalid User ID or Role!', 'error');
           return;
         }
 
@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const user = data[0];        // Check password (assuming plaintext for demo)
         if (!user.password || user.password !== password) {
           console.log(`[LOGIN FAILED] UserID: ${userId}, Role: ${role}, Reason: Incorrect password`);
-          alert('Incorrect password!');
+         showCustomAlert('Login Failed', 'Incorrect password!', 'error');
           return;
         }
 
@@ -142,7 +142,8 @@ document.addEventListener('DOMContentLoaded', function() {
     localStorage.setItem('user_name', userName);
     localStorage.setItem('user_role', user.role);
     
-    alert('Login successful!');
+    
+   showCustomAlert('Success', 'Login successful!', 'success');
     switch (user.role) {
         case 'super_admin':
           window.location.href = '../SuperAdmin panel/SuperAdmin-panel/SuperAdminDashboard.html';
@@ -157,7 +158,7 @@ document.addEventListener('DOMContentLoaded', function() {
           window.location.href = '../User panel/Userdashboard.html';
           break;
         default:
-          alert('Unknown role!');
+        showCustomAlert('Error', 'Unknown role!', 'error');
       }
     })
   }

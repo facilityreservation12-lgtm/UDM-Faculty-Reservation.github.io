@@ -580,7 +580,7 @@ function showStatusChangeNotification(reservation, oldStatus, newStatus) {
   }
   
   // Also show in-app alert
-  alert(message);
+  showCustomAlert("Status Update", message, "info");
   
   // Refresh notifications panel
   loadUserNotifications();
@@ -744,21 +744,21 @@ document.addEventListener('DOMContentLoaded', async function() {
 				if (facilitySelect && facilitySelect.value) selectedFacilities = [facilitySelect.value.trim()];
 			}
 			if (selectedFacilities.length === 0) {
-				alert("Please select a facility.");
+				showCustomAlert('Validation Error', 'Please select a facility.', 'warning');
 				return;
 			}
 
 			// Date of Event
 			const dateOfEventVal = dateOfEventInput && dateOfEventInput.value ? toYMD(dateOfEventInput.value) : null;
 			if (!dateOfEventVal) {
-				alert("Please choose a valid Date of Event.");
+				showCustomAlert('Validation Error', 'Please choose a valid Date of Event.', 'warning');
 				return;
 			}
 			
 			// Prevent reservation for past dates
 			const todayYMD = toYMD(new Date());
 			if (dateOfEventVal < todayYMD) {
-			  alert("You cannot reserve a date that has already passed.");
+			 showCustomAlert('Invalid Date', 'You cannot reserve a date that has already passed.', 'error');
 			  return;
 			}
 
@@ -766,11 +766,11 @@ document.addEventListener('DOMContentLoaded', async function() {
 			const newStart = parseTimeToMinutes(timeStartInput && timeStartInput.value ? timeStartInput.value : null);
 			const newEnd = parseTimeToMinutes(timeEndInput && timeEndInput.value ? timeEndInput.value : null);
 			if (newStart === null || newEnd === null) {
-				alert("Please provide valid start and end times (HH:MM).");
+				showCustomAlert('Validation Error', 'Please provide valid start and end times (HH:MM).', 'warning');
 				return;
 			}
 			if (newStart >= newEnd) {
-				alert("Start time must be earlier than end time.");
+				showCustomAlert('Time Error', 'Start time must be earlier than end time.', 'warning');
 				return;
 			}
 
@@ -784,7 +784,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 				.eq("date", dateOfEventVal);
 			
 			  if (error) {
-				alert("Error checking reservation conflicts. Please try again later.");
+				showCustomAlert("Conflict Error", "Error checking reservation conflicts. Please try again later.", "error");
 				console.error('Conflict check error:', error);
 				return;
 			  }
@@ -988,22 +988,52 @@ document.addEventListener('DOMContentLoaded', async function() {
 			  
 			
 
-			// Generate sequential code for the facility locally
+			// Generate sequential code for the facility (query DB for existing max, fallback to local)
 			const firstFacility = selectedFacilities[0];
 			const codePrefix = getCodePrefix(firstFacility);
-			
-			// Generate local sequence
-			const existingCodes = reservations
-				.filter(r => r.codeId && r.codeId.startsWith(codePrefix))
-				.map(r => parseInt(r.codeId.substring(3), 10))
-				.filter(n => !isNaN(n));
-			
-			let localSequence = 1;
-			if (existingCodes.length > 0) {
-				localSequence = Math.max(...existingCodes) + 1;
+			let codeId = null;
+			try {
+				// Query existing request_ids with this prefix
+				const { data: existingReqs, error: reqError } = await sb
+					.from('reservations')
+					.select('request_id')
+					.like('request_id', `${codePrefix}-%`);
+				console.log('Debug: existingReqs for prefix', codePrefix, existingReqs && existingReqs.length);
+				if (reqError) {
+					console.warn('Could not query existing request_ids for prefix, falling back to local:', reqError);
+				} else {
+					// existingReqs may be empty array; compute numeric parts safely
+					const nums = (existingReqs || [])
+						.map(r => {
+							if (!r || !r.request_id) return null;
+							const parts = String(r.request_id).split('-');
+							const num = parseInt(parts[1], 10);
+							return Number.isFinite(num) ? num : null;
+						})
+						.filter(n => n !== null && !isNaN(n) && n >= 0);
+					console.log('Debug: numeric parts extracted for prefix', codePrefix, nums);
+					const maxNum = nums.length ? Math.max(...nums) : 0;
+					const next = maxNum + 1;
+					console.log('Debug: next sequence for', codePrefix, next);
+					codeId = `${codePrefix}-${String(next).padStart(4, '0')}`;
+				}
+			} catch (err) {
+				console.warn('Error while computing next request_id from DB, will fallback to local sequence:', err);
 			}
-			
-			const codeId = `${codePrefix}-${String(localSequence).padStart(4, '0')}`;
+
+			// Fallback to local sequence if DB method did not set codeId
+			if (!codeId) {
+				// Generate local sequence
+				const existingCodes = reservations
+					.filter(r => r.codeId && r.codeId.startsWith(codePrefix))
+					.map(r => parseInt(r.codeId.split('-')[1], 10))
+					.filter(n => !isNaN(n));
+				let localSequence = 1;
+				if (existingCodes.length > 0) {
+					localSequence = Math.max(...existingCodes) + 1;
+				}
+				codeId = `${codePrefix}-${String(localSequence).padStart(4, '0')}`;
+			}
 
 			// Get all form data
 			const unitOffice = document.querySelector('#unitOffice, input[name="unitOffice"]').value;
@@ -1137,8 +1167,8 @@ document.addEventListener('DOMContentLoaded', async function() {
 					}
 				}
 
-				// Generate and upload PDF
-				const element = document.querySelector('main') || document.querySelector('.form-container');
+				// Generate and upload PDF (use .form-container explicitly)
+				const element = document.querySelector('.form-container');
 				const pdfOptions = {
 					margin: 1,
 					filename: `VRF-${codeId}.pdf`,
@@ -1175,9 +1205,9 @@ document.addEventListener('DOMContentLoaded', async function() {
 				localStorage.removeItem('selectedDate');
 
 				if (dbSuccess) {
-					alert('Reservation submitted successfully! Saved to database with notification created.');
+					showCustomAlert("Success", "Reservation submitted successfully! Saved to database with notification created.", "success");
 				} else {
-					alert('Reservation submitted successfully! Saved locally (network issues). Will sync when connection improves.');
+					showCustomAlert("Saved Locally", "Reservation submitted successfully! Saved locally (network issues). Will sync when connection improves.", "info");
 				}
 				window.location.href = "Userdashboard.html";
 			} catch (error) {
@@ -1185,7 +1215,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 				// Fallback: save locally so user won't lose data
 				reservations.push(reservation);
 				localStorage.setItem('reservations', JSON.stringify(reservations));
-				alert('An error occurred; reservation saved locally. Please contact admin or try again later.');
+				showCustomAlert("Error", "An error occurred. Reservation saved locally. Please contact admin or try again later.", "error");
 			}
 		});
 	} catch (error) {
@@ -1235,55 +1265,118 @@ async function createReservationNotification(sb, reservationData) {
 	}
 }
 
-// Function to sign out user
-function signOutUser() {
-  // Show confirmation dialog
-  if (confirm('Are you sure you want to sign out?')) {
-    console.log('User signing out...');
-    
-    // Clear all user session data from localStorage
-    localStorage.removeItem('id');
-    localStorage.removeItem('user_id');
-    localStorage.removeItem('user_name');
-    localStorage.removeItem('user_role');
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('userName');
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('reservations');
-    localStorage.removeItem('userReservations');
-    localStorage.removeItem('selectedDate');
-    
-    // Clear any other session data
-    sessionStorage.clear();
-    
-    // Sign out from Supabase if available
-    const sb = getSupabase();
-    if (sb && sb.auth) {
-      sb.auth.signOut().catch(error => {
-        console.warn('Error signing out from Supabase:', error);
-      });
+function updateFacilityDisplay() {
+  const selectedRadio = document.querySelector('input[name="facility"]:checked');
+  const facilityDetails = document.getElementById("facilityDetails");
+
+  if (!facilityDetails) return;
+
+  if (selectedRadio) {
+    let text = selectedRadio.value;
+
+    if (selectedRadio.value === "Classroom") {
+      const roomInput = selectedRadio.parentElement.querySelector('.extra-input');
+      if (roomInput && roomInput.value.trim()) {
+        text += " - Room " + roomInput.value.trim();
+        showFacility(facilityDetails, text);
+      } else {
+        clearFacility(facilityDetails);
+      }
+      return;
     }
-    
-    console.log('User signed out successfully');
-    
-    // Redirect to landing page
-    window.location.href = 'landingPage.html';
+
+    if (selectedRadio.value === "Others") {
+      const specifyInput = selectedRadio.parentElement.querySelector('.extra-input');
+      if (specifyInput && specifyInput.value.trim()) {
+        text = "Others: " + specifyInput.value.trim();
+        showFacility(facilityDetails, text);
+      } else {
+        clearFacility(facilityDetails);
+      }
+      return;
+    }
+
+    // Normal facility
+    showFacility(facilityDetails, text);
+  } else {
+    clearFacility(facilityDetails);
   }
 }
 
-// Custom Alert Modal (using browser's native alert instead)
-function showCustomAlert(message) {
-  alert(message);
+function showFacility(container, text) {
+  container.innerHTML = `
+    <div class="facility-title">Selected Facility:</div>
+    <div class="facility-info">${text}</div>
+  `;
+  container.classList.add("has-selection");
 }
 
-function closeAlert() {
-  // Not needed anymore, using native alert
+function clearFacility(container) {
+  container.innerHTML = '<span class="placeholder-text">Pumili ng facility sa dropdown menu</span>';
+  container.classList.remove("has-selection");
 }
 
-// Custom Confirm Modal (using browser's native confirm instead)
-function showCustomConfirm(message, onConfirm) {
-  if (confirm(message)) {
-    onConfirm();
+function updateSetupDisplay() {
+  const selected = [];
+  document.querySelectorAll('input[name="setup"]:checked').forEach(cb => {
+    let text = cb.value;
+
+    if (cb.value === "Others") {
+      const specifyInput = cb.parentElement.querySelector('.extra-setup-input');
+      if (specifyInput && specifyInput.value.trim()) {
+        text = "Others: " + specifyInput.value.trim();
+        selected.push(text);
+      }
+      // kung walang input, huwag isama
+      return;
+    }
+
+    selected.push(text);
+  });
+
+  const setupDetails = document.getElementById("setupDetails");
+  if (setupDetails) {
+    if (selected.length > 0) {
+      setupDetails.innerHTML = `
+        <div class="facility-title">Selected Setup:</div>
+        <div class="facility-info">${selected.join(", ")}</div>
+      `;
+      setupDetails.classList.add("has-selection");
+    } else {
+      setupDetails.innerHTML = '<span class="placeholder-text">Pumili ng setup details sa dropdown menu</span>';
+      setupDetails.classList.remove("has-selection");
+    }
   }
 }
+
+function toggleDropdown(dropdownId) {
+  const dropdown = document.getElementById(dropdownId);
+  if (dropdown) {
+    dropdown.classList.toggle('active');
+    document.querySelectorAll('.dropdown').forEach(d => {
+      if (d.id !== dropdownId) d.classList.remove('active');
+    });
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Facility (radio + inputs)
+  document.querySelectorAll('input[name="facility"]').forEach(radio => {
+    radio.addEventListener("change", updateFacilityDisplay);
+  });
+  document.querySelectorAll('.extra-input').forEach(input => {
+    input.addEventListener("input", updateFacilityDisplay);
+  });
+
+  // Setup (checkbox + inputs)
+  document.querySelectorAll('input[name="setup"]').forEach(cb => {
+    cb.addEventListener("change", updateSetupDisplay);
+  });
+  document.querySelectorAll('.extra-setup-input').forEach(input => {
+    input.addEventListener("input", updateSetupDisplay);
+  });
+
+  // Initial load
+  updateFacilityDisplay();
+  updateSetupDisplay();
+});

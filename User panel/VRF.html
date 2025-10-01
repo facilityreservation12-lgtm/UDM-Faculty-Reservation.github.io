@@ -8,6 +8,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.min.js"></script>
   <script src="../supabaseClient.js"></script>
   <script src="Javascript/VRF.js" defer></script>
+  <script src="Javascript/alert.js"></script>
+  <script src="Javascript/logout.js"></script>
 </head>
 <body>
   <div class="notification-panel" id="notificationPanel">
@@ -69,28 +71,35 @@
         </div>
 
         <!-- UDM Facility Dropdown -->
-        <div class="dropdown">
+        <div id="facilityDropdown"class="dropdown">
+    
           <button type="button" class="dropdown-btn">UDM Facility</button>
           <div class="dropdown-content">
             <label><input type="radio" name="facility" value="Palma Hall"> Palma Hall</label>
             <label><input type="radio" name="facility" value="Right Wing Lobby"> Right Wing Lobby</label>
             <label><input type="radio" name="facility" value="Mehan Garden"> Mehan Garden</label>
             <label><input type="radio" name="facility" value="Rooftop"> Rooftop</label>
+            <div class="facility-option">
             <label>
               <input type="radio" name="facility" value="Classroom"> Classroom
               <input type="text" placeholder="Room #" class="extra-input">
             </label>
+          </div>
             <label><input type="radio" name="facility" value="Basketball Court"> Basketball Court</label>
             <label><input type="radio" name="facility" value="Ground Floor Space"> Space at the ground floor</label>
+            <div class="facility-option">
             <label>
               <input type="radio" name="facility" value="Others"> Others
               <input type="text" placeholder="Specify" class="extra-input">
             </label>
           </div>
+          </div>
         </div>
-
+           <div id="facilityDetails" class="facility-details">
+            <span class="placeholder-text">Pumili ng facility sa dropdown menu</span>
+        </div>
         <!-- Setup Details Dropdown -->
-        <div class="dropdown">
+        <div id="setupDropdown"class="dropdown">
           <button type="button" class="dropdown-btn">Set up Details</button>
           <div class="dropdown-content">
             <label><input type="checkbox" name="setup" value="Chairs"> Chairs</label>
@@ -98,13 +107,17 @@
             <label><input type="checkbox" name="setup" value="Sound System"> Sound System</label>
             <label><input type="checkbox" name="setup" value="Electrical System"> Electrical System</label>
             <label><input type="checkbox" name="setup" value="Projector/HDMI"> Projector/HDMI</label>
+            <div class="setup-option">
             <label>
               <input type="checkbox" name="setup" value="Others"> Others
-              <input type="text" placeholder="Specify" class="extra-input">
+              <input type="text" placeholder="Specify" class="extra-setup-input">
             </label>
           </div>
+          </div>
         </div>
-
+        <div id="setupDetails" class="facility-details">
+  <span class="placeholder-text">Pumili ng setup details sa dropdown menu</span>
+</div>
         <!-- Signatures -->
         <div class="signatures">
           <div class="signContainer">
@@ -141,7 +154,32 @@
     <button id="conflictModalOkBtn" style="background:#F7CF52;color:#234734;padding:0.5rem 1.5rem;border:none;border-radius:4px;cursor:pointer;font-weight:bold;">OK</button>
   </div>
 </div>
+    <!-- Custom Alert Modal -->
+<div id="customAlertModal" class="custom-modal">
+  <div class="custom-modal-content">
+    <button class="modal-close" onclick="closeCustomAlert()">&times;</button>
+    <div id="alertIcon" class="modal-icon"></div>
+    <h3 id="alertTitle" class="modal-title"></h3>
+    <p id="alertMessage" class="modal-message"></p>
+    <div id="alertButtons" class="modal-buttons">
+      <button class="modal-btn primary" onclick="closeCustomAlert()">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- Loading Modal -->
+<div id="loadingModal" class="loading-modal">
+  <div class="loading-content">
+    <div class="loading-spinner"></div>
+    <div id="loadingText" class="loading-text">Loading...</div>
+    <div id="loadingSubtext" class="loading-subtext">Please wait</div>
+  </div>
+</div>
   </main>
   
 </body>
+<script>
+  
+  </script>
+
 </html>

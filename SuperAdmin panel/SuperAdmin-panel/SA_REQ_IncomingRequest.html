@@ -5,7 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SuperAdmin Incoming Request</title>
   <link rel="stylesheet" href="css/SA_IncomingRequest.css"/>
+  <!-- Load Supabase JS and project supabase client/config so window.supabase and keys are available -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.min.js"></script>
+  <script src="../../supabaseClient.js"></script>
+  <script src="../../supabaseConfig.js"></script>
   <script defer src="java/SA_REQ_IncomingRequest.js"></script>
+  <script src="java/SA_logout.js"></script>
 </head>
 <body>
 <div class="sidebar">
@@ -37,7 +42,7 @@
         <a href="SA_Reportbugs.html">Report Bugs</a>             
       </div> 
     </div>
-       <button onclick="window.location.href='landingPage.html'" class="logout-btn">Log Out</button> 
+      <button onclick="signOutUser()" class="logout-btn">Log Out</button>
   </div>
 
   <div class="content-area">

@@ -253,7 +253,7 @@ window.onload = async function() {
 };
 
 async function cancelReservation(requestId) {
-  if (!confirm('Are you sure you want to cancel this reservation?')) {
+  if (!confirm('Are you sure you want to cancel and remove this reservation from the database?')) {
     return;
   }
 
@@ -264,26 +264,26 @@ async function cancelReservation(requestId) {
       return;
     }
 
-    // Delete reservation from Supabase
+    // Delete reservation from Supabase completely
     const { error } = await sb
       .from('reservations')
       .delete()
       .eq('request_id', requestId);
 
     if (error) {
-      console.error('Error canceling reservation:', error);
-      alert('Error canceling reservation. Please try again.');
+      console.error('Error deleting reservation:', error);
+      alert('Error deleting reservation. Please try again.');
       return;
     }
 
-    alert('Reservation canceled successfully!');
+    alert('Reservation deleted successfully!');
     
     // Reload the reservations to update the display
     await loadReservations();
     
   } catch (error) {
     console.error('Error in cancelReservation:', error);
-    alert('Error canceling reservation. Please try again.');
+    alert('Error deleting reservation. Please try again.');
   }
 }
 
@@ -326,40 +326,7 @@ async function fetchAndStoreUserIdByEmail(userEmail) {
   }
 }
 
-// Function to sign out user
-function signOutUser() {
-  // Show confirmation dialog
-  if (confirm('Are you sure you want to sign out?')) {
-    console.log('User signing out...');
-    
-    // Clear all user session data from localStorage
-    localStorage.removeItem('id');
-    localStorage.removeItem('user_id');
-    localStorage.removeItem('user_name');
-    localStorage.removeItem('user_role');
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('userName');
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('reservations');
-    
-    // Clear any other session data
-    sessionStorage.clear();
-    
-    // Sign out from Supabase if available
-    const sb = getSupabase();
-    if (sb && sb.auth) {
-      sb.auth.signOut().catch(error => {
-        console.warn('Error signing out from Supabase:', error);
-      });
-    }
-    
-    console.log('User signed out successfully');
-    
-    // Redirect to landing page
-    window.location.href = 'LandingPage.html';
-  }
-}
+
 
 // Userdashboard JavaScript Functions
 
@@ -576,7 +543,7 @@ function formatTime12hr(timeStr) {
 
 // Cancel reservation function
 async function cancelReservation(requestId) {
-  if (!confirm('Are you sure you want to cancel this reservation?')) {
+  if (!confirm('Are you sure you want to cancel and remove this reservation from the database?')) {
     return;
   }
 
@@ -587,25 +554,25 @@ async function cancelReservation(requestId) {
       return;
     }
 
-    // Update reservation status to cancelled
+    // Delete reservation from database completely
     const { error } = await sb
       .from('reservations')
-      .update({ status: 'cancelled' })
+      .delete()
       .eq('request_id', requestId);
 
     if (error) {
-      console.error('Error cancelling reservation:', error);
-      alert('Failed to cancel reservation. Please try again.');
+      console.error('Error deleting reservation:', error);
+      alert('Failed to delete reservation. Please try again.');
       return;
     }
 
-    alert('Reservation cancelled successfully!');
+    alert('Reservation deleted successfully!');
     
     // Reload the reservations table
     loadUserReservations();
 
   } catch (error) {
-    console.error('Error cancelling reservation:', error);
+    console.error('Error deleting reservation:', error);
     alert('An error occurred. Please try again.');
   }
 }

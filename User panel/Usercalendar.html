@@ -7,6 +7,9 @@
   <link rel="stylesheet" href="CSS/Usercalendar.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.min.js"></script>
   <script src="../supabaseClient.js"></script>
+
+  <script src="Javascript/alert.js"></script>
+  <script src="Javascript/logout.js"></script>
 </head>
 <body>
   <div class="notification-panel" id="notificationPanel">
@@ -67,25 +70,28 @@
     <div class="calendar-grid" id="calendarGrid"></div>
   </div>
 
-  <!-- Alert Modal -->
-  <div id="customAlert" class="modal-overlay">
-    <div class="modal-content">
-      <p id="alertMessage"></p>
-      <button onclick="closeAlert()">OK</button>
+  <!-- Custom Alert Modal -->
+  <div id="customAlertModal" class="custom-modal">
+    <div class="custom-modal-content">
+      <button class="modal-close" onclick="closeCustomAlert()">&times;</button>
+      <div id="alertIcon" class="modal-icon"></div>
+    <h3 id="alertTitle" class="modal-title"></h3>
+    <p id="alertMessage" class="modal-message"></p>
+    <div id="alertButtons" class="modal-buttons">
+      <button class="modal-btn primary" onclick="closeCustomAlert()">OK</button>
     </div>
   </div>
+</div>
 
-  <!-- Confirm Modal -->
-  <div id="customConfirm" class="modal-overlay">
-    <div class="modal-content">
-      <p id="confirmMessage"></p>
-      <div style="display:flex; justify-content:flex-end; gap: 10px; margin-top: 15px;">
-        <button id="confirmYes" style="background-color: #234734; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">Yes</button>
-        <button id="confirmNo" style="background-color: #ccc; color: black; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">No</button>
-      </div>
-    </div>
+<!-- Loading Modal -->
+<div id="loadingModal" class="loading-modal">
+  <div class="loading-content">
+    <div class="loading-spinner"></div>
+    <div id="loadingText" class="loading-text">Loading...</div>
+    <div id="loadingSubtext" class="loading-subtext">Please wait</div>
   </div>
-  <script src="Javascript/Usercalendar.js"></script>
+</div>
+    <script src="Javascript/Usercalendar.js"></script>
     <script>
 document.querySelectorAll('.menu a').forEach(link => {
   if (

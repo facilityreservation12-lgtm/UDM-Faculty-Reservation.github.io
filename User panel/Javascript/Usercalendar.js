@@ -28,15 +28,20 @@ async function getReservationsForDay(year, month, day) {
                    localStorage.getItem('userId') || 
                    localStorage.getItem('currentUserId');
 
+    if (!userId) {
+      console.error('User ID not found in localStorage');
+      return [];
+    }
+
     // Format the target date
     const targetDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
-    // Always fetch ALL reservations for the date to show complete availability
-    // This shows what facilities/times are booked regardless of who booked them
+    // Fetch reservations for the logged-in user only
     const { data: reservations, error } = await sb
       .from('reservations')
       .select('facility, time_start, time_end, title_of_the_event')
-      .eq('date', targetDate);
+      .eq('date', targetDate)
+      .eq('id', userId); // Filter by user ID
 
     if (error) {
       console.error('Error fetching reservations:', error);
@@ -244,7 +249,7 @@ async function renderCalendar(date) {
       today.setHours(0, 0, 0, 0);
       
       if (clickedDate < today) {
-        showCustomAlert("You cannot reserve a date that has already passed.");
+       showCustomAlert("Invalid Date", "You cannot reserve a date that has already passed.", "warning");
         return;
       }
       
@@ -326,17 +331,7 @@ async function nextMonth() {
   await renderCalendar(currentDate);
 })();
 
-// Custom Alert Modal
-function showCustomAlert(message) {
-  const alertBox = document.getElementById("customAlert");
-  const alertMessage = document.getElementById("alertMessage");
-  alertMessage.textContent = message;
-  alertBox.style.display = "flex";
-}
 
-function closeAlert() {
-  document.getElementById("customAlert").style.display = "none";
-}
 
 // Show available time slots for a specific date
 async function showAvailableSlots(year, month, day, formattedDate) {
@@ -404,26 +399,26 @@ async function showAvailableSlots(year, month, day, formattedDate) {
     }
 
     // Format the availability message
-    let message = `Available facilities and time slots for ${formattedDate}:\n\n`;
+    let message = `Available facilities and time slots for ${formattedDate}:<br><br>`;
     
     facilityAvailability.forEach(item => {
-      message += `${item.facility}:\n`;
+      message += `${item.facility}`;
       if (item.slots.length > 0) {
         item.slots.forEach(slot => {
-          message += `• ${formatTime12hr(slot.start)} - ${formatTime12hr(slot.end)}\n`;
+          message += `• ${formatTime12hr(slot.start)} - ${formatTime12hr(slot.end)}<br>`;
         });
       } else {
-        message += `• No available time slot\n`;
+        message += `• No available time slot<br>`;
       }
-      message += '\n';
+      message += '<br>';
     });
 
     message += 'Would you like to make a reservation?';
     
-    showCustomConfirm(message, () => {
-      // Redirect to VRF page with the selected date
-      window.location.href = `VRF.html?dateOfEvent=${formattedDate}`;
-    });
+      showCustomConfirm("Make Reservation", message, () => {
+         window.location.href = `VRF.html?dateOfEvent=${formattedDate}`;
+});
+
 
   } catch (error) {
     console.error('Error showing available slots:', error);
@@ -489,40 +484,7 @@ function calculateAvailableSlots(reservations) {
 }
 
 // Custom Confirm Modal
-function showCustomConfirm(message, onConfirm) {
-  const confirmBox = document.getElementById("customConfirm");
-  const confirmMessage = document.getElementById("confirmMessage");
-  
-  // Convert line breaks to HTML breaks and preserve formatting
-  const htmlMessage = message
-    .replace(/\n\n/g, '<br><br>')
-    .replace(/\n/g, '<br>')
-    .replace(/•/g, '&bull;');
-  
-  confirmMessage.innerHTML = htmlMessage;
-  confirmMessage.style.whiteSpace = 'pre-line';
-  confirmMessage.style.textAlign = 'left';
 
-  const yesBtn = document.getElementById("confirmYes");
-  const noBtn = document.getElementById("confirmNo");
-  
-  // Remove existing event listeners by cloning
-  const newYesBtn = yesBtn.cloneNode(true);
-  const newNoBtn = noBtn.cloneNode(true);
-  yesBtn.parentNode.replaceChild(newYesBtn, yesBtn);
-  noBtn.parentNode.replaceChild(newNoBtn, noBtn);
-
-  newYesBtn.addEventListener("click", () => {
-    confirmBox.style.display = "none";
-    onConfirm();
-  });
-
-  newNoBtn.addEventListener("click", () => {
-    confirmBox.style.display = "none";
-  });
-
-  confirmBox.style.display = "flex";
-}
 
 // Notification panel toggle function
 function toggleNotificationPanel() {
@@ -626,7 +588,7 @@ function createNotificationItem(reservation) {
   // Get status styling
   const statusClass = getStatusClass(reservation.status);
   
-  // Map status for display
+  // Map status for display purposes
   const displayStatus = mapStatusForDisplay(reservation.status);
   
   // Get status color based on status type
@@ -784,45 +746,6 @@ function requestNotificationPermission() {
     });
   }
 }
-
-// Function to sign out user
-function signOutUser() {
-  // Show confirmation dialog
-  if (confirm('Are you sure you want to sign out?')) {
-    console.log('User signing out...');
-    
-    // Clear all user session data from localStorage
-    localStorage.removeItem('id');
-    localStorage.removeItem('user_id');
-    localStorage.removeItem('user_name');
-    localStorage.removeItem('user_role');
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('userName');
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('reservations');
-    localStorage.removeItem('userReservations');
-    localStorage.removeItem('selectedDate');
-    
-    // Clear any other session data
-    sessionStorage.clear();
-    
-    // Sign out from Supabase if available
-    const sb = getSupabase();
-    if (sb && sb.auth) {
-      sb.auth.signOut().catch(error => {
-        console.warn('Error signing out from Supabase:', error);
-      });
-    }
-    
-    console.log('User signed out successfully');
-    
-    // Redirect to landing page
-    window.location.href = 'landingPage.html';
-  }
-}
-
-
 
 // Initialize notifications when page loads
 document.addEventListener('DOMContentLoaded', function() {

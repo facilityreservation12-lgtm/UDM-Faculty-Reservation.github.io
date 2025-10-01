@@ -12,6 +12,7 @@
     window.SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhmYXN1anZka2JqcGxsd29ocWNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ2NjA4ODgsImV4cCI6MjA3MDIzNjg4OH0.Wo6eqzObQ_sI_qebCi0F6iGyyP7TYcHCyxSoOZQOpPM';
   </script>
   <script defer src="java/SA_Pending.js"></script>
+  <script src="java/SA_logout.js"></script>
 </head>
 <body>
 <div class="sidebar">
@@ -43,7 +44,7 @@
         <a href="SA_Reportbugs.html">Report Bugs</a>             
       </div> 
     </div>
-       <button onclick="window.location.href='landingPage.html'" class="logout-btn">Log Out</button> 
+      <button onclick="signOutUser()" class="logout-btn">Log Out</button>
   </div>
 
     <div id="statusModal" class="modal" style="display:none;">
