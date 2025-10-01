@@ -9,6 +9,9 @@ body {
   background-color: #f4f4f4;
   display: flex;
   flex-direction: row;
+  /* Prevent horizontal scroll on high DPI screens */
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 .sidebar {
@@ -23,6 +26,57 @@ body {
   position: sticky;
   top: 0;
   z-index: 2;
+}
+
+/* --- Layout Fix for Lenovo Ideapad 3 Slim 3 and similar laptops --- */
+body {
+  /* Prevent horizontal scroll on high DPI screens */
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+.main {
+  /* Reduce padding for smaller screens and high DPI */
+  padding: 12px;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.main-container {
+  margin: 0 auto;
+  width: 100%;
+  max-width: 1100px;
+  min-width: 320px;
+  padding: 12px;
+  box-sizing: border-box;
+  overflow-x: auto;
+}
+
+.user-table {
+  width: 100%;
+  min-width: 480px;
+  max-width: 100%;
+  font-size: 14px;
+  box-sizing: border-box;
+  overflow-x: auto;
+}
+
+/* Sidebar width and padding for better fit */
+.sidebar {
+  width: 16vw;
+  min-width: 180px;
+  max-width: 260px;
+  padding: 18px 10px;
+}
+
+/* Modal width fix */
+.modal-content {
+  width: 98vw;
+  max-width: 420px;
+  min-width: 260px;
+  padding: 12px;
+  box-sizing: border-box;
 }
 
 .user-photo {
@@ -427,46 +481,57 @@ input, select {
 
 /* Role badge styles */
 .role-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 4px 12px;
   border-radius: 15px;
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
+  background-color: #FF9800; /* fallback color for student org */
+  color: white;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.2;
+  min-width: 80px;
+  max-width: 120px;
+  text-align: center;
+  margin: 2px 0;
 }
 
+/* Specific role colors */
 .role-badge.role-super-admin {
   background-color: #ff8522;
-  color: white;
 }
 
 .role-badge.role-admin {
   background-color: #2196F3;
-  color: white;
 }
 
 .role-badge.role-user {
   background-color: #4CAF50;
-  color: white;
 }
 
 .role-badge.role-faculty {
   background-color: #FF9800;
-  color: white;
 }
 
-.role-badge.role-student {
-  background-color: #FF9800;
-  color: white;
-}
-
-.role-badge.role-student-org {
-  background-color: #FF9800;
-  color: white;
-}
-
+.role-badge.role-student,
+.role-badge.role-student-org,
 .role-badge.role-student-organization {
   background-color: #FF9800;
-  color: white;
+}
+
+/* Responsive fix for long role names on small screens */
+@media (max-width: 600px) {
+  .role-badge {
+    font-size: 11px;
+    min-width: 60px;
+    max-width: 90px;
+    padding: 3px 6px;
+    line-height: 1.1;
+  }
 }
 
 /* User table improvements */
@@ -526,21 +591,27 @@ input, select {
 
 /* User info styling */
 .user-info {
-  text-align: left;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  word-break: break-word;
+  min-width: 0;
 }
 
 .user-name {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
   font-weight: 600;
   color: #333;
   margin-bottom: 4px;
-}
-
-.user-email {
-  font-size: 12px;
-  color: #666;
+  min-width: 0;
+  word-break: break-word;
 }
 
 .current-user-badge {
+  display: inline-block;
   background-color: #4CAF50;
   color: white;
   padding: 2px 8px;
@@ -548,6 +619,34 @@ input, select {
   font-size: 10px;
   font-weight: 600;
   margin-left: 8px;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Responsive fix for user info on small screens */
+@media (max-width: 600px) {
+  .user-info {
+    gap: 1px;
+    font-size: 13px;
+    min-width: 0;
+  }
+  .user-name {
+    font-size: 13px;
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+  .current-user-badge {
+    font-size: 9px;
+    padding: 2px 6px;
+    margin-left: 4px;
+    max-width: 80px;
+  }
+  .user-email {
+    font-size: 11px;
+    word-break: break-all;
+  }
 }
 
 /* Action buttons styling */
@@ -1103,156 +1202,143 @@ input, select {
 @media (max-width: 600px) {
   body {
     flex-direction: column;
-    height: fit-content;
-    width: fit-content;
+    width: 100vw;
+    min-width: 0;
+    overflow-x: hidden;
   }
 
   .sidebar {
-    display: flex;
-    width: 100%;
-    flex-direction: row;
-    align-items: flex-start;
-    justify-content: space-between;
-    padding: 20px;
-    position: static;
-    
-  }
-
-  .user-photo {
-    flex-direction: row;
-    gap: 5px;
-  }
-
-  .menu {
-    flex-direction: row;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-
-  .menu a {
-    display: flex;
-    flex-direction: row;
-    font-size: 12px;
-    padding: 8px;
-    margin-bottom: 0;
-  }
-
-  .main {
-    padding: 10px;
-  }
-
-  table {
-    min-width: unset;
-    font-size: 12px;
-  }
-
-  #UsagePieChart {
-  margin: 0 auto; 
-  width: 180px;
-  height: 180px;
-  font-size: 12px;
-}
-
-  .chart-legend-container {
-    padding: 10px;
-    margin: 0 auto;
-    width: 90%;
-    border-radius: 10px;
-    font-size: 12px;
-  }
-
-  .chart-legend-container ul {
-    padding: 0;
-    margin: 0;
-    list-style: none;
-  }
-
-  .chart-legend-container li {
-    margin-bottom: 5px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .activity-card {
-    width: 100%;
-    padding: 1px;
-    font-size: 12px;
-  }
-
-  .card  {
-    padding: 1rem;
-    font-size: 12px;
-  }
-}
-
-/* ===============================
-   📱 Phones (<= 600px)
-================================== */
-@media (max-width: 600px) {
-  body {
-    flex-direction: column;
-    height: fit-content;
-    width: fit-content;
-  }
-
-  .sidebar {
-    width: 100%;
-    flex-direction: column;
-    padding: 10px;
-    align-items: flex-start;
+    width: 100vw !important;
+    min-width: 0 !important;
+    max-width: 100vw !important;
+    padding: 10px 0 !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    position: static !important;
+    z-index: 2;
+    box-sizing: border-box;
+    background-color: #315C3A;
   }
 
   .side-container {
     display: flex;
     flex-direction: column;
+    width: 100vw;
+    box-sizing: border-box;
   }
 
-  .logout-btn {
-    margin: 0%;
-    align-self: flex-end;
-    order: -1; /* Moves it to the top */
+  .user-photo {
+    flex-direction: row;
+    gap: 8px;
+    margin-bottom: 20px;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 0 10px;
   }
-.menu {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap; 
-  overflow-x: auto; 
-  gap: 8px;
-  scrollbar-width: none;
-}
 
-.menu::-webkit-scrollbar {
-  display: none; 
-}
+  .menu {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 8px;
+    padding: 0 10px;
+    scrollbar-width: none;
+    width: 100vw;
+    box-sizing: border-box;
+    background: transparent;
+  }
 
-.menu a,
-.reqs-sub-menu {
-  flex-shrink: 0; 
-  white-space: nowrap; 
-  font-size: 14px;
-  color: white;
-  border-radius: 6px;
-  text-decoration: none;
-}
+  .menu::-webkit-scrollbar {
+    display: none;
+  }
+
+  .menu a,
+  .reqs-sub-menu {
+    flex-shrink: 0;
+    white-space: nowrap;
+    font-size: 14px;
+    color: white;
+    border-radius: 6px;
+    text-decoration: none;
+    padding: 8px 12px;
+    margin-bottom: 0;
+    background: none;
+  }
+
   .sub-menu {
     display: none;
     flex-direction: column;
     gap: 3px;
     padding: 4px;
     background-color: #315C3A;
+    position: absolute;
+    left: 0;
+    top: 100%;
+    min-width: 120px;
+    z-index: 10;
   }
 
-  .reqs-sub-menu:hover .sub-menu {
+  .reqs-sub-menu:hover .sub-menu,
+  .reqs-sub-menu:focus-within .sub-menu {
     display: flex;
   }
 
-  .main {
-    padding: 10px;
+  .logout-btn {
+    margin: 10px 10px 0 10px;
+    align-self: flex-end;
+    order: -1;
+    width: auto;
+    padding: 10px 18px;
+    background: #fff;
+    color: #315C3A;
   }
 
+  .main {
+    padding: 10px !important;
+    min-width: 0;
+    width: 100vw;
+    box-sizing: border-box;
+  }
+
+  .main-container {
+    margin: 0 auto;
+    width: 100vw;
+    max-width: 100vw;
+    min-width: 0;
+    padding: 8px !important;
+    box-sizing: border-box;
+    overflow-x: auto;
+  }
+
+  .user-table {
+    width: 100vw;
+    min-width: 320px;
+    font-size: 12px;
+    box-sizing: border-box;
+    overflow-x: auto;
+  }
 }
 
+/* Remove duplicate/contradictory sidebar rules for mobile/tablet */
+@media (max-width: 600px), (min-width: 601px) and (max-width: 900px) {
+  .sidebar {
+    width: 100vw !important;
+    min-width: 0 !important;
+    max-width: 100vw !important;
+    padding: 10px 0 !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    position: static !important;
+    z-index: 2;
+    box-sizing: border-box;
+    background-color: #315C3A;
+  }
+  .side-container {
+    width: 100vw;
+    box-sizing: border-box;
+  }
+}
 
 /* ===============================
    📲 Tablets (601px - 900px)
@@ -1318,6 +1404,7 @@ input, select {
   .main {
     padding: 10px;
   }
+
 }
 
 
@@ -1435,7 +1522,7 @@ input, select {
 /* Media queries for laptops with scaling (150%) */
 @media (max-width: 1440px) {
   .main-container {
-    max-width: 1000px;
+    max-width: 900px;
     padding: 12px;
   }
   .user-table {
@@ -1478,8 +1565,59 @@ input, select {
   }
 }
 
-/* For high DPI scaling (150% or more) */
-@media (max-width: 1600px) and (min-resolution: 144dpi), (max-width: 1600px) and (min-device-pixel-ratio: 1.5) {
+/* --- Layout Fix for Lenovo Ideapad 3 Slim 3 and similar laptops --- */
+body {
+  /* Prevent horizontal scroll on high DPI screens */
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+.main {
+  /* Reduce padding for smaller screens and high DPI */
+  padding: 12px;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.main-container {
+  margin: 0 auto;
+  width: 100%;
+  max-width: 1100px;
+  min-width: 320px;
+  padding: 12px;
+  box-sizing: border-box;
+  overflow-x: auto;
+}
+
+.user-table {
+  width: 100%;
+  min-width: 480px;
+  max-width: 100%;
+  font-size: 14px;
+  box-sizing: border-box;
+  overflow-x: auto;
+}
+
+/* Sidebar width and padding for better fit */
+.sidebar {
+  width: 16vw;
+  min-width: 180px;
+  max-width: 260px;
+  padding: 18px 10px;
+}
+
+/* Modal width fix */
+.modal-content {
+  width: 98vw;
+  max-width: 420px;
+  min-width: 260px;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+/* Responsive tweaks for common laptop widths */
+@media (max-width: 1440px) {
   .main-container {
     max-width: 900px;
     padding: 8px;
@@ -1491,6 +1629,68 @@ input, select {
   .modal-content {
     max-width: 350px;
     padding: 10px;
+  }
+}
+
+@media (max-width: 1366px) {
+  .main-container {
+    max-width: 800px;
+    padding: 4px;
+  }
+  .user-table {
+    font-size: 12px;
+    min-width: 320px;
+  }
+  .modal-content {
+    max-width: 95vw;
+    padding: 6px;
+  }
+}
+
+@media (min-width: 1600px) {
+  .main-container {
+    max-width: 1200px;
+    padding: 16px;
+  }
+  .user-table {
+    font-size: 15px;
+    min-width: 600px;
+  }
+  .modal-content {
+    max-width: 500px;
+    padding: 20px;
+  }
+}
+
+/* For high DPI scaling (150% or more) */
+@media (max-width: 1920px) and (min-resolution: 144dpi), (max-width: 1920px) and (min-device-pixel-ratio: 1.5) {
+  .main-container {
+    max-width: 900px;
+    padding: 8px;
+  }
+  .user-table {
+    font-size: 13px;
+    min-width: 380px;
+  }
+  .modal-content {
+    max-width: 350px;
+    padding: 10px;
+  }
+}
+
+/* Prevent table and modal overflow on small screens */
+@media (max-width: 900px) {
+  .main-container {
+    max-width: 100vw;
+    padding: 4px;
+  }
+  .user-table {
+    font-size: 12px;
+    min-width: 320px;
+  }
+  .modal-content {
+    max-width: 95vw;
+    padding: 6px;
   }
 }
 
