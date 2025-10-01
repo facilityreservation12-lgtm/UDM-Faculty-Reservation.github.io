@@ -39,7 +39,6 @@ document.addEventListener('DOMContentLoaded', function() {
     adminBtn.textContent = adminToggle ? 'Admin' : 'Super Admin';
   }
 
-
   // Forgot password modal logic
   const forgotPasswordLink = document.getElementById('forgotPasswordLink');
   const forgotPasswordModal = document.getElementById('forgotPasswordModal');
@@ -76,19 +75,27 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
-    // Handle login form submission
-    const loginForm = document.querySelector('.login-form');
-    if (loginForm) {
-      loginForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const userId = loginForm.querySelector('input[type="text"]').value;
-        const password = loginForm.querySelector('input[type="password"]').value;
-        const role = document.getElementById('role').value;
-  
-        console.log(`[LOGIN ATTEMPT] UserID: ${userId}, Role: ${role}`);
-  
+  // Handle login form submission
+  const loginForm = document.querySelector('.login-form');
+  if (loginForm) {
+    loginForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const userId = loginForm.querySelector('input[type="text"]').value;
+      const password = loginForm.querySelector('input[type="password"]').value;
+      const role = document.getElementById('role').value;
+
+      console.log(`[LOGIN ATTEMPT] UserID: ${userId}, Role: ${role}`);
+
+      // ===== START LOADING HERE =====
+      showLoading('Signing in...', 'Authenticating your credentials');
+      
+      // Start timer for minimum loading duration
+      const startTime = Date.now();
+      const minLoadingTime = 1500; // 1.5 seconds minimum
+
+      try {
         // Query Supabase users table for matching userId and role
-        // Try to get all available columns, but handle if some don't exist
         let { data, error } = await supabase
           .from('users')
           .select('*')
@@ -110,9 +117,21 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Supabase query result:', data);
         console.log('Supabase query error:', error);
 
+        // Calculate remaining time to show loading
+        const elapsedTime = Date.now() - startTime;
+        const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
+
+        // Wait for minimum loading time if needed
+        if (remainingTime > 0) {
+          await new Promise(resolve => setTimeout(resolve, remainingTime));
+        }
+
+        // ===== HIDE LOADING BEFORE SHOWING ALERTS =====
+        hideLoading();
+
         if (error) {
           console.log(`[LOGIN FAILED] UserID: ${userId}, Role: ${role}, Reason: Database error`, error);
-          showCustomAlert('Database Error', 'Database connection error. Please try again.', 'error');
+          showCustomAlert('Connection Error', 'Database connection error. Please try again.', 'error');
           return;
         }
 
@@ -123,43 +142,65 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Get the first (and should be only) user record
-        const user = data[0];        // Check password (assuming plaintext for demo)
+        const user = data[0];
+        
+        // Check password (assuming plaintext for demo)
         if (!user.password || user.password !== password) {
           console.log(`[LOGIN FAILED] UserID: ${userId}, Role: ${role}, Reason: Incorrect password`);
-         showCustomAlert('Login Failed', 'Incorrect password!', 'error');
+          showCustomAlert('Login Failed', 'Incorrect password!', 'error');
           return;
         }
 
+        // Get user's display name from available columns
+        const userName = user.name || user.full_name || user.first_name || user.username || `User ${user.id}`;
+        
+        console.log(`[LOGIN SUCCESS] UserID: ${userId}, Role: ${user.role}, Name: ${userName}`);
+        console.log('Available user data:', user);
+        
+        // Store user information in localStorage
+        localStorage.setItem('user_id', user.id);
+        localStorage.setItem('user_name', userName);
+        localStorage.setItem('user_role', user.role);
+        
+        showCustomAlert('Welcome!', `Login successful! Welcome, ${userName}`, 'success');
+        
+        // Redirect after showing success message
+        setTimeout(() => {
+          switch (user.role) {
+            case 'super_admin':
+              window.location.href = '../SuperAdmin panel/SuperAdmin-panel/SuperAdminDashboard.html';
+              break;
+            case 'admin':
+              window.location.href = '../Admin panel/Admin-panel/AdminDashboard.html';
+              break;
+            case 'faculty':
+              window.location.href = '../User panel/Userdashboard.html';
+              break;
+            case 'student_organization':
+              window.location.href = '../User panel/Userdashboard.html';
+              break;
+            default:
+              showCustomAlert('Error', 'Unknown role!', 'error');
+          }
+        }, 2000); // Wait 2 seconds before redirect
 
-    // Get user's display name from available columns
-    const userName = user.name || user.full_name || user.first_name || user.username || `User ${user.id}`;
-    
-    console.log(`[LOGIN SUCCESS] UserID: ${userId}, Role: ${user.role}, Name: ${userName}`);
-    console.log('Available user data:', user);
-    
-    // Store user information in localStorage
-    localStorage.setItem('user_id', user.id);
-    localStorage.setItem('user_name', userName);
-    localStorage.setItem('user_role', user.role);
-    
-    
-   showCustomAlert('Success', 'Login successful!', 'success');
-    switch (user.role) {
-        case 'super_admin':
-          window.location.href = '../SuperAdmin panel/SuperAdmin-panel/SuperAdminDashboard.html';
-          break;
-        case 'admin':
-          window.location.href = '../Admin panel/Admin-panel/AdminDashboard.html';
-          break;
-        case 'faculty':
-          window.location.href = '../User panel/Userdashboard.html';
-          break;
-        case 'student_organization':
-          window.location.href = '../User panel/Userdashboard.html';
-          break;
-        default:
-        showCustomAlert('Error', 'Unknown role!', 'error');
+      } catch (error) {
+        // ===== ALSO HIDE LOADING IN CATCH BLOCK =====
+        // Calculate remaining time to show loading
+        const elapsedTime = Date.now() - startTime;
+        const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
+
+        // Wait for minimum loading time if needed
+        if (remainingTime > 0) {
+          await new Promise(resolve => setTimeout(resolve, remainingTime));
+        }
+
+        hideLoading();
+        
+        console.error('Login error:', error);
+        showCustomAlert('Error', 'An unexpected error occurred. Please try again.', 'error');
       }
-    })
+    });
   }
 });
+

@@ -5,8 +5,59 @@ const nextMonthBtn = document.getElementById('nextMonth');
 
 let currentDate = new Date();
 let events = JSON.parse(localStorage.getItem('calendarEvents') || '{}');
+let supabaseEvents = {}; // Store approved reservations from Supabase
 
-function renderCalendar(date) {
+// Fetch approved reservations from Supabase
+async function fetchApprovedReservations() {
+  if (typeof window.supabaseClient !== 'undefined') {
+    const sb = window.supabaseClient;
+    const { data, error } = await sb
+      .from('reservations')
+      .select('facility, date, time_start, time_end, title_of_the_event, id') // <-- use id, not user_id
+      .eq('status', 'approved');
+    if (error) {
+      console.error('Error fetching approved reservations:', error);
+      return {};
+    }
+    // Group by date
+    const grouped = {};
+    (data || []).forEach(ev => {
+      if (!grouped[ev.date]) grouped[ev.date] = [];
+      grouped[ev.date].push({
+        title: ev.title_of_the_event,
+        facility: ev.facility,
+        startTime: ev.time_start,
+        endTime: ev.time_end,
+        person: ev.id // <-- use id for user reference
+      });
+    });
+    return grouped;
+  }
+  return {};
+}
+
+// Merge manual and Supabase events
+async function getAllEvents() {
+  supabaseEvents = await fetchApprovedReservations();
+  // Merge: Supabase events take priority for approved slots
+  const merged = { ...events };
+  Object.keys(supabaseEvents).forEach(dateStr => {
+    if (!merged[dateStr]) merged[dateStr] = [];
+    // Avoid duplicates: only add if not already present
+    supabaseEvents[dateStr].forEach(ev => {
+      const exists = merged[dateStr].some(e =>
+        e.facility === ev.facility &&
+        e.startTime === ev.startTime &&
+        e.endTime === ev.endTime &&
+        e.title === ev.title
+      );
+      if (!exists) merged[dateStr].push(ev);
+    });
+  });
+  return merged;
+}
+
+async function renderCalendar(date) {
   const year = date.getFullYear();
   const month = date.getMonth();
   const firstDayOfMonth = new Date(year, month, 1);
@@ -15,6 +66,7 @@ function renderCalendar(date) {
 
   monthYear.textContent = `${firstDayOfMonth.toLocaleString('default', { month: 'long' })} ${year}`;
   daysContainer.innerHTML = '';
+  const allEvents = await getAllEvents();
 
   for (let i = 0; i < startDay; i++) {
     daysContainer.innerHTML += `<div></div>`;
@@ -25,13 +77,11 @@ function renderCalendar(date) {
     const cell = document.createElement('div');
     cell.innerHTML = `<span>${day}</span>`;
 
-    if (events[dateStr]) {
+    if (allEvents[dateStr]) {
       const ul = document.createElement('ul');
       ul.className = 'event-list';
-
       // Sort events by start time
-      const sortedEvents = [...events[dateStr]].sort((a, b) => convertTo24Hour(a.startTime) - convertTo24Hour(b.startTime));
-
+      const sortedEvents = [...allEvents[dateStr]].sort((a, b) => convertTo24Hour(a.startTime) - convertTo24Hour(b.startTime));
       sortedEvents.forEach((ev, index) => {
         const li = document.createElement('li');
         li.className = 'event';
@@ -172,3 +222,6 @@ nextMonthBtn.addEventListener('click', () => {
 });
 
 renderCalendar(currentDate);
+
+// Refresh calendar every 30 seconds to show new approved reservations
+setInterval(() => renderCalendar(currentDate), 30000);

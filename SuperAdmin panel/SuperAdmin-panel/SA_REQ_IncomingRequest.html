@@ -4,24 +4,26 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SuperAdmin Incoming Request</title>
+  <link rel="icon" type="image/png" href="img/udm.webp"/>
   <link rel="stylesheet" href="css/SA_IncomingRequest.css"/>
   <!-- Load Supabase JS and project supabase client/config so window.supabase and keys are available -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.min.js"></script>
   <script src="../../supabaseClient.js"></script>
   <script src="../../supabaseConfig.js"></script>
   <script defer src="java/SA_REQ_IncomingRequest.js"></script>
+  <script src="java/profile.js"></script>
+  <script src="java/alert.js"></script>
   <script src="java/SA_logout.js"></script>
 </head>
 <body>
 <div class="sidebar">
     <div class="side-container">
       <div class="user-photo">
-        <img src="img/peppa.jpg" alt="User Photo" />
+        <img src="img/udmlogo.png" alt="User Photo" />
         <div>
-          <strong>Juan B. Batumbakal</strong><br />
-          SUPER ADMIN
+          <strong id="UserName">Loading...</strong><br/>
+          <span id="UserRole">Loading...</span>
         </div>
-        
       </div>
       <div class="menu">
         <a href="SuperAdminDashboard.html">Dashboard</a>
@@ -66,6 +68,27 @@
       <!-- Data will be populated dynamically -->
     </tbody>
   </table>
+</div>
+ <!-- Custom Alert Modal -->
+<div id="customAlertModal" class="custom-modal">
+  <div class="custom-modal-content">
+    <button class="modal-close" onclick="closeCustomAlert()">&times;</button>
+    <div id="alertIcon" class="modal-icon"></div>
+    <h3 id="alertTitle" class="modal-title"></h3>
+    <p id="alertMessage" class="modal-message"></p>
+    <div id="alertButtons" class="modal-buttons">
+      <button class="modal-btn primary" onclick="closeCustomAlert()">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- Loading Modal -->
+<div id="loadingModal" class="loading-modal">
+  <div class="loading-content">
+    <div class="loading-spinner"></div>
+    <div id="loadingText" class="loading-text">Loading...</div>
+    <div id="loadingSubtext" class="loading-subtext">Please wait</div>
+  </div>
 </div>
   <script>
 document.querySelectorAll('.menu a').forEach(link => {

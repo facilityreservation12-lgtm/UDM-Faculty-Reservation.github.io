@@ -4,16 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>UDM Facility Reservations</title>
+  <link rel="icon" type="image/png" href="img/udm.webp"/>
   <link rel="stylesheet" href="css/UDMFacilities.css">
-  <script src="java/SA_logout.js"></script>
+  <script src="java/alert.js"></script>
+  <script src="java/SA_logout.js"></script>  
+  <script src="java/profile.js"></script>
 </head>
 <body>
   <div class="sidebar">
    <div>
-      <div class="user-photo">
-        <img src="img/peppa.jpg" alt="User Photo" />
+        <div class="user-photo">
+        <img src="img/udmlogo.png" alt="User Photo" />
         <div>
-          <strong id="UserName">Loading...</strong><br />
+          <strong id="UserName">Loading...</strong><br/>
           <span id="UserRole">Loading...</span>
         </div>
       </div>
@@ -66,6 +69,27 @@
       <button onclick="nextFacility()">Next ⟶</button>
     </div>
   </div>
+   <!-- Custom Alert Modal -->
+<div id="customAlertModal" class="custom-modal">
+  <div class="custom-modal-content">
+    <button class="modal-close" onclick="closeCustomAlert()">&times;</button>
+    <div id="alertIcon" class="modal-icon"></div>
+    <h3 id="alertTitle" class="modal-title"></h3>
+    <p id="alertMessage" class="modal-message"></p>
+    <div id="alertButtons" class="modal-buttons">
+      <button class="modal-btn primary" onclick="closeCustomAlert()">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- Loading Modal -->
+<div id="loadingModal" class="loading-modal">
+  <div class="loading-content">
+    <div class="loading-spinner"></div>
+    <div id="loadingText" class="loading-text">Loading...</div>
+    <div id="loadingSubtext" class="loading-subtext">Please wait</div>
+  </div>
+</div>
 
    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
    <script src="../../supabaseConfig.js"></script>

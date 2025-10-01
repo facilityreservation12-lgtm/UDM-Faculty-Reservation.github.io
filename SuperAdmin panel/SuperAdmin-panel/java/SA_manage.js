@@ -32,12 +32,6 @@ function getCurrentUser() {
 
 // Simulate user activity tracking
 function trackUserActivity() {
-  // In a real application, you would track this through:
-  // - WebSocket connections
-  // - Regular heartbeat API calls
-  // - Database last_seen timestamps
-  
-  // For demo purposes, randomly set some users as online
   const allUserIds = Array.from(document.querySelectorAll('.user-row')).map(row => row.dataset.userId);
   onlineUsers.clear();
   
@@ -47,7 +41,6 @@ function trackUserActivity() {
   shuffled.slice(0, onlineCount).forEach(id => onlineUsers.add(id));
 }
 
-// Load users from Supabase
 // Load current user account info (DISABLED - account section removed from HTML)
 async function loadCurrentUserInfo() {
   console.log('ℹ️ loadCurrentUserInfo: Account section removed - function disabled');
@@ -64,6 +57,7 @@ async function loadUsers() {
     const sb = getSupabase();
     if (!sb) {
       tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Database connection error</td></tr>';
+      showCustomAlert('Connection Error', 'Database connection error', 'error');
       return;
     }
 
@@ -78,6 +72,7 @@ async function loadUsers() {
     if (error) {
       console.error('Error fetching users:', error);
       tbody.innerHTML = `<tr><td colspan="5">Error loading users: ${error.message}</td></tr>`;
+      showCustomAlert('Load Error', `Error loading users: ${error.message}`, 'error');
       return;
     }
 
@@ -103,6 +98,7 @@ async function loadUsers() {
   } catch (error) {
     console.error('Error in loadUsers:', error);
     tbody.innerHTML = `<tr><td colspan="5">Error: ${error.message}</td></tr>`;
+    showCustomAlert('Error', `Error: ${error.message}`, 'error');
   }
 }
 
@@ -314,10 +310,13 @@ let currentEditingUserId = null;
 
 // Edit user function
 async function editUser(userId) {
+  showLoading('Loading user data...', 'Please wait');
+  
   try {
     const sb = getSupabase();
     if (!sb) {
-      alert('Database connection error');
+      hideLoading();
+      showCustomAlert('Connection Error', 'Database connection error', 'error');
       return;
     }
 
@@ -327,9 +326,11 @@ async function editUser(userId) {
       .eq('id', userId)
       .single();
 
+    hideLoading();
+
     if (error) {
       console.error('Error fetching user:', error);
-      alert('Error loading user data');
+      showCustomAlert('Load Error', 'Error loading user data', 'error');
       return;
     }
 
@@ -337,48 +338,51 @@ async function editUser(userId) {
     openEditModal(user);
 
   } catch (error) {
+    hideLoading();
     console.error('Error in editUser:', error);
-    alert('Error loading user data');
+    showCustomAlert('Error', 'Error loading user data', 'error');
   }
 }
 
 // Delete user function
 function deleteUser(userId) {
-  document.getElementById('confirmMessage').textContent = 'Are you sure you want to delete this user?';
-  document.getElementById('confirmPopup').style.display = 'block';
-  
-  document.getElementById('confirmYes').onclick = async () => {
-    try {
-      const sb = getSupabase();
-      if (!sb) {
-        alert('Database connection error');
-        return;
+  showCustomConfirm(
+    'Confirm Delete',
+    'Are you sure you want to delete this user? This action cannot be undone.',
+    async () => {
+      showLoading('Deleting user...', 'Please wait');
+      
+      try {
+        const sb = getSupabase();
+        if (!sb) {
+          hideLoading();
+          showCustomAlert('Connection Error', 'Database connection error', 'error');
+          return;
+        }
+
+        const { error } = await sb
+          .from('users')
+          .delete()
+          .eq('id', userId);
+
+        if (error) {
+          console.error('Error deleting user:', error);
+          hideLoading();
+          showCustomAlert('Delete Error', 'Error deleting user', 'error');
+          return;
+        }
+
+        await loadUsers(); // Reload the user list
+        hideLoading();
+        showCustomAlert('Success', 'User deleted successfully', 'success');
+
+      } catch (error) {
+        hideLoading();
+        console.error('Error in deleteUser:', error);
+        showCustomAlert('Error', 'Error deleting user', 'error');
       }
-
-      const { error } = await sb
-        .from('users')
-        .delete()
-        .eq('id', userId);
-
-      if (error) {
-        console.error('Error deleting user:', error);
-        alert('Error deleting user');
-        return;
-      }
-
-      alert('User deleted successfully');
-      closeConfirm();
-      await loadUsers(); // Reload the user list
-
-    } catch (error) {
-      console.error('Error in deleteUser:', error);
-      alert('Error deleting user');
     }
-  };
-}
-
-function closeConfirm() {
-  document.getElementById('confirmPopup').style.display = 'none';
+  );
 }
 
 // Handle form submission
@@ -395,27 +399,27 @@ document.getElementById('userForm').addEventListener('submit', async (e) => {
   // Validation for passwords
   if (password || rePassword) {
     if (password !== rePassword) {
-      alert('Passwords do not match');
+      showCustomAlert('Validation Error', 'Passwords do not match', 'warning');
       return;
     }
   }
 
   // Validation
   if (!firstName || !lastName || !email || !role) {
-    alert('Please fill in all required fields');
+    showCustomAlert('Validation Error', 'Please fill in all required fields', 'warning');
     return;
   }
 
   // For new users, password is required
   if (!currentEditingUserId && !password) {
-    alert('Password is required for new users');
+    showCustomAlert('Validation Error', 'Password is required for new users', 'warning');
     return;
   }
 
   // Email validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
-    alert('Please enter a valid email address');
+    showCustomAlert('Validation Error', 'Please enter a valid email address', 'warning');
     return;
   }
 
@@ -435,10 +439,16 @@ document.getElementById('userForm').addEventListener('submit', async (e) => {
     }
   }
 
+  showLoading(
+    currentEditingUserId ? 'Updating user...' : 'Adding user...', 
+    'Please wait'
+  );
+
   try {
     const sb = getSupabase();
     if (!sb) {
-      alert('Database connection error');
+      hideLoading();
+      showCustomAlert('Connection Error', 'Database connection error', 'error');
       return;
     }
 
@@ -466,11 +476,16 @@ document.getElementById('userForm').addEventListener('submit', async (e) => {
 
       if (error) {
         console.error('Error updating user:', error);
-        alert('Error updating user');
+        hideLoading();
+        showCustomAlert('Update Error', 'Error updating user', 'error');
         return;
       }
 
-      alert('User updated successfully');
+      closeModal();
+      await loadUsers();
+      hideLoading();
+      showCustomAlert('Success', 'User updated successfully', 'success');
+      
     } else {
       // Generate sequential user ID based on existing users
       const generateSequentialUserId = async (roleName) => {
@@ -529,13 +544,13 @@ document.getElementById('userForm').addEventListener('submit', async (e) => {
       
       // Add new user
       const newUserData = {
-        id: newUserId, // Generate sequential ID
+        id: newUserId,
         first_name: firstName,
         last_name: lastName,
         email: email,
         role_name: role,
         role: roleValue,
-        password: password // Note: In production, hash the password
+        password: password
       };
       
       console.log('Adding new user with data:', newUserData);
@@ -553,20 +568,22 @@ document.getElementById('userForm').addEventListener('submit', async (e) => {
           hint: error.hint,
           code: error.code
         });
-        alert(`Error adding user: ${error.message || 'Unknown error'}`);
+        hideLoading();
+        showCustomAlert('Add Error', `Error adding user: ${error.message || 'Unknown error'}`, 'error');
         return;
       }
 
       console.log('User added successfully:', data);
-      alert('User added successfully');
+      closeModal();
+      await loadUsers();
+      hideLoading();
+      showCustomAlert('Success', 'User added successfully', 'success');
     }
 
-    closeModal();
-    await loadUsers(); // Reload the user list
-
   } catch (error) {
+    hideLoading();
     console.error('Error in form submission:', error);
-    alert('Error saving user');
+    showCustomAlert('Error', 'Error saving user', 'error');
   }
 });
 
@@ -599,8 +616,8 @@ function initializePasswordIcons() {
     console.log('Set password icon to 👁️');
   }
   if (rePasswordToggle) {
-    rePasswordToggle.textContent = '�️'; // Default eye icon
-    console.log('Set re-password icon to �️');
+    rePasswordToggle.textContent = '👁️'; // Default eye icon
+    console.log('Set re-password icon to 👁️');
   }
 }
 
@@ -632,9 +649,9 @@ function displayPaginatedUsers() {
     const aIsCurrentUser = a.id === currentLoggedInUserId;
     const bIsCurrentUser = b.id === currentLoggedInUserId;
     
-    if (aIsCurrentUser && !bIsCurrentUser) return -1; // a comes first
-    if (!aIsCurrentUser && bIsCurrentUser) return 1;  // b comes first
-    return 0; // maintain original order for others
+    if (aIsCurrentUser && !bIsCurrentUser) return -1;
+    if (!aIsCurrentUser && bIsCurrentUser) return 1;
+    return 0;
   });
 
   // Calculate pagination
@@ -734,7 +751,7 @@ function changeEntriesPerPage() {
   const select = document.getElementById('entriesPerPage');
   if (select) {
     entriesPerPage = parseInt(select.value);
-    currentPage = 1; // Reset to first page
+    currentPage = 1;
     displayPaginatedUsers();
   }
 }
@@ -815,12 +832,8 @@ function clearFilters() {
 // Close modal when clicking outside
 window.onclick = function(event) {
   const modal = document.getElementById('userModal');
-  const popup = document.getElementById('confirmPopup');
   
   if (event.target === modal) {
     closeModal();
-  }
-  if (event.target === popup) {
-    closeConfirm();
   }
 }

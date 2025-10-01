@@ -1,4 +1,3 @@
-
 * {
   margin: 0;
   padding: 0;
@@ -181,6 +180,96 @@ body {
 
 .status-btn:hover {
   background-color: #0f3a24;
+}
+
+/* Approval Modal Styles */
+#statusModal {
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: auto;
+  background: rgba(49, 92, 58, 0.25); /* semi-transparent green overlay */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#statusModal .modal-content {
+  background: #fff;
+  margin: auto;
+  padding: 32px 24px 24px 24px;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(49, 92, 58, 0.18);
+  max-width: 350px;
+  width: 90%;
+  text-align: center;
+  position: relative;
+  animation: modalFadeIn 0.3s;
+}
+
+@keyframes modalFadeIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+#statusModal h2 {
+  margin-bottom: 18px;
+  font-size: 22px;
+  color: #184C2F;
+  font-weight: 600;
+}
+
+#statusModal .modal-action-btn {
+  padding: 10px 28px;
+  border-radius: 24px;
+  border: none;
+  font-size: 16px;
+  font-weight: 500;
+  margin: 0 8px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  box-shadow: 0 2px 8px rgba(49, 92, 58, 0.08);
+}
+
+#statusModal .modal-action-btn:active {
+  transform: scale(0.97);
+}
+
+#statusModal #approveBtn {
+  background: #184C2F;
+  color: #fff;
+}
+
+#statusModal #approveBtn:hover {
+  background: #276d44;
+}
+
+#statusModal #disapproveBtn {
+  background: #ad332b;
+  color: #fff;
+}
+
+#statusModal #disapproveBtn:hover {
+  background: #d94a3a;
+}
+
+#statusModal .close {
+  position: absolute;
+  top: 12px;
+  right: 18px;
+  font-size: 24px;
+  color: #888;
+  cursor: pointer;
+  background: none;
+  border: none;
+  transition: color 0.2s;
+}
+
+#statusModal .close:hover {
+  color: #184C2F;
 }
 
 /* ===============================

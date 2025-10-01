@@ -36,12 +36,12 @@ async function getReservationsForDay(year, month, day) {
     // Format the target date
     const targetDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
-    // Fetch reservations for the logged-in user only
+    // Fetch reservations for the logged-in user only, include all statuses
     const { data: reservations, error } = await sb
       .from('reservations')
-      .select('facility, time_start, time_end, title_of_the_event')
+      .select('facility, time_start, time_end, title_of_the_event, status')
       .eq('date', targetDate)
-      .eq('id', userId); // Filter by user ID
+      .eq('id', userId); // <-- use id, not user_id
 
     if (error) {
       console.error('Error fetching reservations:', error);
@@ -170,7 +170,7 @@ async function fetchUserReservations() {
     const { data, error } = await sb
       .from('reservations')
       .select('*')
-      .eq('id', userId);
+      .eq('id', userId); // <-- use id, not user_id
 
     console.log('fetchUserReservations: id query result:', { data, error, count: data?.length });
 
@@ -269,27 +269,10 @@ async function loadReservationsForDay(dayElement, year, month, day) {
   try {
     const reservations = await getReservationsForDay(year, month, day);
     const eventsDiv = dayElement.querySelector('.events');
-    
-    // Check if current user has reservations on this day
     const dayDate = new Date(year, month, day);
     const dayDateString = dayDate.toISOString().split('T')[0];
-    
-    console.log(`Checking day ${day} (${dayDateString}) against ${userReservations.length} user reservations`);
-    
-    const userDayReservations = userReservations.filter(reservation => {
-      const reservationDate = new Date(reservation.date).toISOString().split('T')[0];
-      const matches = reservationDate === dayDateString;
-      console.log(`  Reservation date: ${reservationDate}, Day date: ${dayDateString}, Matches: ${matches}`);
-      return matches;
-    });
-    
-    // Add user reservation indicator
-    if (userDayReservations.length > 0) {
-      console.log(`Adding has-reservation class to day ${day} - found ${userDayReservations.length} reservations`);
-      dayElement.classList.add('has-reservation');
-      dayElement.title = `You have ${userDayReservations.length} reservation(s) on this day`;
-    }
-    
+
+    // Show all reservations (pending/request/approved)
     if (reservations.length > 0) {
       dayElement.classList.add("booked");
       eventsDiv.innerHTML = reservations.map(r =>
@@ -297,15 +280,10 @@ async function loadReservationsForDay(dayElement, year, month, day) {
           <strong>${r.facility || 'Unknown Facility'}</strong><br>
           <span>${r.title_of_the_event || ''}</span><br>
           <span>${formatTime12hr(r.time_start)} - ${formatTime12hr(r.time_end)}</span>
+          <span style="font-size:12px;color:#888;">[${r.status}]</span>
         </div>`
       ).join("<hr>");
-      
-      // Update title to show both general bookings and user reservations
-      if (userDayReservations.length > 0) {
-        dayElement.title = `You have ${userDayReservations.length} reservation(s). Total bookings: ${reservations.length}`;
-      } else {
-        dayElement.title = `${reservations.length} booking(s) on this day`;
-      }
+      dayElement.title = `${reservations.length} booking(s) on this day`;
     } else {
       eventsDiv.innerHTML = "";
     }
@@ -521,7 +499,7 @@ async function loadUserNotifications() {
     const { data: reservations, error } = await sb
       .from('reservations')
       .select('facility, date, time_start, time_end, title_of_the_event, status')
-      .eq('id', userId)
+      .eq('id', userId) // <-- use id, not user_id
       .order('created_at', { ascending: false })
       .limit(10); // Get latest 10 reservations
 
@@ -677,7 +655,7 @@ async function checkForStatusUpdates() {
     const { data: currentReservations, error } = await sb
       .from('reservations')
       .select('request_id, facility, date, time_start, time_end, status')
-      .eq('id', userId);
+      .eq('id', userId); // <-- use id, not user_id
 
     if (error) {
       console.error('Error checking status updates:', error);

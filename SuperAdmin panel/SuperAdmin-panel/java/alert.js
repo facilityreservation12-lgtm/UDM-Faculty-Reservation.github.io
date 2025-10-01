@@ -97,7 +97,7 @@ function hideLoading() {
   if (modal) {
     setTimeout(() => {
       modal.classList.remove('show');
-    }, 800); // 1.5s bago mawala para hindi mag-flash
+    }, 1500); // 1.5s bago mawala para hindi mag-flash
   }
 }
 

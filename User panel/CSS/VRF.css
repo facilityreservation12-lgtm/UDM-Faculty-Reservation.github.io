@@ -160,8 +160,8 @@ main {
 input[type="text"],
 input[type="number"],
 input[type="date"],
+input[type="time"],
 input[type="datetime-local"],
-input[type="file"],
 select {
   flex: 1;
   min-width: 250px;
