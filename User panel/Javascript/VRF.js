@@ -879,7 +879,11 @@ document.addEventListener('DOMContentLoaded', async function() {
 				  }
 			
 				  if (foundFacility) {
-					const slotStr = foundSlots.map(s => `<li>${pad(Math.floor(s.start / 60))}:${pad(s.start % 60)} - ${pad(Math.floor(s.end / 60))}:${pad(s.end % 60)}</li>`).join('');
+					const slotStr = foundSlots.map(s => {
+  const start = `${pad(Math.floor(s.start / 60))}:${pad(s.start % 60)}`;
+  const end = `${pad(Math.floor(s.end / 60))}:${pad(s.end % 60)}`;
+  return `<li>${formatTime12hr(start)} - ${formatTime12hr(end)}</li>`;
+}).join('');
 					const messageHtml = `
 					  <strong>No slots available for "<span style="color:#234734">${facility}</span>" on <span style="color:#234734">${dateOfEventVal}</span>.</strong>
 					  <br><br>
@@ -975,7 +979,11 @@ document.addEventListener('DOMContentLoaded', async function() {
 				  }
 				} else {
 				  // If there are available slots for the selected facility, show them
-				  const slotStr = slots.map(s => `<li>${pad(Math.floor(s.start / 60))}:${pad(s.start % 60)} - ${pad(Math.floor(s.end / 60))}:${pad(s.end % 60)}</li>`).join('');
+				  const slotStr = slots.map(s => {
+  const start = `${pad(Math.floor(s.start / 60))}:${pad(s.start % 60)}`;
+  const end = `${pad(Math.floor(s.end / 60))}:${pad(s.end % 60)}`;
+  return `<li>${formatTime12hr(start)} - ${formatTime12hr(end)}</li>`;
+}).join('');
 				  const messageHtml = `
 					<strong>The facility "<span style="color:#234734">${facility}</span>" is already reserved for <span style="color:#234734">${dateOfEventVal}</span> during the selected time.</strong>
 					<br><br>

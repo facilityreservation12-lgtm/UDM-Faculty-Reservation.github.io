@@ -333,10 +333,12 @@ async function showAvailableSlots(year, month, day, formattedDate) {
     ];
 
     // Get reservations for all facilities on this date
+    // FIX: Block slots for reservations with status "request", "pending", or "approved"
     const { data: allReservations, error } = await sb
       .from('reservations')
-      .select('facility, time_start, time_end')
+      .select('facility, time_start, time_end, status')
       .eq('date', formattedDate)
+      .in('status', ['request', 'pending', 'approved']) // <-- include all
       .order('facility, time_start', { ascending: true });
 
     if (error) {
@@ -361,7 +363,6 @@ async function showAvailableSlots(year, month, day, formattedDate) {
       const facilityReservations = reservationsByFacility[facility] || [];
       const availableSlots = calculateAvailableSlots(facilityReservations);
       
-      // Always add facility to the list, even if no slots are available
       facilityAvailability.push({
         facility: facility,
         slots: availableSlots
@@ -383,6 +384,7 @@ async function showAvailableSlots(year, month, day, formattedDate) {
       message += `${item.facility}`;
       if (item.slots.length > 0) {
         item.slots.forEach(slot => {
+          // Always show 12-hour format with AM/PM
           message += `• ${formatTime12hr(slot.start)} - ${formatTime12hr(slot.end)}<br>`;
         });
       } else {
@@ -393,10 +395,9 @@ async function showAvailableSlots(year, month, day, formattedDate) {
 
     message += 'Would you like to make a reservation?';
     
-      showCustomConfirm("Make Reservation", message, () => {
-         window.location.href = `VRF.html?dateOfEvent=${formattedDate}`;
-});
-
+    showCustomConfirm("Make Reservation", message, () => {
+      window.location.href = `VRF.html?dateOfEvent=${formattedDate}`;
+    });
 
   } catch (error) {
     console.error('Error showing available slots:', error);
