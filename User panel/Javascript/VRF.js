@@ -774,6 +774,9 @@ document.addEventListener('DOMContentLoaded', async function() {
 				return;
 			}
 
+			// START LOADING HERE - Before conflict check
+ 			 showLoading('Checking availability...', 'Verifying facility availability');
+
 						// Improved conflict check with recommendations
 			for (let facility of selectedFacilities) {
 			  // Query all reservations for this facility and date
@@ -826,6 +829,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 			  }
 			
 			  if (conflict) {
+				 hideLoading(); // HIDE LOADING when conflict found
 				// If no slots for this facility, recommend another facility
 				if (slots.length === 0) {
 				  // Get all facilities
@@ -985,8 +989,8 @@ document.addEventListener('DOMContentLoaded', async function() {
 				}
 			  }
 			}
-			  
-			
+			  // UPDATE LOADING TEXT - Conflict check passed, now processing
+  			showLoading('Processing reservation...', 'Preparing your reservation details');
 
 			// Generate sequential code for the facility (query DB for existing max, fallback to local)
 			const firstFacility = selectedFacilities[0];
@@ -1072,6 +1076,8 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 			try {
 				console.log('Attempting to save to database and work locally');
+				// UPDATE LOADING TEXT - Saving to database
+    			showLoading('Saving to database...', 'Storing your reservation information');
 
 				// Create reservation object for database
 				const dbReservation = {
@@ -1140,6 +1146,8 @@ document.addEventListener('DOMContentLoaded', async function() {
 						}
 					}
 				}
+ 					// UPDATE LOADING TEXT - Uploading files
+   					 showLoading('Uploading files...', 'Processing signature and documents');
 
 				// Try file upload(s). If upload fails, save in IndexedDB
 				const fileInput = document.getElementById('signature');
@@ -1166,6 +1174,8 @@ document.addEventListener('DOMContentLoaded', async function() {
 						}
 					}
 				}
+					// UPDATE LOADING TEXT - Generating PDF
+    					showLoading('Generating PDF...', 'Creating your reservation document');
 
 				// Generate and upload PDF (use .form-container explicitly)
 				const element = document.querySelector('.form-container');
@@ -1204,14 +1214,22 @@ document.addEventListener('DOMContentLoaded', async function() {
 				localStorage.setItem('reservations', JSON.stringify(reservations));
 				localStorage.removeItem('selectedDate');
 
+				// HIDE LOADING before showing success alert
+    			hideLoading();
+
 				if (dbSuccess) {
 					showCustomAlert("Success", "Reservation submitted successfully! Saved to database with notification created.", "success");
 				} else {
 					showCustomAlert("Saved Locally", "Reservation submitted successfully! Saved locally (network issues). Will sync when connection improves.", "info");
 				}
-				window.location.href = "Userdashboard.html";
+				// Redirect after user closes the alert
+    		setTimeout(() => {
+    			  window.location.href = "Userdashboard.html";
+   				 }, 2000);
 			} catch (error) {
 				console.error('Error submitting form:', error);
+				// HIDE LOADING on error
+    				hideLoading();
 				// Fallback: save locally so user won't lose data
 				reservations.push(reservation);
 				localStorage.setItem('reservations', JSON.stringify(reservations));

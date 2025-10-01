@@ -65,6 +65,24 @@ document.addEventListener('DOMContentLoaded', function() {
   setInterval(updateDateTime, 1000);
 });
 
+// Helper for custom alert
+function showAlert(title, message, type) {
+  if (typeof showCustomAlert === 'function') {
+    showCustomAlert(title, message, type || 'info');
+  } else {
+    alert(title ? (title + '\n' + message) : message);
+  }
+}
+
+// Helper for custom confirm
+function showConfirm(title, message, onConfirm) {
+  if (typeof showCustomConfirm === 'function') {
+    showCustomConfirm(title, message, onConfirm);
+  } else {
+    if (confirm(message)) onConfirm();
+  }
+}
+
 async function loadReservations() {
   const tbody = document.getElementById('facilityTableBody');
   tbody.innerHTML = "<tr><td colspan='8'>Loading...</td></tr>";
@@ -78,6 +96,7 @@ async function loadReservations() {
 
   if (!userId) {
     tbody.innerHTML = "<tr><td colspan='8'>Please log in to view your reservations</td></tr>";
+    showAlert('Login Required', 'Please log in to view your reservations.', 'warning');
     return;
   }
 
@@ -86,6 +105,7 @@ async function loadReservations() {
     if (!sb) {
       console.error('Supabase client not found');
       tbody.innerHTML = "<tr><td colspan='8'>Database connection error</td></tr>";
+      showAlert('Connection Error', 'Database connection error', 'error');
       return;
     }
 
@@ -127,6 +147,7 @@ async function loadReservations() {
     if (reservationError) {
       console.error('Error fetching reservations:', reservationError);
       tbody.innerHTML = `<tr><td colspan='8'>Error loading reservations: ${reservationError.message}</td></tr>`;
+      showAlert('Load Error', `Error loading reservations: ${reservationError.message}`, 'error');
       return;
     }
 
@@ -135,6 +156,7 @@ async function loadReservations() {
 
     if (!reservations || reservations.length === 0) {
       tbody.innerHTML = "<tr><td colspan='8'>No reservations found</td></tr>";
+      showAlert('No Reservations', 'No reservations found.', 'info');
       return;
     }
 
@@ -171,6 +193,7 @@ async function loadReservations() {
   } catch (error) {
     console.error('Error in loadReservations:', error);
     tbody.innerHTML = `<tr><td colspan='8'>Error loading data: ${error.message}</td></tr>`;
+    showAlert('Error', `Error loading data: ${error.message}`, 'error');
   }
 }
 
@@ -185,7 +208,7 @@ async function loadUserDetails() {
     if (!userId) {
       if (document.getElementById('UserName')) document.getElementById('UserName').textContent = '';
       if (document.getElementById('UserRole')) document.getElementById('UserRole').textContent = '';
-      console.warn('No user ID found in localStorage - user not logged in');
+      showAlert('Login Required', 'No user ID found in localStorage - user not logged in', 'warning');
       return;
     }
 
@@ -212,6 +235,7 @@ async function loadUserDetails() {
 
     if (error) {
       console.error('Supabase error:', error);
+      showAlert('Database Error', 'Error fetching user details.', 'error');
       return;
     }
     
@@ -228,10 +252,11 @@ async function loadUserDetails() {
     } else {
       if (document.getElementById('UserName')) document.getElementById('UserName').textContent = '';
       if (document.getElementById('UserRole')) document.getElementById('UserRole').textContent = '';
-      console.warn('No user data found for id:', userId);
+      showAlert('User Not Found', 'No user data found for id: ' + userId, 'warning');
     }
   } catch (err) {
     console.error('loadUserDetails error:', err);
+    showAlert('Error', 'Error loading user details.', 'error');
   }
 }
 
@@ -253,38 +278,34 @@ window.onload = async function() {
 };
 
 async function cancelReservation(requestId) {
-  if (!confirm('Are you sure you want to cancel and remove this reservation from the database?')) {
-    return;
-  }
+  showConfirm('Cancel Reservation', 'Are you sure you want to cancel and remove this reservation from the database?', async () => {
+    try {
+      const sb = getSupabase();
+      if (!sb) {
+        showAlert('Database Error', 'Database connection error', 'error');
+        return;
+      }
 
-  try {
-    const sb = getSupabase();
-    if (!sb) {
-      alert('Database connection error');
-      return;
+      // Delete reservation from Supabase completely
+      const { error } = await sb
+        .from('reservations')
+        .delete()
+        .eq('request_id', requestId);
+
+      if (error) {
+        console.error('Error deleting reservation:', error);
+        showAlert('Delete Error', 'Error deleting reservation. Please try again.', 'error');
+        return;
+      }
+
+      showAlert('Success', 'Reservation deleted successfully!', 'success');
+      await loadReservations();
+
+    } catch (error) {
+      console.error('Error in cancelReservation:', error);
+      showAlert('Delete Error', 'Error deleting reservation. Please try again.', 'error');
     }
-
-    // Delete reservation from Supabase completely
-    const { error } = await sb
-      .from('reservations')
-      .delete()
-      .eq('request_id', requestId);
-
-    if (error) {
-      console.error('Error deleting reservation:', error);
-      alert('Error deleting reservation. Please try again.');
-      return;
-    }
-
-    alert('Reservation deleted successfully!');
-    
-    // Reload the reservations to update the display
-    await loadReservations();
-    
-  } catch (error) {
-    console.error('Error in cancelReservation:', error);
-    alert('Error deleting reservation. Please try again.');
-  }
+  });
 }
 
 function updateDateTime() {
@@ -543,38 +564,34 @@ function formatTime12hr(timeStr) {
 
 // Cancel reservation function
 async function cancelReservation(requestId) {
-  if (!confirm('Are you sure you want to cancel and remove this reservation from the database?')) {
-    return;
-  }
+  showConfirm('Cancel Reservation', 'Are you sure you want to cancel and remove this reservation from the database?', async () => {
+    try {
+      const sb = getSupabase();
+      if (!sb) {
+        showAlert('Database Error', 'Database connection error', 'error');
+        return;
+      }
 
-  try {
-    const sb = getSupabase();
-    if (!sb) {
-      alert('Unable to connect to the database. Please try again later.');
-      return;
+      // Delete reservation from Supabase completely
+      const { error } = await sb
+        .from('reservations')
+        .delete()
+        .eq('request_id', requestId);
+
+      if (error) {
+        console.error('Error deleting reservation:', error);
+        showAlert('Delete Error', 'Error deleting reservation. Please try again.', 'error');
+        return;
+      }
+
+      showAlert('Success', 'Reservation deleted successfully!', 'success');
+      await loadReservations();
+
+    } catch (error) {
+      console.error('Error in cancelReservation:', error);
+      showAlert('Delete Error', 'Error deleting reservation. Please try again.', 'error');
     }
-
-    // Delete reservation from database completely
-    const { error } = await sb
-      .from('reservations')
-      .delete()
-      .eq('request_id', requestId);
-
-    if (error) {
-      console.error('Error deleting reservation:', error);
-      alert('Failed to delete reservation. Please try again.');
-      return;
-    }
-
-    alert('Reservation deleted successfully!');
-    
-    // Reload the reservations table
-    loadUserReservations();
-
-  } catch (error) {
-    console.error('Error deleting reservation:', error);
-    alert('An error occurred. Please try again.');
-  }
+  });
 }
 
 // Load user details and populate UI
@@ -640,6 +657,7 @@ async function loadUserNotifications() {
     const sb = getSupabase();
     if (!sb) {
       console.error('Supabase client not found');
+      showAlert('Connection Error', 'Supabase client not found', 'error');
       return;
     }
 
@@ -661,6 +679,7 @@ async function loadUserNotifications() {
 
     if (error) {
       console.error('Error fetching user notifications:', error);
+      showAlert('Load Error', 'Error fetching user notifications.', 'error');
       return;
     }
 
@@ -669,6 +688,7 @@ async function loadUserNotifications() {
 
   } catch (error) {
     console.error('Error loading notifications:', error);
+    showAlert('Error', 'Error loading notifications.', 'error');
   }
 }
 

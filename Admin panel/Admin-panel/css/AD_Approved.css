@@ -185,6 +185,220 @@ body {
   background-color: #0f3a24;
 }
 
+ .custom-modal {
+  position: fixed;
+  z-index: 9999;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.custom-modal.show {
+  display: flex;
+  opacity: 1;
+}
+
+.custom-modal-content {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(35, 71, 52, 0.15);
+  max-width: 450px;
+  width: 90%;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  position: relative;
+  transform: scale(0.9);
+  transition: transform 0.3s ease;
+  border-top: 4px solid #315C3A;
+}
+
+.custom-modal.show .custom-modal-content {
+  transform: scale(1);
+}
+
+.modal-close {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  font-size: 1.8rem;
+  cursor: pointer;
+  color: #999;
+  transition: color 0.2s ease;
+  background: none;
+  border: none;
+  padding: 0;
+  line-height: 1;
+}
+
+.modal-close:hover {
+  color: #315C3A;
+}
+
+.modal-icon {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 1.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.modal-icon.success {
+  background: #e8f5e8;
+  color: #315C3A;
+}
+
+.modal-icon.error {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.modal-icon.warning {
+  background: #fffbeb;
+  color: #d97706;
+}
+
+.modal-icon.info {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.modal-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #234734;
+  margin-bottom: 0.5rem;
+}
+
+.modal-message {
+  font-size: 1rem;
+  color: #666;
+  line-height: 1.5;
+  margin-bottom: 2rem;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.modal-btn {
+  padding: 0.75rem 2rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 100px;
+}
+
+.modal-btn.primary {
+  background: #315C3A;
+  color: white;
+}
+
+.modal-btn.primary:hover {
+  background: #1e3e2e;
+  transform: translateY(-1px);
+}
+
+.modal-btn.secondary {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.modal-btn.secondary:hover {
+  background: #e5e7eb;
+  transform: translateY(-1px);
+}
+
+.modal-btn.danger {
+  background: #dc2626;
+  color: white;
+}
+
+.modal-btn.danger:hover {
+  background: #b91c1c;
+  transform: translateY(-1px);
+}
+
+/* Loading Modal Styles */
+.loading-modal {
+  position: fixed;
+  z-index: 10000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-modal.show {
+  display: flex;
+}
+
+.loading-content {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(35, 71, 52, 0.15);
+  padding: 2rem;
+  text-align: center;
+  min-width: 300px;
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  margin: 0 auto 1rem;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #315C3A;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 1.1rem;
+  color: #234734;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.loading-subtext {
+  font-size: 0.9rem;
+  color: #666;
+}
+#loadingModal {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+#loadingModal.show {
+  opacity: 1;
+  visibility: visible;
+}
 /* ===============================
    📱 Phones (<= 600px)
 ================================== */

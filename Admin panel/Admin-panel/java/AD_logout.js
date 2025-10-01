@@ -1,9 +1,15 @@
 // Function to sign out user (for the logout button)
 function signOutUser() {
-  // Show confirmation dialog
-  if (confirm('Are you sure you want to sign out?')) {
-    console.log('Admin - User signing out...');
-    
+  // Gumamit ng custom confirm kung meron, fallback sa normal confirm kung wala
+  const confirmFn = typeof showCustomConfirm === 'function'
+    ? showCustomConfirm
+    : (title, message, onConfirm) => {
+        if (confirm(message)) onConfirm();
+      };
+
+  confirmFn('Sign out', 'Are you sure you want to sign out?', () => {
+    console.log('User signing out.');
+
     // Clear all user session data from localStorage
     localStorage.removeItem('id');
     localStorage.removeItem('user_id');
@@ -16,22 +22,33 @@ function signOutUser() {
     localStorage.removeItem('reservations');
     localStorage.removeItem('userReservations');
     localStorage.removeItem('selectedDate');
-    
+
     // Clear any other session data
     sessionStorage.clear();
-    
+
     // Sign out from Supabase if available
-    const supabaseClient = getSupabaseClient();
+    const supabaseClient = getSupabaseClient?.();
     if (supabaseClient && supabaseClient.auth) {
       supabaseClient.auth.signOut().catch(error => {
         console.warn('Error signing out from Supabase:', error);
       });
     }
-    
-    console.log('Admin - User signed out successfully');
-    
-    // Redirect to landing page
-    window.location.href = '../../User panel/LandingPage.html';
-  }
+
+    console.log('User signed out successfully');
+
+    // Gumamit ng custom alert kung meron, fallback sa alert kung wala
+    if (typeof showCustomAlert === 'function') {
+      showCustomAlert('Signed Out', 'You have been signed out successfully.', 'success');
+    } else {
+      alert('You have been signed out successfully.');
+    }
+
+    // Redirect to landing page after a short delay
+    setTimeout(() => {
+      window.location.href = '../../User panel/LandingPage.html';
+    }, 500);
+  });
 }
 
+// Ensure global assignment
+window.signOutUser = signOutUser;

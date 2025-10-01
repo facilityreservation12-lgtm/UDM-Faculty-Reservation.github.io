@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Venue Reservation Form</title>
+  <link rel="icon" type="image/png" href="images/udm-logo.webp"/>  
   <link rel="stylesheet" href="CSS/VRF.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.min.js"></script>
@@ -60,14 +61,14 @@
         </div>
 
         <div class="row">
-          <input type="text" id="unitOffice" name="unitOffice" placeholder="Unit/Office/College" required>
-          <input type="date" id="dateOfEvent" name="dateOfEvent" placeholder="Date of Event" required>
-          <input type="text" id="attendees" name="attendees" placeholder="Attendees" required>
+          <label>Unit/Office/College: <input type="text" id="unitOffice" name="unitOffice" placeholder="Unit/Office/College" required></label>
+          <label>Date of Event: <input type="date" id="dateOfEvent" name="dateOfEvent" placeholder="Date of Event" required></label>
+          <label>Attendees: <input type="text" id="attendees" name="attendees" placeholder="Attendees" required></label>
         </div>
 
         <div class="row">
-          <input type="text" id="eventTitle" name="eventTitle" placeholder="Title of Event/Activity" required>
-          <input type="text" id="additionalReq" name="additionalReq" placeholder="Additional Requirements" required>
+          <label>Title of Event/Activity: <input type="text" id="eventTitle" name="eventTitle" placeholder="Title of Event/Activity" required></label>
+          <label>Additional Requirements: <input type="text" id="additionalReq" name="additionalReq" placeholder="Additional Requirements" required></label>
         </div>
 
         <!-- UDM Facility Dropdown -->
