@@ -527,13 +527,13 @@ document.getElementById('userForm').addEventListener('submit', async (e) => {
       const getRolePrefix = (roleName) => {
         switch (roleName) {
           case 'ADMIN':
-            return 'A';
+            return 'A-';
           case 'SUPER ADMIN':
-            return 'S';
+            return 'S-';
           case 'STUDENT ORGANIZATION':
-            return 'O';
+            return 'O-';
           case 'FACULTY':
-            return 'F';
+            return 'F-';
           default:
             return 'U';
         }
