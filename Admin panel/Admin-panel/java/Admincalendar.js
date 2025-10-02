@@ -11,24 +11,40 @@ let supabaseEvents = {}; // Store approved reservations from Supabase
 async function fetchApprovedReservations() {
   if (typeof window.supabaseClient !== 'undefined') {
     const sb = window.supabaseClient;
-    const { data, error } = await sb
+    // Fetch id, first_name, last_name from users table for mapping
+    const { data: reservations, error } = await sb
       .from('reservations')
-      .select('facility, date, time_start, time_end, title_of_the_event, id') // <-- use id, not user_id
+      .select('facility, date, time_start, time_end, title_of_the_event, id')
       .eq('status', 'approved');
     if (error) {
       console.error('Error fetching approved reservations:', error);
       return {};
     }
+    // Fetch user names for all unique ids
+    const userIds = Array.from(new Set((reservations || []).map(ev => ev.id).filter(Boolean)));
+    let usersMap = {};
+    if (userIds.length > 0) {
+      const { data: users, error: usersErr } = await sb
+        .from('users')
+        .select('id, first_name')
+        .in('id', userIds);
+      if (!usersErr && users && users.length) {
+        usersMap = users.reduce((m, u) => {
+          m[u.id] = u.first_name || u.id;
+          return m;
+        }, {});
+      }
+    }
     // Group by date
     const grouped = {};
-    (data || []).forEach(ev => {
+    (reservations || []).forEach(ev => {
       if (!grouped[ev.date]) grouped[ev.date] = [];
       grouped[ev.date].push({
         title: ev.title_of_the_event,
         facility: ev.facility,
         startTime: ev.time_start,
         endTime: ev.time_end,
-        person: ev.id // <-- use id for user reference
+        person: usersMap[ev.id] || ev.id // Show first name if available
       });
     });
     return grouped;
@@ -85,6 +101,7 @@ async function renderCalendar(date) {
       sortedEvents.forEach((ev, index) => {
         const li = document.createElement('li');
         li.className = 'event';
+        // FIX: Show first name for approved events, manual events show entered "person"
         li.textContent = `${ev.facility} - ${formatTime(ev.startTime)} to ${formatTime(ev.endTime)} - ${ev.person} (${ev.title})`;
         li.title = 'Click to remove';
         li.style.cursor = 'pointer';
