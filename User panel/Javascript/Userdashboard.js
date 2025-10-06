@@ -85,7 +85,13 @@ function showConfirm(title, message, onConfirm) {
 
 async function loadReservations() {
   const tbody = document.getElementById('facilityTableBody');
-  tbody.innerHTML = "<tr><td colspan='8'>Loading...</td></tr>";
+  // Clear table before loading
+  tbody.innerHTML = "";
+
+  // Show loading row
+  const loadingRow = document.createElement('tr');
+  loadingRow.innerHTML = `<td colspan='8' style="text-align:center;">Loading...</td>`;
+  tbody.appendChild(loadingRow);
 
   // Get user details first (users table based login)
   const userId = localStorage.getItem('id');
@@ -140,19 +146,18 @@ async function loadReservations() {
     // Fetch user's reservations from Supabase
     const { data: reservations, error: reservationError } = await sb
       .from('reservations')
-      .select('*')
+      .select('request_id, facility, date, time_start, time_end, status, title_of_the_event')
       .eq('id', userId)
       .order('date', { ascending: true });
 
+    // Remove loading row
+    tbody.innerHTML = "";
+
     if (reservationError) {
-      console.error('Error fetching reservations:', reservationError);
       tbody.innerHTML = `<tr><td colspan='8'>Error loading reservations: ${reservationError.message}</td></tr>`;
       showAlert('Load Error', `Error loading reservations: ${reservationError.message}`, 'error');
       return;
     }
-
-    // Clear loading message
-    tbody.innerHTML = "";
 
     if (!reservations || reservations.length === 0) {
       tbody.innerHTML = "<tr><td colspan='8'>No reservations found</td></tr>";
@@ -177,11 +182,15 @@ async function loadReservations() {
       // Determine status (you can add a status column to your database later)
       const status = reservation.status || 'PENDING';
       
+      // Show event title in the Event column (second column)
+      const eventTitle = (typeof reservation.title_of_the_event === 'string' && reservation.title_of_the_event.trim())
+        ? reservation.title_of_the_event
+        : '-';
       tr.innerHTML = `
         <td>${index + 1}</td>
-        <td>${userName}</td>
-        <td>${reservation.request_id}</td>
-        <td>${reservation.facility}</td>
+        <td>${eventTitle}</td>
+        <td>${reservation.request_id || '-'}</td>
+        <td>${reservation.facility || '-'}</td>
         <td>${formattedDate}</td>
         <td>${timeRange}</td>
         <td class="status-${status.toLowerCase()}">${status}</td>
@@ -191,7 +200,6 @@ async function loadReservations() {
     });
 
   } catch (error) {
-    console.error('Error in loadReservations:', error);
     tbody.innerHTML = `<tr><td colspan='8'>Error loading data: ${error.message}</td></tr>`;
     showAlert('Error', `Error loading data: ${error.message}`, 'error');
   }
@@ -533,6 +541,11 @@ function createReservationRow(reservation, rowNumber) {
     ? `${reservation.users.first_name || ''} ${reservation.users.last_name || ''}`.trim()
     : 'Unknown User';
   
+  // Show event title in the Event column (second column)
+  const eventTitle = (typeof reservation.title_of_the_event === 'string' && reservation.title_of_the_event.trim())
+    ? reservation.title_of_the_event
+    : '-';
+  
   // Create action button
   const actionButton = reservation.status?.toLowerCase() === 'approved' || reservation.status?.toLowerCase() === 'request' 
     ? `<button class="cancel-btn" onclick="cancelReservation('${reservation.request_id}')">Cancel</button>`
@@ -540,7 +553,7 @@ function createReservationRow(reservation, rowNumber) {
   
   row.innerHTML = `
     <td>${rowNumber}</td>
-    <td>${userName}</td>
+    <td>${eventTitle}</td>
     <td>${reservation.request_id || '-'}</td>
     <td>${reservation.facility || '-'}</td>
     <td>${formattedDate}</td>

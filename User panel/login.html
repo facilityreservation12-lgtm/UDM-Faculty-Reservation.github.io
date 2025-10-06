@@ -20,14 +20,17 @@
       <img src="../User panel/images/udm-logo.webp" alt="UDM Logo" class="logo" />
       <h1>UNIVERSIDAD DE MANILA</h1>
       <small>Former City College of Manila</small>
-      <p>Please Log in to continue to your account</p>
+      <p>Please select your role to log in</p>
 
-      <div class="role-switch">
-        <span id="facultyBtn" class="active">Faculty/Student Org</span>
-        <span id="adminBtn">Admin</span>
+      <div class="role-select">
+        <button id="facultyBtn" type="button">Faculty</button>
+        <button id="studentOrgBtn" type="button">Student Org</button>
+        <button id="adminBtn" type="button">Admin</button>
+        <button id="superAdminBtn" type="button">Super Admin</button>
       </div>
-      <form class="login-form">
-        <input type="hidden" id="role" name="role" value="faculty" />
+
+      <form class="login-form" style="display:none;">
+        <input type="hidden" id="role" name="role" value="" />
         <input type="text" placeholder="User ID" required />
         <input type="password" placeholder="Password" required />
         <button type="submit">LOG IN</button>

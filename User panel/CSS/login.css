@@ -74,8 +74,41 @@ p {
   color: white;
 }
 
-.login-form {
+.role-select {
   display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: 1.2rem 0;
+}
+
+.role-select button {
+  flex: 1;
+  padding: 0.5rem 0.2rem;
+  border-radius: 6px;
+  border: none;
+  background: #f7cf52;
+  color: #234734;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  box-shadow: none;
+  outline: none;
+}
+
+.role-select button.selected {
+  background: #315C3A;
+  color: #fff;
+  box-shadow: 0 0 0 2px #f7cf52;
+}
+
+.role-select button:hover {
+  background: #234734;
+  color: #fff;
+}
+
+.login-form {
+  display: none; /* hidden by default, shown after role selection */
   flex-direction: column;
 }
 

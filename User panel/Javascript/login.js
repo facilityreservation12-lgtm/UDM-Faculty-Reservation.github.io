@@ -4,39 +4,56 @@ const supabase = window.supabase.createClient(
 );
 
 document.addEventListener('DOMContentLoaded', function() {
-  // Role switch logic
-  const facultyBtn = document.getElementById('facultyBtn');
-  const adminBtn = document.getElementById('adminBtn');
+  // Role selection logic (show login form after selection)
   const roleInput = document.getElementById('role');
+  const facultyBtn = document.getElementById('facultyBtn');
+  const studentOrgBtn = document.getElementById('studentOrgBtn');
+  const adminBtn = document.getElementById('adminBtn');
+  const superAdminBtn = document.getElementById('superAdminBtn');
+  const loginForm = document.querySelector('.login-form');
 
-  let facultyToggle = true; // true: faculty, false: student_organization
-  let adminToggle = true;   // true: admin, false: super_admin
-
-  // Set initial state
-  if (roleInput) roleInput.value = 'faculty';
-  if (facultyBtn) facultyBtn.textContent = 'Faculty';
-  if (adminBtn) adminBtn.textContent = 'Admin';
-
-  if (facultyBtn && roleInput) {
-    facultyBtn.addEventListener('click', () => {
-      facultyToggle = !facultyToggle;
-      roleInput.value = facultyToggle ? 'faculty' : 'student_organization';
-      facultyBtn.textContent = facultyToggle ? 'Faculty' : 'Student Org';
-      facultyBtn.classList.add('active');
-      if (adminBtn) adminBtn.classList.remove('active');
+  function showLoginForRole(role, label) {
+    if (roleInput) roleInput.value = role;
+    if (loginForm) {
+      loginForm.style.display = 'flex';
+      // Set placeholder for User ID field
+      const userIdInput = loginForm.querySelector('input[type="text"]');
+      if (userIdInput) userIdInput.placeholder = `${label} User ID`;
+      // Reset password field
+      const passwordInput = loginForm.querySelector('input[type="password"]');
+      if (passwordInput) passwordInput.value = '';
+    }
+    // Indicate selected button
+    [facultyBtn, studentOrgBtn, adminBtn, superAdminBtn].forEach(btn => {
+      if (btn) btn.classList.remove('selected');
     });
-    facultyBtn.textContent = facultyToggle ? 'Faculty' : 'Student Org';
+    switch (role) {
+      case 'faculty':
+        if (facultyBtn) facultyBtn.classList.add('selected');
+        break;
+      case 'student_organization':
+        if (studentOrgBtn) studentOrgBtn.classList.add('selected');
+        break;
+      case 'admin':
+        if (adminBtn) adminBtn.classList.add('selected');
+        break;
+      case 'super_admin':
+        if (superAdminBtn) superAdminBtn.classList.add('selected');
+        break;
+    }
   }
 
-  if (adminBtn && roleInput) {
-    adminBtn.addEventListener('click', () => {
-      adminToggle = !adminToggle;
-      roleInput.value = adminToggle ? 'admin' : 'super_admin';
-      adminBtn.textContent = adminToggle ? 'Admin' : 'Super Admin';
-      adminBtn.classList.add('active');
-      if (facultyBtn) facultyBtn.classList.remove('active');
-    });
-    adminBtn.textContent = adminToggle ? 'Admin' : 'Super Admin';
+  if (facultyBtn) {
+    facultyBtn.addEventListener('click', () => showLoginForRole('faculty', 'Faculty'));
+  }
+  if (studentOrgBtn) {
+    studentOrgBtn.addEventListener('click', () => showLoginForRole('student_organization', 'Student Org'));
+  }
+  if (adminBtn) {
+    adminBtn.addEventListener('click', () => showLoginForRole('admin', 'Admin'));
+  }
+  if (superAdminBtn) {
+    superAdminBtn.addEventListener('click', () => showLoginForRole('super_admin', 'Super Admin'));
   }
 
   // Forgot password modal logic
@@ -76,7 +93,6 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // Handle login form submission
-  const loginForm = document.querySelector('.login-form');
   if (loginForm) {
     loginForm.addEventListener('submit', async function(e) {
       e.preventDefault();
@@ -203,4 +219,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 });
+        hideLoading();
+        
+        console.error('Login error:', error);
+        showCustomAlert('Error', 'An unexpected error occurred. Please try again.', 'error');
 

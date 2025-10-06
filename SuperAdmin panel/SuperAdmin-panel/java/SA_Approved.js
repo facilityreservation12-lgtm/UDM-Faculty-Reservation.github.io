@@ -72,8 +72,10 @@ async function loadApprovedRequests() {
       const timeStart = formatTime(reservation.time_start);
       const timeEnd = formatTime(reservation.time_end);
       const timeRange = (timeStart || timeEnd) ? `${timeStart} - ${timeEnd}` : '';
-      // keep Slip button; optionally add request id to querystring if you want per-slip links
-      const slipHref = `Slip.html?request_id=${encodeURIComponent(reservation.request_id)}`;
+      // Slip button: link to SA_Slip.html with reservation id in query string
+      const slipHref = `SA_Slip.html?request_id=${encodeURIComponent(reservation.request_id)}`;
+      // Example if you want to use reservation.id instead:
+      // const slipHref = `SA_Slip.html?request_id=${encodeURIComponent(reservation.id)}`;
       const row = document.createElement('tr');
       row.innerHTML = `
         <td>${userName}</td>
