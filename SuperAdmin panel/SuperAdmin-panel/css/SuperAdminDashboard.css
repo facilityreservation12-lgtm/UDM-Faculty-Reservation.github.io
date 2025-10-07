@@ -715,7 +715,7 @@ th, td {
 ================================== */
 @media (min-width: 1201px) and (max-width: 1440px) {
   .sidebar {
-    width: 15%;
+    width: 19%;
     padding: 25px;
   }
 

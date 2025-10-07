@@ -118,6 +118,7 @@ p {
   border-radius: 8px;
   border: none;
   outline: none;
+  cursor: pointer;
 }
 
 .login-form button {
