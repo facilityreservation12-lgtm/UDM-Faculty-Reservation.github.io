@@ -559,7 +559,7 @@ body {
 ================================== */
 @media (min-width: 1201px) and (max-width: 1440px) {
   .sidebar {
-    width: 15%;
+    width: 20%;
     padding: 25px;
   }
 
