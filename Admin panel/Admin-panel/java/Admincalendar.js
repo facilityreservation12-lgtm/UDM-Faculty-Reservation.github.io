@@ -71,7 +71,7 @@ async function getAllEvents() {
 }
 
 // Save event must add id and source
-function saveEvent(startDateStr) {
+async function saveEvent(startDateStr) {
   const title = document.getElementById('title').value.trim();
   const facility = document.getElementById('facility').value.trim();
   const startTime = document.getElementById('startTime').value.trim();
@@ -104,6 +104,31 @@ function saveEvent(startDateStr) {
     };
     if (!events[dateStr]) events[dateStr] = [];
     events[dateStr].push(newEvent);
+
+    // Save to Supabase manual_events table
+    const supabaseClient = getSupabaseClient();
+    if (!supabaseClient) {
+      console.error('Supabase client not available');
+      return;
+    }
+
+    const eventData = {
+      facility: facility, // Use facility directly
+      date: dateStr,
+      time_start: startTime,
+      time_end: endTime,
+      title_of_the_event: title
+    };
+
+    const { data, error } = await supabaseClient
+      .from('manual_events')
+      .insert([eventData]);
+
+    if (error) {
+      console.error('Error saving event to Supabase:', error);
+    } else {
+      console.log('Event saved successfully:', data);
+    }
   }
 
   localStorage.setItem('calendarEvents', JSON.stringify(events));

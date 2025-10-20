@@ -1,4 +1,3 @@
-
 * {
   margin: 0;
   padding: 0;
@@ -70,7 +69,6 @@ body {
   color: white;
 }
 
-
 .reqs-sub-menu {
   position: relative;
 }
@@ -116,9 +114,8 @@ body {
   color: #16a34a;
 }
 
-
 .main {
-    height: auto;
+  height: auto;
   flex: 1;
   padding: 30px;
   display: flex;
@@ -126,7 +123,6 @@ body {
   gap: 3px;
   z-index: 0;
 }
-
 
 /* Cards */
 .card {
@@ -142,24 +138,143 @@ h2, h3 {
   margin-top: 0;
 }
 
+/* Remove or modify the generic table styles */
 table {
-  width: 100%;
-  min-width: 700px;
   border-collapse: collapse;
 }
 
-th, td {
-  padding: 0.5rem;
-  text-align: left;
-  border-bottom: 1px solid #ddd;
+/* More specific table styles */
+.facility-usage-table {
+  width: 100%;
+  min-width: 500px;
+  margin-bottom: 20px;
 }
 
-/* Rows and Columns */
-.row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
+.incoming-requests-table {
+  width: 100%;
+  min-width: 700px;
 }
+
+.incoming-requests-table th {
+  background-color: #F7CF52;
+  padding: 12px;
+  text-align: left;
+  font-weight: bold;
+  color: #234734;
+}
+
+.incoming-requests-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.requests-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* Three Pie Charts Container */
+.three-charts-container {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  gap: 20px;
+  margin: 30px 0;
+  flex-wrap: wrap;
+}
+
+.chart-wrapper {
+  flex: 1;
+  min-width: 250px;
+  max-width: 350px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.chart-wrapper canvas {
+  max-width: 100%;
+  height: auto !important;
+}
+
+/* Table and Legend Container */
+.table-legend-container {
+  display: flex;
+  gap: 30px;
+  margin-top: 30px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.facility-table-wrapper {
+  flex: 2;
+  min-width: 400px;
+  overflow-x: auto;
+}
+
+#facilityTable {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 500px;
+}
+
+#facilityTable thead {
+  background-color: #F7CF52;
+}
+
+#facilityTable th {
+  padding: 12px;
+  text-align: left;
+  font-weight: bold;
+  color: #234734;
+}
+
+#facilityTable td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+#facilityTable tbody tr:hover {
+  background-color: #f9f9f9;
+}
+
+.legend-wrapper {
+  flex: 1;
+  min-width: 200px;
+  background-color: #f9f9f9;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.legend-wrapper h4 {
+  margin-bottom: 15px;
+  color: #234734;
+  font-size: 1.1rem;
+}
+
+.legend-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.legend-list li {
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.legend-list span {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+/* Activity Container */
 .activity-container {
   display: flex;
   align-items: space-around;
@@ -186,7 +301,6 @@ th, td {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-
 .activity-card h3 {
   font-size: 1.1rem;
   margin-bottom: 10px;
@@ -203,48 +317,8 @@ th, td {
   line-height: 1.4;
 }
 
-
-/* Pie Chart + Legend Container */
-
-.chart-legend-container {
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
-  gap: 100px;
-  max-width: 1400px;
-  margin-bottom: 20px;
-  flex-wrap: nowrap;
-}
-
-
-.chart-legend-container ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  font-family: sans-serif;
-  font-size: 16px;
-  width: 250px;
-  flex-shrink: 0;
-  margin-top: 50px;
-}
-
-.chart-legend-container ul li {
-  margin-bottom: 8px;
-}
-
-.chart-legend-container ul span {
-  display: inline-block;
-  width: 20px;
-  height: 20px;
-  margin-right: 8px;
-}
- #UsagePieChart {
-  display: block;
-  width: 350px;
-  height: 350px;
-  
-}
- .custom-modal {
+/* Modal Styles */
+.custom-modal {
   position: fixed;
   z-index: 9999;
   left: 0;
@@ -448,6 +522,7 @@ th, td {
   font-size: 0.9rem;
   color: #666;
 }
+
 #loadingModal {
   opacity: 0;
   visibility: hidden;
@@ -457,6 +532,21 @@ th, td {
 #loadingModal.show {
   opacity: 1;
   visibility: visible;
+}
+
+/* Update responsive styles */
+@media (max-width: 900px) {
+  .facility-usage-table,
+  .incoming-requests-table {
+    min-width: unset;
+    font-size: 12px;
+  }
+  
+  .facility-table-wrapper,
+  .requests-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+  }
 }
 
 /* ===============================
@@ -483,30 +573,32 @@ th, td {
 
   .logout-btn {
     align-self: flex-end;
-    order: -1; /* Moves it to the top */
+    order: -1;
   }
-.menu {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap; 
-  overflow-x: auto; 
-  gap: 8px;
-  scrollbar-width: none;
-}
 
-.menu::-webkit-scrollbar {
-  display: none; 
-}
+  .menu {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap; 
+    overflow-x: auto; 
+    gap: 8px;
+    scrollbar-width: none;
+  }
 
-.menu a,
-.reqs-sub-menu {
-  flex-shrink: 0; 
-  white-space: nowrap; 
-  font-size: 14px;
-  color: white;
-  border-radius: 6px;
-  text-decoration: none;
-}
+  .menu::-webkit-scrollbar {
+    display: none; 
+  }
+
+  .menu a,
+  .reqs-sub-menu {
+    flex-shrink: 0; 
+    white-space: nowrap; 
+    font-size: 14px;
+    color: white;
+    border-radius: 6px;
+    text-decoration: none;
+  }
+
   .sub-menu {
     display: none;
     flex-direction: column;
@@ -528,59 +620,51 @@ th, td {
     font-size: 12px;
   }
 
-  #UsagePieChart {
-  width: 350px;
-  height: 350px;
-  display: block;
-  margin: 0 auto;
-}
+  .three-charts-container {
+    flex-direction: column;
+    gap: 30px;
+  }
 
-  .chart-legend-container {
-    display: flex;
-    align-items: flex-start;
-    padding: 10px;
-    margin: 0 auto;
-    width: 90%;
-    border-radius: 10px;
+  .chart-wrapper {
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .table-legend-container {
+    flex-direction: column;
+  }
+
+  .facility-table-wrapper {
+    min-width: unset;
+    width: 100%;
+  }
+
+  #facilityTable {
+    min-width: unset;
     font-size: 12px;
   }
 
-  .chart-legend-container ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  font-family: sans-serif;
-  font-size: 16px;
-  width: 250px;
-  flex-shrink: 0;
-  margin-top: 50px;
-  }
-
-  .chart-legend-container li {
-    margin-bottom: 5px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
+  .legend-wrapper {
+    width: 100%;
   }
 
   .activity-card {
     width: 100%;
-    padding: 1px;
+    padding: 15px;
     font-size: 12px;
   }
 
-  .card  {
+  .card {
     padding: 1rem;
     font-size: 12px;
   }
 }
 
-
 /* ===============================
    📲 Tablets (601px - 900px)
 ================================== */
 @media (min-width: 601px) and (max-width: 900px) {
-    body {
+  body {
     flex-direction: column;
     height: fit-content;
     width: fit-content;
@@ -600,30 +684,32 @@ th, td {
 
   .logout-btn {
     align-self: flex-end;
-    order: -1; /* Moves it to the top */
+    order: -1;
   }
-.menu {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap; 
-  overflow-x: auto; 
-  gap: 8px;
-  scrollbar-width: none;
-}
 
-.menu::-webkit-scrollbar {
-  display: none; 
-}
+  .menu {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap; 
+    overflow-x: auto; 
+    gap: 8px;
+    scrollbar-width: none;
+  }
 
-.menu a,
-.reqs-sub-menu {
-  flex-shrink: 0; 
-  white-space: nowrap; 
-  font-size: 14px;
-  color: white;
-  border-radius: 6px;
-  text-decoration: none;
-}
+  .menu::-webkit-scrollbar {
+    display: none; 
+  }
+
+  .menu a,
+  .reqs-sub-menu {
+    flex-shrink: 0; 
+    white-space: nowrap; 
+    font-size: 14px;
+    color: white;
+    border-radius: 6px;
+    text-decoration: none;
+  }
+
   .sub-menu {
     display: none;
     flex-direction: column;
@@ -640,54 +726,39 @@ th, td {
     padding: 10px;
   }
 
- #UsagePieChart {
-  width: 350px;
-  height: 350px;
-  display: block;
-  margin: 0 auto;
-}
-
- 
-  .chart-legend-container {
-    display: flex;
-    align-items: flex-start;
-    padding: 10px;
-    margin: 0 auto;
-    width: 90%;
-    border-radius: 10px;
-    font-size: 12px;
+  .three-charts-container {
+    flex-direction: column;
+    gap: 30px;
   }
 
-  .chart-legend-container ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  font-family: sans-serif;
-  font-size: 16px;
-  width: 250px;
-  flex-shrink: 0;
-  margin-top: 50px;
+  .chart-wrapper {
+    width: 100%;
+    max-width: 350px;
   }
 
-  .chart-legend-container li {
-    margin-bottom: 5px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
+  .table-legend-container {
+    flex-direction: column;
+  }
+
+  .facility-table-wrapper {
+    width: 100%;
+  }
+
+  .legend-wrapper {
+    width: 100%;
   }
 
   .activity-card {
     width: 100%;
-    padding: 1px;
+    padding: 15px;
     font-size: 12px;
   }
 
-  .card  {
+  .card {
     padding: 1rem;
     font-size: 12px;
   }
 }
-
 
 /* ===============================
    💻 Mini Laptops (901px - 1200px)
@@ -706,8 +777,8 @@ th, td {
     width: 48%;
   }
 
-  table {
-    min-width: 600px;
+  .chart-wrapper {
+    max-width: 280px;
   }
 }
 
@@ -727,6 +798,10 @@ th, td {
   .activity-card {
     width: 30%;
   }
+
+  .chart-wrapper {
+    max-width: 320px;
+  }
 }
 
 /* ===============================
@@ -744,5 +819,9 @@ th, td {
 
   .activity-card {
     width: 365px;
+  }
+
+  .chart-wrapper {
+    max-width: 350px;
   }
 }

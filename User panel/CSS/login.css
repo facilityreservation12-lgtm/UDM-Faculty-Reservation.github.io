@@ -414,3 +414,22 @@ p {
   color: #666;
 }
 
+.back-arrow {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  color: #fff;
+  font-size: 24px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.back-arrow:hover {
+  transform: scale(1.2);
+}
+
+.login-box {
+  position: relative;
+}
+

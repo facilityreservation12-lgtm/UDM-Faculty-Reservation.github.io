@@ -49,125 +49,127 @@
       <button onclick="signOutUser()" class="logout-btn">Log Out</button>
 </div>
 
-  <div class="main">  
-  <div class="card">
+ <div class="main">  
+    <div class="card usage-card">
       <h2 id="usage-title">USAGE PERCENTAGE OF FACILITIES FOR THE MONTH OF ______</h2>
-      <div class="chart-legend-container">
-        <canvas id="UsagePieChart"></canvas>
+      
+      <!-- Three Pie Charts Container -->
+      <div class="three-charts-container">
+        <div class="chart-wrapper">
+          <canvas id="internalPieChart"></canvas>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="externalPieChart"></canvas>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="totalPieChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Facility Table and Legend -->
+      <div class="table-legend-container">
+        <div class="facility-table-wrapper">
+          <table id="facilityTable" class="facility-usage-table">
+            <thead>
+              <tr>
+                <th>Facility</th>
+                <th>Internal</th>
+                <th>External</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Data will be populated by JavaScript -->
+            </tbody>
+          </table>
+        </div>
+        
+        <div class="legend-wrapper">
+          <h4>Legend</h4>
+          <ul class="legend-list">
+            <li>
+              <span style="background-color: #FFCC00;"></span>
+              <a href="UDMfacility.html?facility=Palma%20Hall" class="nav-link">Palma Hall</a>
+            </li>
+            <li>
+              <span style="background-color: #A1C181;"></span>
+              <a href="UDMfacility.html?facility=Right%20Wing%20Lobby" class="nav-link">Right Wing Lobby</a>
+            </li>
+            <li>
+              <span style="background-color: #E8E288;"></span>
+              <a href="UDMfacility.html?facility=Mehan%20Garden" class="nav-link">Mehan Garden</a>
+            </li>
+            <li>
+              <span style="background-color: #92DCE5;"></span>
+              <a href="UDMfacility.html?facility=Rooftop" class="nav-link">Rooftop</a>
+            </li>
+            <li>
+              <span style="background-color: #FFDCC1;"></span>
+              <a href="UDMfacility.html?facility=Classrooms" class="nav-link">Classroom</a>
+            </li>
+            <li>
+              <span style="background-color: #A7C6ED;"></span>
+              <a href="UDMfacility.html?facility=Basketball%20Court" class="nav-link">Basketball Court</a>
+            </li>
+            <li>
+              <span style="background-color: #FFABAB;"></span>
+              <a href="UDMfacility.html?facility=Space%20at%20the%20Ground%20Floor" class="nav-link">Space at the Ground Floor</a>
+            </li>
+            <li>
+              <span style="background-color: #CCCCCC;"></span>
+              <a href="UDMfacility.html?facility=Others" class="nav-link">Others</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="activity-container">
+      <div class="activity-card">
+        <h3>Activity Today</h3>
         <ul>
-          <li>
-            <span style="background-color: #FFCC00;"></span>
-            <a href="UDMfacility.html?facility=Palma%20Hall" class="nav-link">Palma Hall</a>
-          </li>
-          <li>
-            <span style="background-color: #A1C181;"></span>
-            <a href="UDMfacility.html?facility=Right%20Wing%20Lobby" class="nav-link">Right Wing Lobby</a>
-          </li>
-          <li>
-            <span style="background-color: #E8E288;"></span>
-            <a href="UDMfacility.html?facility=Mehan%20Garden" class="nav-link">Mehan Garden</a>
-          </li>
-          <li>
-            <span style="background-color: #92DCE5;"></span>
-            <a href="UDMfacility.html?facility=Rooftop" class="nav-link">Rooftop</a>
-          </li>
-          <li>
-            <span style="background-color: #FFDCC1;"></span>
-            <a href="UDMfacility.html?facility=Classrooms" class="nav-link">Classroom</a>
-          </li>
-          <li>
-            <span style="background-color: #A7C6ED;"></span>
-            <a href="UDMfacility.html?facility=Basketball%20Court" class="nav-link">Basketball Court</a>
-          </li>
-          <li>
-            <span style="background-color: #FFABAB;"></span>
-            <a href="UDMfacility.html?facility=Space%20at%20the%20Ground%20Floor" class="nav-link">Space at the Ground Floor</a>
-          </li>
-          <li>
-            <span style="background-color: #CCCCCC;"></span>
-            <a href="UDMfacility.html?facility=Others" class="nav-link">Others</a>
-          </li>
+          <li>Loading...</li>
+        </ul>
+      </div>
+
+      <div class="activity-card">
+        <h3>Activity Tommorow</h3>
+        <ul>
+          <li>Loading...</li>
+        </ul>
+      </div>
+      
+      <div class="activity-card">
+        <h3>Activity Next Day</h3>
+        <ul>
+          <li>Loading...</li>
         </ul>
       </div>
     </div>
-  <div class="activity-container">
-    <div class="activity-card">
-      <h3>Activity Today</h3>
-      <ul>
-        <li>Thrift shop at <strong>Space at the Ground Floor</strong> - 12:00 PM</li>
-        <li>Student interviews at <strong>Right Wing Lobby</strong> - 3:00 PM</li>
-        <li>Musical rehearsal at <strong>Palma Hall</strong> - 6:00 PM</li>
-        <li>Thrift shop at <strong>Space at the Ground Floor</strong> - 12:00 PM</li>
-        <li>Student interviews at <strong>Right Wing Lobby</strong> - 3:00 PM</li>
-        <li>Musical rehearsal at <strong>Palma Hall</strong> - 6:00 PM</li>
-        <li>Thrift shop at <strong>Space at the Ground Floor</strong> - 12:00 PM</li>
-        <li>Student interviews at <strong>Right Wing Lobby</strong> - 3:00 PM</li>
-        <li>Musical rehearsal at <strong>Palma Hall</strong> - 6:00 PM</li>
-      </ul>
-    </div>
 
-    <div class="activity-card">
-      <h3>Activity Tommorow</h3>
-      <ul>
-        <li>Mental health booth at <strong>Right Wing Lobby</strong> - 11:30 AM</li>
-        <li>Poetry event at <strong>Space at the Ground Floor</strong> - 1:00 PM</li>
-        <li>Basketball training at <strong>Basketball Court</strong> - 3:00 PM</li>
-      </ul>
-    </div>
-    <div class="activity-card">
-      <h3>Activity Next Day</h3>
-      <ul>
-        <li>Mental health booth at <strong>Right Wing Lobby</strong> - 11:30 AM</li>
-        <li>Poetry event at <strong>Space at the Ground Floor</strong> - 1:00 PM</li>
-        <li>Basketball training at <strong>Basketball Court</strong> - 3:00 PM</li>
-      </ul>
-    </div>
-</div>
-    <div class="card">
+    <div class="card requests-card">
       <h3>Incoming Request</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>User</th>
-            <th>Venue</th>
-            <th>Date</th>
-            <th>Time</th>
-            <th>Details</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Kevin Reyes</td>
-            <td>Classroom</td>
-            <td>June 10, 2025</td>
-            <td>10:30 AM</td>
-            <td>Facilitating a review</td>
-          </tr>
-          <tr>
-            <td>Mika Salamanca</td>
-            <td>Palma Hall</td>
-            <td>June 12, 2025</td>
-            <td>1:00 PM</td>
-            <td>Hosting a poetry reading</td>
-          </tr>
-          <tr>
-            <td>Nina Sinclair</td>
-            <td>Basketball Court</td>
-            <td>July 15, 2025</td>
-            <td>1:00 PM</td>
-            <td>Volleyball Try-out</td>
-          </tr>
-          <tr>
-            <td>Theo Fedelin</td>
-            <td>Basketball Court</td>
-            <td>July 15, 2025</td>
-            <td>3:00 PM</td>
-            <td>Basketball Try-out</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="requests-table-wrapper">
+        <table class="incoming-requests-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Venue</th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="5" style="text-align: center;">Loading...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
+
  <!-- Custom Alert Modal -->
 <div id="customAlertModal" class="custom-modal">
   <div class="custom-modal-content">
