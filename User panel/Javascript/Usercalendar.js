@@ -407,9 +407,9 @@ async function showAvailableSlots(year, month, day, formattedDate) {
 
 // Calculate available time slots based on existing reservations
 function calculateAvailableSlots(reservations) {
-  // Define operating hours (7 AM to 7 PM)
+  // Define operating hours (7 AM to 9 PM)
   const OPERATING_START = "07:00";
-  const OPERATING_END = "19:00";
+  const OPERATING_END = "21:00";
   
   // Convert time string to minutes since midnight for easier calculation
   function timeToMinutes(timeStr) {
@@ -732,8 +732,8 @@ document.addEventListener('DOMContentLoaded', function() {
   requestNotificationPermission();
   
   // Load initial notifications
-  setTimeout(loadUserNotifications, 1000); // Delay to ensure user is loaded
+  setTimeout(loadUserNotifications, 800); // Delay to ensure user is loaded
   
   // Check for status updates every 30 seconds
-  setInterval(checkForStatusUpdates, 30000);
+  setInterval(checkForStatusUpdates, 10000);
 });
