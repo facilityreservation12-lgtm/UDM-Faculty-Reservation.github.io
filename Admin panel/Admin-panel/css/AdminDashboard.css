@@ -658,6 +658,13 @@ table {
     padding: 1rem;
     font-size: 12px;
   }
+
+  .print-usage-btn {
+    right: 12px;
+    top: 12px;
+    padding: 8px 10px;
+    font-size: 13px;
+  }
 }
 
 /* ===============================
@@ -758,6 +765,13 @@ table {
     padding: 1rem;
     font-size: 12px;
   }
+
+  .print-usage-btn {
+    right: 12px;
+    top: 12px;
+    padding: 8px 10px;
+    font-size: 13px;
+  }
 }
 
 /* ===============================
@@ -823,5 +837,89 @@ table {
 
   .chart-wrapper {
     max-width: 350px;
+  }
+}
+
+.usage-card {
+  position: relative; /* enable absolutely positioned print button inside */
+}
+
+/* Print button styling (now top-right of usage-card) */
+.print-usage-btn {
+  position: absolute;
+  right: 18px;
+  top: 18px; /* moved from bottom to top */
+  background-color: #315C3A;
+  color: #ffffff;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  transition: transform 0.12s ease, background-color 0.12s ease;
+  z-index: 50;
+}
+.print-usage-btn:hover {
+  transform: translateY(-2px);
+  background-color: #234734;
+}
+
+/* small-screen adjustment so button doesn't overlap header */
+@media (max-width: 600px) {
+  .print-usage-btn {
+    right: 12px;
+    top: 12px;
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+}
+
+/* Ensure charts (canvas) print with good sizing */
+.chart-wrapper canvas {
+  max-width: 100% !important;
+  height: auto !important;
+}
+
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+  .usage-card, .usage-card * {
+    visibility: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .usage-card {
+    position: absolute !important;
+    left: 0; top: 0; width: 100vw !important; min-width: 0 !important; box-shadow: none !important; margin: 0 !important; padding: 0 !important;
+    background: white !important;
+    color: black !important;
+    z-index: 9999 !important;
+  }
+  /* hide the on-screen print button when printing */
+  .print-usage-btn {
+    display: none !important;
+  }
+
+  /* make sure canvas prints at full width of chart wrapper */
+  .chart-wrapper {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+  .chart-wrapper canvas {
+    image-rendering: optimizeQuality;
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Ensure legend swatches print with color when possible, and still show when backgrounds are suppressed */
+  .legend-list span {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    background-clip: padding-box !important;
+    /* subtle border so swatch is visible even if background is not printed */
+    border: 1px solid rgba(0,0,0,0.15) !important;
+    box-shadow: none !important;
   }
 }

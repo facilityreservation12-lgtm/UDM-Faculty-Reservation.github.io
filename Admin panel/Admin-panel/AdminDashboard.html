@@ -114,7 +114,11 @@
             </li>
           </ul>
         </div>
+        
       </div>
+
+      <!-- add print button inside usage-card, lower-right -->
+      <button class="print-usage-btn" onclick="printUsageCard()" aria-label="Print Usage Report">Print Usage Report</button>
     </div>
 
     <div class="activity-container">
@@ -184,5 +188,13 @@
       <div id="loadingSubtext" class="loading-subtext">Please wait</div>
     </div>
   </div>
+
+  <script>
+function printUsageCard() {
+  // Print in-place so canvas elements (charts) are printed as rendered
+  // Uses existing @media print CSS to hide other page content
+  window.print();
+}
+</script>
 </body>
 </html>
