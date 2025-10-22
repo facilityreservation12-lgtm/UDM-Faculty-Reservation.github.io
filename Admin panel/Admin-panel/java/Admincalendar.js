@@ -5,27 +5,124 @@ const nextMonthBtn = document.getElementById('nextMonth');
 
 let currentDate = new Date();
 let events = JSON.parse(localStorage.getItem('calendarEvents') || '{}');
-let supabaseEvents = {}; // Store approved reservations from Supabase
+let supabaseEvents = {};
+
+// Helper function to get current user ID
+async function getCurrentUserId() {
+  try {
+    // Method 1: Check localStorage for 'user_id' key directly
+    const userIdDirect = localStorage.getItem('user_id');
+    if (userIdDirect) {
+      console.log('Found user ID in localStorage.user_id:', userIdDirect);
+      return userIdDirect;
+    }
+
+    // Method 2: Check localStorage for 'id' key
+    const idDirect = localStorage.getItem('id');
+    if (idDirect) {
+      console.log('Found user ID in localStorage.id:', idDirect);
+      return idDirect;
+    }
+
+    // Method 3: Try localStorage currentUser object
+    const storedUser = localStorage.getItem('currentUser');
+    if (storedUser) {
+      try {
+        const parsed = JSON.parse(storedUser);
+        if (parsed?.id) {
+          console.log('Found user ID in localStorage.currentUser:', parsed.id);
+          return parsed.id;
+        }
+        if (parsed?.user_id) {
+          console.log('Found user ID in localStorage.currentUser.user_id:', parsed.user_id);
+          return parsed.user_id;
+        }
+      } catch (e) {
+        console.warn('Error parsing localStorage currentUser:', e);
+      }
+    }
+
+    // Method 4: Try window.currentUser
+    if (window.currentUser?.id) {
+      console.log('Found user ID in window.currentUser.id:', window.currentUser.id);
+      return window.currentUser.id;
+    }
+    if (window.currentUser?.user_id) {
+      console.log('Found user ID in window.currentUser.user_id:', window.currentUser.user_id);
+      return window.currentUser.user_id;
+    }
+
+    // Method 5: Try sessionStorage
+    const sessionUserId = sessionStorage.getItem('user_id');
+    if (sessionUserId) {
+      console.log('Found user ID in sessionStorage.user_id:', sessionUserId);
+      return sessionUserId;
+    }
+
+    const sessionId = sessionStorage.getItem('id');
+    if (sessionId) {
+      console.log('Found user ID in sessionStorage.id:', sessionId);
+      return sessionId;
+    }
+
+    // Method 6: Try Supabase client
+    const supabaseClient = window.supabaseClient;
+    if (supabaseClient) {
+      // Try to get from session
+      const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+      if (!sessionError && session?.user?.id) {
+        console.log('Found user ID in Supabase session:', session.user.id);
+        return session.user.id;
+      }
+
+      // Try to get from user
+      const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+      if (!userError && user?.id) {
+        console.log('Found user ID in Supabase user:', user.id);
+        return user.id;
+      }
+    }
+
+    console.error('No user ID found in any location');
+    return null;
+  } catch (err) {
+    console.error('Error getting user ID:', err);
+    return null;
+  }
+}
 
 // Fetch approved reservations from Supabase
 async function fetchApprovedReservations() {
-  if (typeof window.supabaseClient !== 'undefined') {
+  try {
+    if (typeof window.supabaseClient === 'undefined') {
+      console.warn('Supabase client not available');
+      return {};
+    }
+
     const sb = window.supabaseClient;
     const { data: reservations, error } = await sb
       .from('reservations')
       .select('facility, date, time_start, time_end, title_of_the_event, id')
       .eq('status', 'approved');
+
     if (error) {
       console.error('Error fetching approved reservations:', error);
       return {};
     }
-    const userIds = Array.from(new Set((reservations || []).map(ev => ev.id).filter(Boolean)));
+
+    if (!reservations || reservations.length === 0) {
+      return {};
+    }
+
+    const userIds = Array.from(new Set(reservations.map(ev => ev.id).filter(Boolean)));
     let usersMap = {};
+
     if (userIds.length > 0) {
       const { data: users, error: usersErr } = await sb
         .from('users')
         .select('id, first_name')
         .in('id', userIds);
+
       if (!usersErr && users && users.length) {
         usersMap = users.reduce((m, u) => {
           m[u.id] = u.first_name || u.id;
@@ -33,8 +130,9 @@ async function fetchApprovedReservations() {
         }, {});
       }
     }
+
     const grouped = {};
-    (reservations || []).forEach(ev => {
+    reservations.forEach(ev => {
       if (!grouped[ev.date]) grouped[ev.date] = [];
       grouped[ev.date].push({
         id: `sb-${ev.id}-${ev.date}-${ev.time_start || ''}`,
@@ -46,31 +144,41 @@ async function fetchApprovedReservations() {
         source: 'supabase'
       });
     });
+
     return grouped;
+  } catch (err) {
+    console.error('Unexpected error fetching reservations:', err);
+    return {};
   }
-  return {};
 }
 
-// Merge manual and Supabase events (unchanged logic)
+// Merge manual and Supabase events
 async function getAllEvents() {
-  supabaseEvents = await fetchApprovedReservations();
-  const merged = { ...events };
-  Object.keys(supabaseEvents).forEach(dateStr => {
-    if (!merged[dateStr]) merged[dateStr] = [];
-    supabaseEvents[dateStr].forEach(ev => {
-      const exists = merged[dateStr].some(e =>
-        e.facility === ev.facility &&
-        e.startTime === ev.startTime &&
-        e.endTime === ev.endTime &&
-        e.title === ev.title
-      );
-      if (!exists) merged[dateStr].push(ev);
+  try {
+    supabaseEvents = await fetchApprovedReservations();
+    const merged = { ...events };
+    
+    Object.keys(supabaseEvents).forEach(dateStr => {
+      if (!merged[dateStr]) merged[dateStr] = [];
+      supabaseEvents[dateStr].forEach(ev => {
+        const exists = merged[dateStr].some(e =>
+          e.facility === ev.facility &&
+          e.startTime === ev.startTime &&
+          e.endTime === ev.endTime &&
+          e.title === ev.title
+        );
+        if (!exists) merged[dateStr].push(ev);
+      });
     });
-  });
-  return merged;
+    
+    return merged;
+  } catch (err) {
+    console.error('Error merging events:', err);
+    return { ...events };
+  }
 }
 
-// Save event must add id and source
+// Save event - FIXED: Auto-generate ID, user ID in reserved_by only
 async function saveEvent(startDateStr) {
   const title = document.getElementById('title').value.trim();
   const facility = document.getElementById('facility').value.trim();
@@ -80,66 +188,323 @@ async function saveEvent(startDateStr) {
   const duration = parseInt(document.getElementById('duration').value);
 
   if (!title || !facility || !startTime || !endTime || !person || isNaN(duration) || duration < 1) {
-    alert('Please fill in all fields correctly.');
+    showCustomAlert('Validation Error', 'Please fill in all fields correctly.', 'warning');
     return;
   }
 
-  const facilityColor = getFacilityColor(facility);
+  try {
+    const supabaseClient = window.supabaseClient;
+    const userId = await getCurrentUserId();
+    
+    if (!userId) {
+      console.error('User ID detection failed. Debug info:');
+      console.log('localStorage.currentUser:', localStorage.getItem('currentUser'));
+      console.log('window.currentUser:', window.currentUser);
+      console.log('sessionStorage.currentUser:', sessionStorage.getItem('currentUser'));
+      
+      showCustomConfirm('Debug Information', 'Unable to get user ID. Click OK to see debug info in console, or Cancel to go back.', () => {
+        console.log('=== DEBUG INFO ===');
+        console.log('All localStorage:', { ...localStorage });
+        console.log('All window properties with "user":', Object.keys(window).filter(k => k.toLowerCase().includes('user')));
+      });
+      return;
+    }
+    
+    console.log('Using user ID:', userId);
 
-  const startDate = new Date(startDateStr);
+    if (!supabaseClient) {
+      showCustomAlert('Connection Error', 'Supabase client not available. Cannot save event.', 'error');
+      return;
+    }
 
-  for (let i = 0; i < duration; i++) {
-    const current = new Date(startDate);
-    current.setDate(current.getDate() + i);
-    const dateStr = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')}`;
-    const newEvent = {
-      id: `m-${Date.now()}-${Math.floor(Math.random()*1000)}`,
+    const startDate = new Date(startDateStr);
+    const savedEvents = [];
+    
+    for (let i = 0; i < duration; i++) {
+      const current = new Date(startDate);
+      current.setDate(current.getDate() + i);
+      const dateStr = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')}`;
+      
+      const eventId = `manual-${Date.now()}-${i}-${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Save to Supabase with auto-generated ID and user ID in reserved_by
+      try {
+        const { data, error } = await supabaseClient
+          .from('manual_events')
+          .insert([{
+            facility: facility,
+            date: dateStr,
+            time_start: startTime,
+            time_end: endTime,
+            title_of_the_event: title,
+            reserved_by: userId
+          }])
+          .select();
+
+        if (error) {
+          console.error('Error saving to Supabase:', error);
+          showCustomAlert('Database Error', 'Error saving to database: ' + error.message, 'error');
+          return;
+        }
+        
+        console.log('Successfully saved to Supabase:', data);
+      } catch (dbErr) {
+        console.error('Database error:', dbErr);
+        showCustomAlert('Database Error', 'Database error: ' + dbErr.message, 'error');
+        return;
+      }
+
+      const newEvent = {
+        id: eventId,
+        title,
+        facility,
+        startTime,
+        endTime,
+        person,
+        source: 'manual'
+      };
+      
+      if (!events[dateStr]) events[dateStr] = [];
+      events[dateStr].push(newEvent);
+      savedEvents.push(dateStr);
+    }
+
+    localStorage.setItem('calendarEvents', JSON.stringify(events));
+    closeModal();
+    renderCalendar(currentDate);
+    showCustomAlert('Success', 'Event saved successfully!', 'success');
+
+  } catch (err) {
+    showCustomAlert('Error', 'Error saving event: ' + err.message, 'error');
+    console.error('Save event error:', err);
+  }
+}
+
+// Save edited event - FIXED: Update using reserved_by
+async function saveEditedEvent(dateStr, index) {
+  const title = document.getElementById('editTitle').value.trim();
+  const facility = document.getElementById('editFacility').value.trim();
+  const startTime = document.getElementById('editStartTime').value.trim();
+  const endTime = document.getElementById('editEndTime').value.trim();
+  const person = document.getElementById('editPerson').value.trim();
+
+  if (!title || !facility || !startTime || !endTime || !person) {
+    showCustomAlert('Validation Error', 'Please fill in all fields correctly.', 'warning');
+    return;
+  }
+
+  try {
+    const supabaseClient = window.supabaseClient;
+    const userId = await getCurrentUserId();
+    
+    if (!userId) {
+      showCustomAlert('Authentication Error', 'Unable to get user ID. Please make sure you are logged in.', 'error');
+      return;
+    }
+    
+    const originalEvent = events[dateStr][index];
+    if (!originalEvent) {
+      throw new Error('Event not found.');
+    }
+    
+    if (supabaseClient) {
+      try {
+        const { data, error } = await supabaseClient
+          .from('manual_events')
+          .update({
+            facility: facility,
+            time_start: startTime,
+            time_end: endTime,
+            title_of_the_event: title
+          })
+          .eq('reserved_by', userId)
+          .eq('date', dateStr)
+          .eq('time_start', originalEvent.startTime)
+          .eq('facility', originalEvent.facility)
+          .select();
+
+        if (error) {
+          console.error('Error updating in Supabase:', error);
+          showCustomAlert('Database Error', 'Error updating in database: ' + error.message, 'error');
+          return;
+        }
+        
+        console.log('Successfully updated in Supabase:', data);
+      } catch (dbErr) {
+        console.error('Database error:', dbErr);
+        showCustomAlert('Database Error', 'Database error: ' + dbErr.message, 'error');
+        return;
+      }
+    }
+
+    const updatedEvent = {
+      id: originalEvent.id,
       title,
       facility,
-      facilityColor,
       startTime,
       endTime,
       person,
       source: 'manual'
     };
-    if (!events[dateStr]) events[dateStr] = [];
-    events[dateStr].push(newEvent);
 
-    // Save to Supabase manual_events table
-    const supabaseClient = getSupabaseClient();
-    if (!supabaseClient) {
-      console.error('Supabase client not available');
-      return;
-    }
+    events[dateStr][index] = updatedEvent;
+    localStorage.setItem('calendarEvents', JSON.stringify(events));
+    closeEditModal();
+    renderCalendar(currentDate);
+    showCustomAlert('Success', 'Event updated successfully!', 'success');
 
-    const eventData = {
-      facility: facility, // Use facility directly
-      date: dateStr,
-      time_start: startTime,
-      time_end: endTime,
-      title_of_the_event: title
-    };
+  } catch (err) {
+    showCustomAlert('Error', 'Error updating event: ' + err.message, 'error');
+    console.error('Update event error:', err);
+  }
+}
 
-    const { data, error } = await supabaseClient
-      .from('manual_events')
-      .insert([eventData]);
-
-    if (error) {
-      console.error('Error saving event to Supabase:', error);
-    } else {
-      console.log('Event saved successfully:', data);
-    }
+// Duplicate event - FIXED: Auto-generate ID, user ID in reserved_by
+async function confirmDuplicate(origDateStr, index) {
+  const targetDate = document.getElementById('dup_startDate')?.value;
+  const duration = parseInt(document.getElementById('dup_duration')?.value || '0', 10);
+  
+  if (!targetDate || isNaN(duration) || duration < 1) { 
+    showCustomAlert('Validation Error', 'Provide a valid target date and duration', 'warning'); 
+    return; 
   }
 
-  localStorage.setItem('calendarEvents', JSON.stringify(events));
-  closeModal();
-  renderCalendar(currentDate);
+  try {
+    const supabaseClient = window.supabaseClient;
+    const userId = await getCurrentUserId();
+    
+    if (!userId) {
+      showCustomAlert('Authentication Error', 'Unable to get user ID. Please make sure you are logged in.', 'error');
+      return;
+    }
+    
+    const all = await getAllEvents();
+    const ev = all[origDateStr] && all[origDateStr][index];
+    if (!ev || ev.source !== 'manual') { 
+      showCustomAlert('Error', 'Cannot duplicate this event', 'error'); 
+      return; 
+    }
+
+    const startDate = new Date(targetDate);
+    
+    for (let i = 0; i < duration; i++) {
+      const current = new Date(startDate);
+      current.setDate(current.getDate() + i);
+      const newDateStr = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')}`;
+      
+      const eventId = `manual-${Date.now()}-${i}-${Math.random().toString(36).substr(2, 9)}`;
+      
+      if (supabaseClient) {
+        try {
+          const { data, error } = await supabaseClient
+            .from('manual_events')
+            .insert([{
+              facility: ev.facility,
+              date: newDateStr,
+              time_start: ev.startTime,
+              time_end: ev.endTime,
+              title_of_the_event: ev.title,
+              reserved_by: userId
+            }])
+            .select();
+
+          if (error) {
+            console.error('Error duplicating to Supabase:', error);
+            showCustomAlert('Database Error', 'Error duplicating to database: ' + error.message, 'error');
+            return;
+          }
+          
+          console.log('Successfully duplicated to Supabase:', data);
+        } catch (dbErr) {
+          console.error('Database error:', dbErr);
+          showCustomAlert('Database Error', 'Database error: ' + dbErr.message, 'error');
+          return;
+        }
+      }
+
+      const duplicatedEvent = {
+        id: eventId,
+        title: ev.title,
+        facility: ev.facility,
+        startTime: ev.startTime,
+        endTime: ev.endTime,
+        person: ev.person,
+        source: 'manual'
+      };
+      
+      if (!events[newDateStr]) events[newDateStr] = [];
+      events[newDateStr].push(duplicatedEvent);
+    }
+
+    localStorage.setItem('calendarEvents', JSON.stringify(events));
+    closeDuplicateModal();
+    renderCalendar(currentDate);
+    showCustomAlert('Success', 'Event duplicated successfully!', 'success');
+
+  } catch (err) {
+    showCustomAlert('Error', 'Error duplicating event: ' + err.message, 'error');
+    console.error('Duplicate event error:', err);
+  }
+}
+
+// Delete event - FIXED: Delete using reserved_by
+async function deleteEvent(dateStr, index) {
+  try {
+    const supabaseClient = window.supabaseClient;
+    const userId = await getCurrentUserId();
+    
+    if (!userId) {
+      showCustomAlert('Authentication Error', 'Unable to get user ID. Please make sure you are logged in.', 'error');
+      return;
+    }
+    
+    const eventToDelete = events[dateStr]?.[index];
+    if (!eventToDelete) {
+      throw new Error('Event not found.');
+    }
+    
+    if (supabaseClient) {
+      try {
+        const { error } = await supabaseClient
+          .from('manual_events')
+          .delete()
+          .eq('reserved_by', userId)
+          .eq('date', dateStr)
+          .eq('time_start', eventToDelete.startTime)
+          .eq('facility', eventToDelete.facility)
+          .eq('title_of_the_event', eventToDelete.title);
+
+        if (error) {
+          console.error('Error deleting from Supabase:', error);
+          showCustomAlert('Database Error', 'Error deleting from database: ' + error.message, 'error');
+          return;
+        }
+        
+        console.log('Successfully deleted from Supabase');
+      } catch (dbErr) {
+        console.error('Database error:', dbErr);
+        showCustomAlert('Database Error', 'Database error: ' + dbErr.message, 'error');
+        return;
+      }
+    }
+
+    events[dateStr].splice(index, 1);
+    if (events[dateStr].length === 0) delete events[dateStr];
+    localStorage.setItem('calendarEvents', JSON.stringify(events));
+    
+    closeDeleteModal();
+    renderCalendar(currentDate);
+    showCustomAlert('Success', 'Event deleted successfully!', 'success');
+
+  } catch (err) {
+    showCustomAlert('Error', 'Error deleting event: ' + err.message, 'error');
+    console.error('Delete event error:', err);
+    closeDeleteModal();
+  }
 }
 
 function convertTo24Hour(timeStr) {
-  // Handle missing or empty times gracefully
   if (!timeStr) return 0;
-  // If time includes AM/PM, strip that and parse
   const clean = String(timeStr).trim().split(' ')[0];
   const parts = clean.split(':').map(Number);
   const hour = parts[0] || 0;
@@ -153,46 +518,6 @@ function formatTime(timeStr) {
   const ampm = hours >= 12 ? "PM" : "AM";
   hours = hours % 12 || 12;
   return `${hours}:${minutes.toString().padStart(2, '0')} ${ampm}`;
-}
-
-function openEventModal(dateStr) {
-  const modalHtml = `
-    <div class="modal-overlay">
-      <div class="modal-content">
-        <h3>Add Event - ${dateStr}</h3>
-        <label>Event Title (e.g., Campus Week, CET Webinar):</label>
-        <input type="text" id="title">
-        <label>Facility:</label>
-        <select id="facility" onchange="updateFacilityColor(this)">
-          <option value="">Select a facility...</option>
-          <option value="Palma Hall" data-color="#FFCC00">Palma Hall</option>
-          <option value="Right Wing Lobby" data-color="#A1C181">Right Wing Lobby</option>
-          <option value="Mehan Garden" data-color="#E8E288">Mehan Garden</option>
-          <option value="Rooftop" data-color="#92DCE5">Rooftop</option>
-          <option value="Classroom" data-color="#FFDCC1">Classroom</option>
-          <option value="Basketball Court" data-color="#A7C6ED">Basketball Court</option>
-          <option value="Ground Floor Space" data-color="#FFABAB">Ground Floor Space</option>
-          <option value="Others" data-color="#CCCCCC">Others</option>
-        </select>
-        <label>Start Time:</label>
-        <input type="time" id="startTime">
-        <label>End Time:</label>
-        <input type="time" id="endTime">
-        <label>Reserved By:</label>
-        <input type="text" id="person">
-        <label>Duration (days):</label>
-        <input type="number" id="duration" min="1" value="1">
-        <div class="modal-buttons">
-          <button onclick="saveEvent('${dateStr}')">Save</button>
-          <button onclick="closeModal()">Cancel</button>
-        </div>
-      </div>
-    </div>
-  `;
-  const modal = document.createElement('div');
-  modal.innerHTML = modalHtml;
-  modal.id = 'eventModal';
-  document.body.appendChild(modal);
 }
 
 function getFacilityColor(facilityName) {
@@ -216,11 +541,9 @@ function updateFacilityColor(select) {
 }
 
 function getContrastColor(hexcolor) {
-  // Convert hex to RGB
   const r = parseInt(hexcolor.substr(1,2), 16);
   const g = parseInt(hexcolor.substr(3,2), 16);
   const b = parseInt(hexcolor.substr(5,2), 16);
-  // Calculate luminance
   const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
   return luminance > 0.5 ? '#000000' : '#FFFFFF';
 }
@@ -270,7 +593,6 @@ function closeModal() {
   if (modal) modal.remove();
 }
 
-// Render calendar - attach manual handlers (same approach as Admincalendar.js)
 async function renderCalendar(date) {
   const year = date.getFullYear();
   const month = date.getMonth();
@@ -318,10 +640,6 @@ async function renderCalendar(date) {
   }
 }
 
-// Copy the same helper functions used in Admincalendar.js: openManualEventOptions, closeManualOptions,
-// viewSupabaseEvent, openEditModal, saveEditedEvent, openDuplicateModal, confirmDuplicate, confirmDeleteEvent,
-// closeDeleteModal, closeEditModal, closeDuplicateModal
-
 function openManualEventOptions(dateStr, index, targetEl) {
   closeManualOptions();
   getAllEvents().then(all => {
@@ -333,7 +651,7 @@ function openManualEventOptions(dateStr, index, targetEl) {
     modal.innerHTML = `
       <div class="event-options-inner">
         <div class="eo-title">${escapeHtml(ev.title)}</div>
-        <div class="eo-info">${escapeHtml(ev.facility)} — ${formatTime(ev.startTime)} to ${formatTime(ev.endTime)}</div>
+        <div class="eo-info">${escapeHtml(ev.facility)} – ${formatTime(ev.startTime)} to ${formatTime(ev.endTime)}</div>
         <div class="eo-person">Reserved by: ${escapeHtml(ev.person)}</div>
         <div class="eo-actions">
           <button class="eo-btn eo-edit">Edit</button>
@@ -440,8 +758,6 @@ function openEditModal(dateStr, index) {
         <input type="time" id="editEndTime" value="${event.endTime}">
         <label>Reserved By:</label>
         <input type="text" id="editPerson" value="${event.person}">
-        <label>Duration (days):</label>
-        <input type="number" id="editDuration" min="1" value="1">
         <div class="modal-buttons">
           <button onclick="saveEditedEvent('${dateStr}', ${index})">Save Changes</button>
           <button onclick="closeEditModal()">Cancel</button>
@@ -454,7 +770,6 @@ function openEditModal(dateStr, index) {
   modal.id = 'eventModal';
   document.body.appendChild(modal);
   
-  // Set initial color of facility select
   const facilitySelect = document.getElementById('editFacility');
   updateFacilityColor(facilitySelect);
 }
@@ -464,40 +779,11 @@ function closeEditModal() {
   if (modal) modal.remove();
 }
 
-function saveEditedEvent(dateStr, index) {
-  const title = document.getElementById('editTitle').value.trim();
-  const facility = document.getElementById('editFacility').value.trim();
-  const startTime = document.getElementById('editStartTime').value.trim();
-  const endTime = document.getElementById('editEndTime').value.trim();
-  const person = document.getElementById('editPerson').value.trim();
-  const duration = parseInt(document.getElementById('editDuration').value);
-
-  if (!title || !facility || !startTime || !endTime || !person || isNaN(duration) || duration < 1) {
-    alert('Please fill in all fields correctly.');
-    return;
-  }
-
-  const updatedEvent = {
-    id: events[dateStr][index].id,
-    title,
-    facility,
-    startTime,
-    endTime,
-    person,
-    source: 'manual'
-  };
-
-  events[dateStr][index] = updatedEvent;
-  localStorage.setItem('calendarEvents', JSON.stringify(events));
-  closeEditModal();
-  renderCalendar(currentDate);
-}
-
 function openDuplicateModal(dateStr, index) {
   closeManualOptions();
   getAllEvents().then(all => {
     const ev = all[dateStr] && all[dateStr][index];
-    if (!ev || ev.source !== 'manual') { alert('Cannot duplicate this event'); return; }
+    if (!ev || ev.source !== 'manual') { showCustomAlert('Error', 'Cannot duplicate this event', 'error'); return; }
     const modalHtml = `
       <div class="modal-overlay" id="duplicateModal">
         <div class="modal-content">
@@ -518,7 +804,6 @@ function openDuplicateModal(dateStr, index) {
     modal.innerHTML = modalHtml;
     modal.id = 'duplicateWrapper';
     document.body.appendChild(modal);
-    // focus date input for convenience
     setTimeout(() => document.getElementById('dup_startDate')?.focus(), 50);
   });
 }
@@ -526,39 +811,6 @@ function openDuplicateModal(dateStr, index) {
 function closeDuplicateModal() {
   const modal = document.getElementById('duplicateWrapper');
   if (modal) modal.remove();
-}
-
-function confirmDuplicate(origDateStr, index) {
-  const targetDate = document.getElementById('dup_startDate')?.value;
-  const duration = parseInt(document.getElementById('dup_duration')?.value || '0', 10);
-  if (!targetDate || isNaN(duration) || duration < 1) { alert('Provide a valid target date and duration'); return; }
-
-  getAllEvents().then(all => {
-    const ev = all[origDateStr] && all[origDateStr][index];
-    if (!ev || ev.source !== 'manual') { alert('Cannot duplicate this event'); return; }
-
-    const startDate = new Date(targetDate);
-    for (let i = 0; i < duration; i++) {
-      const current = new Date(startDate);
-      current.setDate(current.getDate() + i);
-      const newDateStr = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')}`;
-      const duplicatedEvent = {
-        id: `m-${Date.now()}-${Math.floor(Math.random()*1000)}`,
-        title: ev.title,
-        facility: ev.facility,
-        startTime: ev.startTime,
-        endTime: ev.endTime,
-        person: ev.person,
-        source: 'manual'
-      };
-      if (!events[newDateStr]) events[newDateStr] = [];
-      events[newDateStr].push(duplicatedEvent);
-    }
-
-    localStorage.setItem('calendarEvents', JSON.stringify(events));
-    closeDuplicateModal();
-    renderCalendar(currentDate);
-  });
 }
 
 function confirmDeleteEvent(dateStr, index) {
@@ -585,14 +837,6 @@ function closeDeleteModal() {
   if (modal) modal.remove();
 }
 
-function deleteEvent(dateStr, index) {
-  events[dateStr].splice(index, 1);
-  if (events[dateStr].length === 0) delete events[dateStr];
-  localStorage.setItem('calendarEvents', JSON.stringify(events));
-  closeDeleteModal();
-  renderCalendar(currentDate);
-}
-
 prevMonthBtn.addEventListener('click', () => {
   currentDate.setMonth(currentDate.getMonth() - 1);
   renderCalendar(currentDate);
@@ -604,6 +848,4 @@ nextMonthBtn.addEventListener('click', () => {
 });
 
 renderCalendar(currentDate);
-
-// Refresh calendar every 30 seconds to show new approved reservations
 setInterval(() => renderCalendar(currentDate), 30000);
