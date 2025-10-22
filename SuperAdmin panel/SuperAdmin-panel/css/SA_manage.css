@@ -865,7 +865,9 @@ input, select {
 .password-group {
   position: relative;
   width: 100%;
-  margin-bottom: 10px;
+  margin-bottom: 15px; /* Increased spacing to prevent overlap */
+  min-height: 42px; /* Ensure consistent height */
+  transition: margin-top 0.3s ease; /* Smooth transition when position changes */
 }
 
 .password-group input {
@@ -899,6 +901,33 @@ input, select {
 .password-toggle:hover {
   color: #333;
 }
+
+/* Password validation feedback styling */
+#passwordFeedback, #passwordMatchFeedback {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1; /* Lower z-index to not cover other elements */
+  margin-top: 2px;
+  font-size: 11px;
+  line-height: 1.3;
+  padding: 8px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  max-height: 80px; /* Reduced height to prevent covering other fields */
+  overflow-y: auto;
+  background: white; /* Ensure background is solid */
+}
+
+/* Password validation feedback is now properly positioned */
+
+/* Ensure proper spacing between password fields */
+.password-group + .password-group {
+  margin-top: 20px; /* Extra space between password fields */
+}
+
+/* Password groups now have proper spacing to prevent overlap */
 
 .modal-actions {
   margin-top: 25px;

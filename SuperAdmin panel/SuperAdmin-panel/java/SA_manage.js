@@ -1,5 +1,149 @@
 let editingUserId = null;
 
+// Strong password validation function
+function isStrongPassword(password) {
+  // At least 8 characters
+  if (password.length < 8) return false;
+  
+  // At least one uppercase letter
+  if (!/[A-Z]/.test(password)) return false;
+  
+  // At least one lowercase letter
+  if (!/[a-z]/.test(password)) return false;
+  
+  // At least one number
+  if (!/[0-9]/.test(password)) return false;
+  
+  // At least one special character
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) return false;
+  
+  return true;
+}
+
+// Real-time password strength validation
+function validatePasswordStrength() {
+  const passwordField = document.getElementById('userPassword');
+  const password = passwordField.value;
+  
+  // Remove existing feedback
+  const existingFeedback = document.getElementById('passwordFeedback');
+  if (existingFeedback) {
+    existingFeedback.remove();
+    
+    // Reset re-enter password field position when feedback is removed
+    const rePasswordField = document.getElementById('userRePassword');
+    const rePasswordGroup = rePasswordField ? rePasswordField.closest('.password-group') : null;
+    if (rePasswordGroup) {
+      rePasswordGroup.style.marginTop = '0px';
+    }
+  }
+  
+  if (password.length === 0) return;
+  
+  const feedback = document.createElement('div');
+  feedback.id = 'passwordFeedback';
+  feedback.style.cssText = 'position: absolute; top: 100%; left: 0; right: 0; z-index: 1; margin-top: 2px; font-size: 11px; line-height: 1.3; padding: 8px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-height: 80px; overflow-y: auto; background: white;';
+  
+  const requirements = [];
+  
+  if (password.length < 8) {
+    requirements.push('❌ At least 8 characters');
+  } else {
+    requirements.push('✅ At least 8 characters');
+  }
+  
+  if (!/[A-Z]/.test(password)) {
+    requirements.push('❌ Uppercase letter');
+  } else {
+    requirements.push('✅ Uppercase letter');
+  }
+  
+  if (!/[a-z]/.test(password)) {
+    requirements.push('❌ Lowercase letter');
+  } else {
+    requirements.push('✅ Lowercase letter');
+  }
+  
+  if (!/[0-9]/.test(password)) {
+    requirements.push('❌ Number');
+  } else {
+    requirements.push('✅ Number');
+  }
+  
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+    requirements.push('❌ Special character');
+  } else {
+    requirements.push('✅ Special character');
+  }
+  
+  feedback.innerHTML = requirements.join('<br>');
+  
+  if (isStrongPassword(password)) {
+    feedback.style.backgroundColor = '#d4edda';
+    feedback.style.color = '#155724';
+    feedback.style.border = '1px solid #c3e6cb';
+  } else {
+    feedback.style.backgroundColor = '#f8d7da';
+    feedback.style.color = '#721c24';
+    feedback.style.border = '1px solid #f5c6cb';
+  }
+  
+  // Append to password group container, not the input field
+  const passwordGroup = passwordField.closest('.password-group');
+  if (passwordGroup) {
+    passwordGroup.appendChild(feedback);
+    
+    // Push down the re-enter password field to avoid overlap
+    const rePasswordField = document.getElementById('userRePassword');
+    const rePasswordGroup = rePasswordField ? rePasswordField.closest('.password-group') : null;
+    if (rePasswordGroup) {
+      rePasswordGroup.style.marginTop = '100px'; // Push it down when feedback appears
+    }
+  } else {
+    passwordField.parentNode.appendChild(feedback);
+  }
+}
+
+// Real-time password match validation
+function validatePasswordMatch() {
+  const passwordField = document.getElementById('userPassword');
+  const rePasswordField = document.getElementById('userRePassword');
+  const password = passwordField.value;
+  const rePassword = rePasswordField.value;
+  
+  // Remove existing feedback
+  const existingFeedback = document.getElementById('passwordMatchFeedback');
+  if (existingFeedback) {
+    existingFeedback.remove();
+  }
+  
+  if (rePassword.length === 0) return;
+  
+  const feedback = document.createElement('div');
+  feedback.id = 'passwordMatchFeedback';
+  feedback.style.cssText = 'position: absolute; top: 100%; left: 0; right: 0; z-index: 1; margin-top: 2px; font-size: 11px; line-height: 1.3; padding: 8px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-height: 80px; overflow-y: auto; background: white;';
+  
+  if (password === rePassword) {
+    feedback.innerHTML = '✅ Passwords match';
+    feedback.style.backgroundColor = '#d4edda';
+    feedback.style.color = '#155724';
+    feedback.style.border = '1px solid #c3e6cb';
+  } else {
+    feedback.innerHTML = '❌ Passwords do not match';
+    feedback.style.backgroundColor = '#f8d7da';
+    feedback.style.color = '#721c24';
+    feedback.style.border = '1px solid #f5c6cb';
+  }
+  
+  // Append to password group container, not the input field
+  const rePasswordGroup = rePasswordField.closest('.password-group');
+  if (rePasswordGroup) {
+    rePasswordGroup.appendChild(feedback);
+  } else {
+    rePasswordField.parentNode.appendChild(feedback);
+  }
+}
+
 // Helper to get Supabase client
 function getSupabase() {
   if (typeof window !== 'undefined') {
@@ -230,6 +374,22 @@ function openAddModal() {
   
   // Initialize password icons with different defaults
   setTimeout(initializePasswordIcons, 100);
+  
+  // Re-initialize password validation
+  setTimeout(() => {
+    const passwordField = document.getElementById('userPassword');
+    const rePasswordField = document.getElementById('userRePassword');
+    
+    if (passwordField) {
+      passwordField.removeEventListener('input', validatePasswordStrength);
+      passwordField.addEventListener('input', validatePasswordStrength);
+    }
+    
+    if (rePasswordField) {
+      rePasswordField.removeEventListener('input', validatePasswordMatch);
+      rePasswordField.addEventListener('input', validatePasswordMatch);
+    }
+  }, 200);
 }
 
 function closeModal() {
@@ -304,6 +464,22 @@ function openEditModal(user) {
   
   // Initialize password icons with different defaults
   setTimeout(initializePasswordIcons, 200);
+  
+  // Re-initialize password validation
+  setTimeout(() => {
+    const passwordField = document.getElementById('userPassword');
+    const rePasswordField = document.getElementById('userRePassword');
+    
+    if (passwordField) {
+      passwordField.removeEventListener('input', validatePasswordStrength);
+      passwordField.addEventListener('input', validatePasswordStrength);
+    }
+    
+    if (rePasswordField) {
+      rePasswordField.removeEventListener('input', validatePasswordMatch);
+      rePasswordField.addEventListener('input', validatePasswordMatch);
+    }
+  }, 300);
 }
 
 let currentEditingUserId = null;
@@ -400,6 +576,18 @@ document.getElementById('userForm').addEventListener('submit', async (e) => {
   if (password || rePassword) {
     if (password !== rePassword) {
       showCustomAlert('Validation Error', 'Passwords do not match', 'warning');
+      return;
+    }
+    
+    // Strong password validation
+    if (password && !isStrongPassword(password)) {
+      showCustomAlert('Password Requirements', 
+        'Password must be at least 8 characters long and contain:\n' +
+        '• At least one uppercase letter\n' +
+        '• At least one lowercase letter\n' +
+        '• At least one number\n' +
+        '• At least one special character (!@#$%^&*)', 
+        'warning');
       return;
     }
   }
@@ -590,7 +778,13 @@ document.getElementById('userForm').addEventListener('submit', async (e) => {
 // Password toggle function for inline icons
 function togglePassword(inputId) {
   const input = document.getElementById(inputId);
-  const toggle = input.nextElementSibling;
+  const passwordGroup = input.closest('.password-group');
+  const toggle = passwordGroup ? passwordGroup.querySelector('.password-toggle') : input.nextElementSibling;
+  
+  if (!toggle) {
+    console.error('Toggle element not found for input:', inputId);
+    return;
+  }
   
   if (input.type === 'password') {
     input.type = 'text';
@@ -605,19 +799,36 @@ function togglePassword(inputId) {
 function initializePasswordIcons() {
   console.log('Initializing password icons...');
   
-  const passwordToggle = document.querySelector('#userPassword + .password-toggle');
-  const rePasswordToggle = document.querySelector('#userRePassword + .password-toggle');
-  
-  console.log('Password toggle found:', !!passwordToggle);
-  console.log('Re-password toggle found:', !!rePasswordToggle);
-  
-  if (passwordToggle) {
-    passwordToggle.textContent = '👁️'; // Default eye icon
-    console.log('Set password icon to 👁️');
-  }
-  if (rePasswordToggle) {
-    rePasswordToggle.textContent = '👁️'; // Default eye icon
-    console.log('Set re-password icon to 👁️');
+  try {
+    // Find password toggles within password groups
+    const passwordInput = document.querySelector('#userPassword');
+    const rePasswordInput = document.querySelector('#userRePassword');
+    
+    if (passwordInput) {
+      const passwordGroup = passwordInput.closest('.password-group');
+      const passwordToggle = passwordGroup ? passwordGroup.querySelector('.password-toggle') : null;
+      
+      if (passwordToggle) {
+        passwordToggle.textContent = '👁️'; // Default eye icon
+        console.log('Set password icon to 👁️');
+      } else {
+        console.warn('Password toggle not found for userPassword');
+      }
+    }
+    
+    if (rePasswordInput) {
+      const rePasswordGroup = rePasswordInput.closest('.password-group');
+      const rePasswordToggle = rePasswordGroup ? rePasswordGroup.querySelector('.password-toggle') : null;
+      
+      if (rePasswordToggle) {
+        rePasswordToggle.textContent = '👁️'; // Default eye icon
+        console.log('Set re-password icon to 👁️');
+      } else {
+        console.warn('Re-password toggle not found for userRePassword');
+      }
+    }
+  } catch (error) {
+    console.error('Error initializing password icons:', error);
   }
 }
 
@@ -631,6 +842,18 @@ setInterval(() => {
 document.addEventListener('DOMContentLoaded', () => {
   console.log('SA_manage.js loaded, initializing...');
   loadUsers();
+  
+  // Add password validation feedback
+  const passwordField = document.getElementById('userPassword');
+  const rePasswordField = document.getElementById('userRePassword');
+  
+  if (passwordField) {
+    passwordField.addEventListener('input', validatePasswordStrength);
+  }
+  
+  if (rePasswordField) {
+    rePasswordField.addEventListener('input', validatePasswordMatch);
+  }
 });
 
 // Display paginated users

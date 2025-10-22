@@ -8,6 +8,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
 
+    // Validate input lengths
+    if (email.length !== 4) {
+      showCustomAlert('Validation Error', 'User ID must be exactly 4 characters long.', 'warning');
+      return;
+    }
+
+    if (password.length !== 8) {
+      showCustomAlert('Validation Error', 'Password must be exactly 8 characters long.', 'warning');
+      return;
+    }
+
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -26,7 +37,7 @@ document.addEventListener('DOMContentLoaded', function() {
       window.location.href = 'User panel/Userdashboard.html';
     } catch (error) {
       console.error('Login error:', error);
-      alert('Login failed: ' + error.message);
+      showCustomAlert('Login Failed', 'Login failed: ' + error.message, 'error');
     }
   });
 });
