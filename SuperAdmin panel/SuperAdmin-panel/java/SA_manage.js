@@ -22,125 +22,92 @@ function isStrongPassword(password) {
 
 // Real-time password strength validation
 function validatePasswordStrength() {
-  const passwordField = document.getElementById('userPassword');
-  const password = passwordField.value;
+  const password = document.getElementById('userPassword').value;
+  const validationArea = document.getElementById('passwordValidationArea');
   
-  // Remove existing feedback
-  const existingFeedback = document.getElementById('passwordFeedback');
-  if (existingFeedback) {
-    existingFeedback.remove();
-    
-    // Reset re-enter password field position when feedback is removed
-    const rePasswordField = document.getElementById('userRePassword');
-    const rePasswordGroup = rePasswordField ? rePasswordField.closest('.password-group') : null;
-    if (rePasswordGroup) {
-      rePasswordGroup.style.marginTop = '0px';
-    }
+  // Show validation area when user starts typing
+  if (password.length > 0) {
+    validationArea.classList.add('show');
+  } else {
+    validationArea.classList.remove('show');
+    return;
   }
   
-  if (password.length === 0) return;
+  // Update individual validation icons
+  const lengthIcon = document.getElementById('lengthIcon');
+  const uppercaseIcon = document.getElementById('uppercaseIcon');
+  const lowercaseIcon = document.getElementById('lowercaseIcon');
+  const numberIcon = document.getElementById('numberIcon');
+  const specialIcon = document.getElementById('specialIcon');
   
-  const feedback = document.createElement('div');
-  feedback.id = 'passwordFeedback';
-  feedback.style.cssText = 'position: absolute; top: 100%; left: 0; right: 0; z-index: 1; margin-top: 2px; font-size: 11px; line-height: 1.3; padding: 8px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-height: 80px; overflow-y: auto; background: white;';
-  
-  const requirements = [];
-  
-  if (password.length < 8) {
-    requirements.push('❌ At least 8 characters');
+  // Length check
+  if (password.length >= 8) {
+    lengthIcon.textContent = '✅';
+    lengthIcon.style.color = '#28a745';
   } else {
-    requirements.push('✅ At least 8 characters');
+    lengthIcon.textContent = '❌';
+    lengthIcon.style.color = '#dc3545';
   }
   
-  if (!/[A-Z]/.test(password)) {
-    requirements.push('❌ Uppercase letter');
+  // Uppercase check
+  if (/[A-Z]/.test(password)) {
+    uppercaseIcon.textContent = '✅';
+    uppercaseIcon.style.color = '#28a745';
   } else {
-    requirements.push('✅ Uppercase letter');
+    uppercaseIcon.textContent = '❌';
+    uppercaseIcon.style.color = '#dc3545';
   }
   
-  if (!/[a-z]/.test(password)) {
-    requirements.push('❌ Lowercase letter');
+  // Lowercase check
+  if (/[a-z]/.test(password)) {
+    lowercaseIcon.textContent = '✅';
+    lowercaseIcon.style.color = '#28a745';
   } else {
-    requirements.push('✅ Lowercase letter');
+    lowercaseIcon.textContent = '❌';
+    lowercaseIcon.style.color = '#dc3545';
   }
   
-  if (!/[0-9]/.test(password)) {
-    requirements.push('❌ Number');
+  // Number check
+  if (/\d/.test(password)) {
+    numberIcon.textContent = '✅';
+    numberIcon.style.color = '#28a745';
   } else {
-    requirements.push('✅ Number');
+    numberIcon.textContent = '❌';
+    numberIcon.style.color = '#dc3545';
   }
   
-  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
-    requirements.push('❌ Special character');
+  // Special character check
+  if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+    specialIcon.textContent = '✅';
+    specialIcon.style.color = '#28a745';
   } else {
-    requirements.push('✅ Special character');
-  }
-  
-  feedback.innerHTML = requirements.join('<br>');
-  
-  if (isStrongPassword(password)) {
-    feedback.style.backgroundColor = '#d4edda';
-    feedback.style.color = '#155724';
-    feedback.style.border = '1px solid #c3e6cb';
-  } else {
-    feedback.style.backgroundColor = '#f8d7da';
-    feedback.style.color = '#721c24';
-    feedback.style.border = '1px solid #f5c6cb';
-  }
-  
-  // Append to password group container, not the input field
-  const passwordGroup = passwordField.closest('.password-group');
-  if (passwordGroup) {
-    passwordGroup.appendChild(feedback);
-    
-    // Push down the re-enter password field to avoid overlap
-    const rePasswordField = document.getElementById('userRePassword');
-    const rePasswordGroup = rePasswordField ? rePasswordField.closest('.password-group') : null;
-    if (rePasswordGroup) {
-      rePasswordGroup.style.marginTop = '100px'; // Push it down when feedback appears
-    }
-  } else {
-    passwordField.parentNode.appendChild(feedback);
+    specialIcon.textContent = '❌';
+    specialIcon.style.color = '#dc3545';
   }
 }
 
-// Real-time password match validation
+// Real-time password match validation - now using fixed validation area
 function validatePasswordMatch() {
-  const passwordField = document.getElementById('userPassword');
-  const rePasswordField = document.getElementById('userRePassword');
-  const password = passwordField.value;
-  const rePassword = rePasswordField.value;
+  const password = document.getElementById('userPassword').value;
+  const rePassword = document.getElementById('userRePassword').value;
+  const matchArea = document.getElementById('passwordMatchArea');
+  const matchIcon = document.getElementById('matchIcon');
   
-  // Remove existing feedback
-  const existingFeedback = document.getElementById('passwordMatchFeedback');
-  if (existingFeedback) {
-    existingFeedback.remove();
-  }
-  
-  if (rePassword.length === 0) return;
-  
-  const feedback = document.createElement('div');
-  feedback.id = 'passwordMatchFeedback';
-  feedback.style.cssText = 'position: absolute; top: 100%; left: 0; right: 0; z-index: 1; margin-top: 2px; font-size: 11px; line-height: 1.3; padding: 8px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-height: 80px; overflow-y: auto; background: white;';
-  
-  if (password === rePassword) {
-    feedback.innerHTML = '✅ Passwords match';
-    feedback.style.backgroundColor = '#d4edda';
-    feedback.style.color = '#155724';
-    feedback.style.border = '1px solid #c3e6cb';
+  // Show match area when user starts typing in re-enter password
+  if (rePassword.length > 0) {
+    matchArea.classList.add('show');
+    
+    if (password === rePassword) {
+      matchIcon.textContent = '✅';
+      matchIcon.style.color = '#28a745';
+      matchArea.querySelector('.validation-item span:last-child').textContent = 'Passwords match';
+    } else {
+      matchIcon.textContent = '❌';
+      matchIcon.style.color = '#dc3545';
+      matchArea.querySelector('.validation-item span:last-child').textContent = 'Passwords do not match';
+    }
   } else {
-    feedback.innerHTML = '❌ Passwords do not match';
-    feedback.style.backgroundColor = '#f8d7da';
-    feedback.style.color = '#721c24';
-    feedback.style.border = '1px solid #f5c6cb';
-  }
-  
-  // Append to password group container, not the input field
-  const rePasswordGroup = rePasswordField.closest('.password-group');
-  if (rePasswordGroup) {
-    rePasswordGroup.appendChild(feedback);
-  } else {
-    rePasswordField.parentNode.appendChild(feedback);
+    matchArea.classList.remove('show');
   }
 }
 
