@@ -349,19 +349,75 @@ async function retryLocalUploads(sb) {
 			}
 		}
 
-		// pdfKey case
+		// pdfKey case - regenerate PDF with new format
 		if (r.pdfKey && r.pdfName) {
 			try {
-				const file = await getFileFromIDB(r.pdfKey);
-				if (!file) continue;
-				console.log('Retrying PDF upload for', r.pdfName);
-				const upPdf = await uploadToSupabase(new File([file], r.pdfName, { type: file.type || 'application/pdf' }), `Reserved Facilities/${r.pdfName}`);
-				if (upPdf) {
-					await deleteFileFromIDB(r.pdfKey);
-					delete r.pdfKey;
-					delete r.pdfName;
-					changed = true;
-					console.log('PDF re-uploaded for', r.codeId || r.request_id || '(unknown)');
+				// Check if this is an old format PDF that needs regeneration
+				const needsRegeneration = r.pdfFormatVersion !== 'v2' || !r.pdfFormatVersion;
+				
+				if (needsRegeneration) {
+					console.log('Regenerating PDF with new format for', r.pdfName);
+					
+					// Temporarily populate form with reservation data for PDF generation
+					const tempForm = document.createElement('div');
+					tempForm.className = 'form-container';
+					tempForm.innerHTML = generateFormHTML(r);
+					tempForm.style.position = 'absolute';
+					tempForm.style.left = '-9999px';
+					tempForm.style.top = '-9999px';
+					document.body.appendChild(tempForm);
+					
+					// Generate new PDF with improved format
+					const pdfOptions = {
+						margin: [0, 10, 10, 10],
+						filename: r.pdfName,
+						image: { type: 'jpeg', quality: 0.95 },
+						html2canvas: { 
+							scale: 1.5,
+							useCORS: true,
+							letterRendering: true,
+							allowTaint: false,
+							backgroundColor: '#ffffff'
+						},
+						jsPDF: { 
+							unit: 'mm', 
+							format: 'a4', 
+							orientation: 'portrait',
+							compress: true
+						},
+						pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+					};
+					
+					const pdfBlob = await html2pdf().set(pdfOptions).from(tempForm).output('blob');
+					document.body.removeChild(tempForm);
+					
+					// Upload new PDF
+					const upPdf = await uploadToSupabase(
+						new Blob([pdfBlob], { type: 'application/pdf' }), 
+						`Reserved Facilities/${r.pdfName}`
+					);
+					
+					if (upPdf) {
+						await deleteFileFromIDB(r.pdfKey);
+						delete r.pdfKey;
+						delete r.pdfName;
+						r.pdfFormatVersion = 'v2'; // Mark as new format
+						changed = true;
+						console.log('PDF regenerated with new format for', r.codeId || r.request_id || '(unknown)');
+					}
+				} else {
+					// Just retry upload of existing PDF
+					const file = await getFileFromIDB(r.pdfKey);
+					if (!file) continue;
+					console.log('Retrying PDF upload for', r.pdfName);
+					const upPdf = await uploadToSupabase(new File([file], r.pdfName, { type: file.type || 'application/pdf' }), `Reserved Facilities/${r.pdfName}`);
+					if (upPdf) {
+						await deleteFileFromIDB(r.pdfKey);
+						delete r.pdfKey;
+						delete r.pdfName;
+						changed = true;
+						console.log('PDF re-uploaded for', r.codeId || r.request_id || '(unknown)');
+					}
 				}
 			} catch (err) {
 				console.warn('Retry PDF upload failed for', r.pdfName, err);
@@ -376,6 +432,58 @@ async function retryLocalUploads(sb) {
 		localStorage.setItem('reservations', JSON.stringify(reservations));
 		console.log('Local reservations updated after retry attempts.');
 	}
+}
+
+// Helper function to generate form HTML for PDF regeneration
+function generateFormHTML(reservation) {
+	return `
+		<h2>Venue Reservation Form</h2>
+		<div class="row">
+			<div>
+				<label>Date/Time Received: <input type="datetime-local" value="${reservation.dateReceived || ''}" readonly></label><br>
+				<label>Date Filed: <input type="date" value="${reservation.dateFiled || ''}" readonly></label>
+			</div>
+			<label>Date of Event: <input type="date" value="${reservation.dateOfEvent || ''}" readonly></label>
+			<div class="time-inputs">
+				<label>Time Start: <input type="time" value="${reservation.timeStart || ''}" readonly></label>
+				<label>Time End: <input type="time" value="${reservation.timeEnd || ''}" readonly></label>
+			</div>
+		</div>
+		<div class="row">
+			<label>Unit/Office/College: <input type="text" value="${reservation.unitOffice || ''}" readonly></label>          
+			<label>Attendees: <input type="text" value="${reservation.attendees || ''}" readonly></label>
+		</div>
+		<div class="row">
+			<label>Title of Event/Activity: <input type="text" value="${reservation.eventTitle || ''}" readonly></label>
+			<label>Additional Requirements: <input type="text" value="${reservation.additionalReq || ''}" readonly></label>
+		</div>
+		<div id="facilityDetails" class="facility-details">
+			<div class="facility-title">Selected Facility:</div>
+			<div class="facility-info">${reservation.facility || ''}</div>
+		</div>
+		<div id="setupDetails" class="facility-details">
+			<div class="facility-title">Selected Setup:</div>
+			<div class="facility-info">${reservation.setupDetails || ''}</div>
+		</div>
+		<div class="signatures">
+			<div class="signContainer">
+				Requested by:<br>
+				<div class="signature-drop-area">
+					<p>Drop your signature here or click to browse</p>
+					<small>Accepted formats: JPG, PNG</small>
+				</div>
+				<div class="Personel">(Name and E-signature)<br>End-User/Requester/Event organizer</div>
+			</div>
+			<div class="signContainer">
+				Recommending Approval:<br><br><br>
+				<div class="Personel">Head, Maintenance & Engineering Division</div>
+			</div>
+			<div class="signContainer">
+				Approved by:<br><br><br>
+				<div class="Personel">VP for Administration</div>
+			</div>
+		</div>
+	`;
 }
 
 // Load and display user notifications
@@ -1215,8 +1323,9 @@ document.addEventListener('DOMContentLoaded', async function() {
 				// Add PDF-specific class to body
 				document.body.classList.add('pdf-generation');
 				
+				
 				const pdfOptions = {
-					margin: [10, 10, 10, 10], // [top, right, bottom, left] in mm
+					margin: [0, 10, 10, 10], // [top, right, bottom, left] in mm
 					filename: `VRF-${codeId}.pdf`,
 					image: { type: 'jpeg', quality: 0.95 },
 					html2canvas: { 
@@ -1259,9 +1368,13 @@ document.addEventListener('DOMContentLoaded', async function() {
 						await storeFileInIDB(pdfKey, pdfFile);
 						reservation.pdfKey = pdfKey;
 						reservation.pdfName = `VRF-${codeId}.pdf`;
+						reservation.pdfFormatVersion = 'v2'; // Mark as new format
 					} catch (pdfErr) {
 						console.error('Failed to store PDF in IndexedDB:', pdfErr);
 					}
+				} else {
+					// Mark as new format when successfully uploaded
+					reservation.pdfFormatVersion = 'v2';
 				}
 
 				// Save everything locally as backup

@@ -1210,7 +1210,7 @@ label {
     width: 100%;
     max-width: none;
     margin: 0;
-    padding: 15mm;
+    padding: 0mm 15mm 15mm 15mm;
     box-shadow: none;
     border: none;
     background: white;
@@ -1219,7 +1219,7 @@ label {
   .form-container h2 {
     text-align: center;
     font-size: 16px;
-    margin-bottom: 15px;
+    margin: 0 0 15px 0;
     color: #000;
   }
 
@@ -1230,6 +1230,8 @@ label {
     padding: 8px 0;
     margin-bottom: 5px;
     page-break-inside: avoid;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .row:last-child {
@@ -1289,6 +1291,21 @@ label {
     margin: 5px 0;
     font-size: 11px;
     min-height: 30px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .facility-title {
+    font-weight: bold;
+    font-size: 11px;
+    margin-bottom: 4px;
+    color: #000;
+  }
+  
+  .facility-info {
+    font-size: 11px;
+    color: #000;
+    word-wrap: break-word;
   }
 
   .signatures {
@@ -1306,6 +1323,9 @@ label {
     text-align: center;
     font-size: 11px;
     min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
   }
 
   .signature-drop-area {
@@ -1318,8 +1338,9 @@ label {
 
   .Personel {
     font-size: 10px;
-    margin-top: 5px;
+    margin-top: auto;
     font-weight: bold;
+    align-self: flex-end;
   }
 
   /* Hide interactive elements */
@@ -1359,7 +1380,7 @@ body.pdf-generation .form-container {
   width: 100%;
   max-width: none;
   margin: 0;
-  padding: 15mm;
+  padding: 0mm 15mm 15mm 15mm;
   box-shadow: none;
   border: none;
   background: white;
@@ -1368,7 +1389,7 @@ body.pdf-generation .form-container {
 body.pdf-generation .form-container h2 {
   text-align: center;
   font-size: 16px;
-  margin-bottom: 15px;
+  margin: 0 0 15px 0;
   color: #000;
 }
 
@@ -1379,6 +1400,8 @@ body.pdf-generation .row {
   padding: 8px 0;
   margin-bottom: 5px;
   page-break-inside: avoid;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 body.pdf-generation .row:last-child {
@@ -1438,6 +1461,21 @@ body.pdf-generation #setupDetails {
   margin: 5px 0;
   font-size: 11px;
   min-height: 30px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+body.pdf-generation .facility-title {
+  font-weight: bold;
+  font-size: 11px;
+  margin-bottom: 4px;
+  color: #000;
+}
+
+body.pdf-generation .facility-info {
+  font-size: 11px;
+  color: #000;
+  word-wrap: break-word;
 }
 
 body.pdf-generation .signatures {
@@ -1455,6 +1493,9 @@ body.pdf-generation .signContainer {
   text-align: center;
   font-size: 11px;
   min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 body.pdf-generation .signature-drop-area {
@@ -1467,8 +1508,9 @@ body.pdf-generation .signature-drop-area {
 
 body.pdf-generation .Personel {
   font-size: 10px;
-  margin-top: 5px;
+  margin-top: auto;
   font-weight: bold;
+  align-self: flex-end;
 }
 
 body.pdf-generation .dropdown-btn,
