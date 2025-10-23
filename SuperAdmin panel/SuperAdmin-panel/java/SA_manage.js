@@ -165,29 +165,19 @@ async function loadUsers() {
   currentLoggedInUserId = getCurrentUser();
   
   try {
-    const sb = getSupabase();
-    if (!sb) {
-      tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Database connection error</td></tr>';
-      showCustomAlert('Connection Error', 'Database connection error', 'error');
-      return;
-    }
 
-    console.log('Fetching users from Supabase...');
+    console.log('Fetching users from server (decrypted)...');
     console.log('Current logged in user ID:', currentLoggedInUserId);
     
-    const { data: users, error } = await sb
-      .from('users')
-      .select('id, first_name, last_name, email, role_name')
-      .order('id', { ascending: true });
-
-    if (error) {
-      console.error('Error fetching users:', error);
-      tbody.innerHTML = `<tr><td colspan="5">Error loading users: ${error.message}</td></tr>`;
-      showCustomAlert('Load Error', `Error loading users: ${error.message}`, 'error');
-      return;
+    // Fetch users from our server endpoint which provides decrypted data
+    const response = await fetch('http://localhost:3000/users');
+    
+    if (!response.ok) {
+      throw new Error(`Server error: ${response.status}`);
     }
-
-    console.log('Fetched users:', users);
+    
+    const users = await response.json();
+    console.log('Fetched decrypted users from server:', users);
 
     if (!users || users.length === 0) {
       tbody.innerHTML = '<tr><td colspan="5">No users found</td></tr>';
@@ -710,29 +700,31 @@ document.getElementById('userForm').addEventListener('submit', async (e) => {
       
       console.log('Adding new user with data:', newUserData);
       
-      const { data, error } = await sb
-        .from('users')
-        .insert(newUserData)
-        .select();
-
-      if (error) {
-        console.error('Error adding user:', error);
-        console.error('Error details:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
+      // Send data to backend for AES encryption and Supabase insertion
+      try {
+        const response = await fetch('http://localhost:3000/add-user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newUserData)
         });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+          closeModal();
+          await loadUsers();
+          hideLoading();
+          showCustomAlert('Success', result.message || 'User added successfully', 'success');
+        } else {
+          hideLoading();
+          console.error('Backend add-user error:', result);
+          showCustomAlert('Add Error', result.error || result.message || 'Error adding user', 'error');
+        }
+      } catch (err) {
         hideLoading();
-        showCustomAlert('Add Error', `Error adding user: ${error.message || 'Unknown error'}`, 'error');
-        return;
+        console.error('Fetch error:', err);
+        showCustomAlert('Connection Error', 'Failed to connect to backend', 'error');
       }
-
-      console.log('User added successfully:', data);
-      closeModal();
-      await loadUsers();
-      hideLoading();
-      showCustomAlert('Success', 'User added successfully', 'success');
     }
 
   } catch (error) {
