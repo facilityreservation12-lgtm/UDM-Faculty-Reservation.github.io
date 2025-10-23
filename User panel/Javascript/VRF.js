@@ -1187,18 +1187,65 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 				// Generate and upload PDF (use .form-container explicitly)
 				const element = document.querySelector('.form-container');
+				
+				// Temporarily hide elements that shouldn't be in PDF
+				const elementsToHide = [
+					'.sidebar',
+					'.notification-panel',
+					'.notification-overlay',
+					'.modal',
+					'.custom-modal',
+					'.loading-modal',
+					'.submit-btn',
+					'.dropdown-btn',
+					'.dropdown-content'
+				];
+				
+				const hiddenElements = [];
+				elementsToHide.forEach(selector => {
+					const elements = document.querySelectorAll(selector);
+					elements.forEach(el => {
+						if (el.style.display !== 'none') {
+							el.style.display = 'none';
+							hiddenElements.push(el);
+						}
+					});
+				});
+				
+				// Add PDF-specific class to body
+				document.body.classList.add('pdf-generation');
+				
 				const pdfOptions = {
-					margin: 1,
+					margin: [10, 10, 10, 10], // [top, right, bottom, left] in mm
 					filename: `VRF-${codeId}.pdf`,
-					image: { type: 'jpeg', quality: 0.98 },
-					html2canvas: { scale: 2 },
-					jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+					image: { type: 'jpeg', quality: 0.95 },
+					html2canvas: { 
+						scale: 1.5,
+						useCORS: true,
+						letterRendering: true,
+						allowTaint: false,
+						backgroundColor: '#ffffff'
+					},
+					jsPDF: { 
+						unit: 'mm', 
+						format: 'a4', 
+						orientation: 'portrait',
+						compress: true
+					},
+					pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
 				};
  
  				const pdfBlob = await html2pdf().set(pdfOptions).from(element).output('blob');
+				
+				// Restore hidden elements
+				hiddenElements.forEach(el => {
+					el.style.display = '';
+				});
+				document.body.classList.remove('pdf-generation');
+				
 				const pdfPath = `Reserved Facilities/VRF-${codeId}.pdf`;
- 				
- 				console.log('Attempting PDF upload:', pdfPath);
+				
+				console.log('Attempting PDF upload:', pdfPath);
  				const pdfUploadResult = await uploadToSupabase(
  					new Blob([pdfBlob], { type: 'application/pdf' }), 
  					pdfPath
