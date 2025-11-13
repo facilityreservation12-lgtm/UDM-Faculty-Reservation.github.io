@@ -13,6 +13,7 @@
   <script src="java/alert.js"></script>
   <script src="java/SA_logout.js"></script>
   <script src="java/SA_Slip.js"></script>
+  <script src="java/sendEmail.js"></script>
 </head>
 <body>
 <div class="sidebar">
@@ -142,6 +143,7 @@
 
     <div class="print-button">
       <button onclick="window.print()">🖨 Print Slip</button>
+      <button id="sendEmailBtn">📧 Send Email</button>
     </div>
   </div>
   </div>
@@ -171,6 +173,14 @@
     const input = document.getElementById(inputId);
     input.style.display = checkbox.checked ? "inline-block" : "none";
   }
+</script>
+<script>// Check if download parameter is present
+document.addEventListener('DOMContentLoaded', function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('download') === 'true') {
+    window.print(); // Or trigger your download function
+  }
+});
 </script>
   <script>
 document.querySelectorAll('.menu a').forEach(link => {
