@@ -1,5 +1,7 @@
 // Admin Dashboard User Loading Functions
 
+const API_BASE_URL = (typeof window !== 'undefined' && window.API_BASE_URL) ? window.API_BASE_URL : 'http://localhost:3000';
+
 // Helper to get Supabase client from supabaseConfig.js
 function getSupabaseClient() {
   // First, check if supabaseConfig.js has initialized the client
@@ -33,9 +35,45 @@ function getSupabaseClient() {
   return null;
 }
 
+async function fetchDecryptedUser(userId) {
+  if (!API_BASE_URL) {
+    return { data: null, error: 'API base URL not configured' };
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/users?id=${encodeURIComponent(userId)}`, {
+      credentials: 'include'
+    });
+
+    if (!response.ok) {
+      const errorPayload = await response.json().catch(() => ({}));
+      const message = errorPayload?.error?.message || errorPayload?.error || response.statusText;
+      return { data: null, error: message || 'Failed to fetch decrypted user' };
+    }
+
+    const decryptedUser = await response.json();
+    if (!decryptedUser) {
+      return { data: null, error: 'User not found' };
+    }
+
+    return { data: decryptedUser, error: null };
+  } catch (error) {
+    console.error('Error fetching decrypted user:', error);
+    return { data: null, error };
+  }
+}
+
 // Fetch user data using Supabase client from supabaseConfig.js
 async function fetchUserData(userId) {
   try {
+    // First attempt: fetch decrypted data via Express API
+    const decryptedResult = await fetchDecryptedUser(userId);
+    if (decryptedResult.data && !decryptedResult.error) {
+      return decryptedResult;
+    }
+    
+    console.warn('Decrypted fetch failed or returned empty, falling back to direct Supabase query.');
+
     const supabaseClient = getSupabaseClient();
     
     if (!supabaseClient) {

@@ -97,9 +97,12 @@ document.addEventListener('DOMContentLoaded', function() {
     loginForm.addEventListener('submit', async function(e) {
       e.preventDefault();
       
-      const userId = loginForm.querySelector('input[type="text"]').value;
+      const userId = loginForm.querySelector('input[type="text"]').value.trim();
       const password = loginForm.querySelector('input[type="password"]').value;
-      const role = document.getElementById('role').value;
+      const roleInput = document.getElementById('role');
+      const selectedRole = roleInput ? roleInput.value.trim() : '';
+      const role = selectedRole.toLowerCase();
+      const roleFilter = role.replace(/\s+/g, '_');
 
       console.log(`[LOGIN ATTEMPT] UserID: ${userId}, Role: ${role}`);
 
@@ -116,7 +119,7 @@ document.addEventListener('DOMContentLoaded', function() {
           .from('users')
           .select('*')
           .eq('id', userId)
-          .eq('role', role);
+          .ilike('role', roleFilter);
 
         // If the above fails, try with minimal columns
         if (error && error.code === '42703') {
@@ -125,7 +128,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .from('users')
             .select('id, role, password')
             .eq('id', userId)
-            .eq('role', role);
+            .ilike('role', roleFilter);
           data = result.data;
           error = result.error;
         }
@@ -170,19 +173,20 @@ document.addEventListener('DOMContentLoaded', function() {
         // Get user's display name from available columns
         const userName = user.name || user.full_name || user.first_name || user.username || `User ${user.id}`;
         
-        console.log(`[LOGIN SUCCESS] UserID: ${userId}, Role: ${user.role}, Name: ${userName}`);
+        console.log(`[LOGIN SUCCESS] UserID: ${userId}, Role: ${user.role_name || user.role}, Name: ${userName}`);
         console.log('Available user data:', user);
         
         // Store user information in localStorage
         localStorage.setItem('user_id', user.id);
         localStorage.setItem('user_name', userName);
-        localStorage.setItem('user_role', user.role);
+        localStorage.setItem('user_role', user.role_name || user.role);
         
         showCustomAlert('Welcome!', `Login successful! Welcome, ${userName}`, 'success');
         
         // Redirect after showing success message
         setTimeout(() => {
-          switch (user.role) {
+          const normalizedRole = user.role || user.role_name.toLowerCase().replace(' ', '_');
+          switch (normalizedRole) {
             case 'super_admin':
               window.location.href = '../SuperAdmin panel/SuperAdmin-panel/SuperAdminDashboard.html';
               break;
@@ -219,8 +223,3 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 });
-        hideLoading();
-        
-        console.error('Login error:', error);
-        showCustomAlert('Error', 'An unexpected error occurred. Please try again.', 'error');
-
