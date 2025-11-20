@@ -170,7 +170,7 @@ async function loadUsers() {
     console.log('Current logged in user ID:', currentLoggedInUserId);
     
     // Fetch users from our server endpoint which provides decrypted data
-    const response = await fetch('http://localhost:3000/users');
+    const response = await fetch('http://localhost:5500/users');
     
     if (!response.ok) {
       throw new Error(`Server error: ${response.status}`);
@@ -700,38 +700,8 @@ document.getElementById('userForm').addEventListener('submit', async (e) => {
       
       console.log('Adding new user with data:', newUserData);
       
-      // Send data to backend for AES encryption and Supabase insertion
-      try {
-        const response = await fetch('http://localhost:3000/add-user', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(newUserData)
-        });
-        
-        const result = await response.json();
-        
-        if (response.ok) {
-          closeModal();
-          await loadUsers();
-          hideLoading();
-          showCustomAlert('Success', result.message || 'User added successfully', 'success');
-        } else {
-          hideLoading();
-          console.error('Backend add-user error:', result);
-          showCustomAlert('Add Error', result.error || result.message || 'Error adding user', 'error');
-        }
-      } catch (err) {
-        hideLoading();
-        console.error('Fetch error:', err);
-        showCustomAlert('Connection Error', 'Failed to connect to backend', 'error');
-      }
-    }
-
-  } catch (error) {
-    hideLoading();
-    console.error('Error in form submission:', error);
-    showCustomAlert('Error', 'Error saving user', 'error');
   }
+};
 });
 
 // Password toggle function for inline icons
