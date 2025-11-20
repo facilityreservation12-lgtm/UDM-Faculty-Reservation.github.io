@@ -170,7 +170,7 @@ async function loadUsers() {
     console.log('Current logged in user ID:', currentLoggedInUserId);
     
     // Fetch users from our server endpoint which provides decrypted data
-    const response = await fetch('http://localhost:5500/users');
+    const response = await fetch('http://localhost:3000/users');
     
     if (!response.ok) {
       throw new Error(`Server error: ${response.status}`);
@@ -688,24 +688,47 @@ document.getElementById('userForm').addEventListener('submit', async (e) => {
       const newUserId = await generateSequentialUserId(role);
       
       // Add new user
-      const newUserData = {
-        id: newUserId,
-        first_name: firstName,
-        last_name: lastName,
-        email: email,
-        role_name: role,
-        role: roleValue,
-        password: password
-      };
-      
-      console.log('Adding new user with data:', newUserData);
-      
-  }
+const newUserData = {
+  id: newUserId,
+  first_name: firstName,
+  last_name: lastName,
+  email: email,
+  role_name: role,
+  role: roleValue,
+  password: password
 };
+
+try {
+  const { error } = await sb.from('users').insert(newUserData);
+
+  if (error) {
+    console.error('Error adding new user:', error);
+    hideLoading();
+    showCustomAlert('Add Error', 'Error adding new user', 'error');
+    return;
+  }
+
+  closeModal();
+  await loadUsers();
+  hideLoading();
+  showCustomAlert('Success', 'User added successfully', 'success');
+
+} catch (err) {
+  hideLoading();
+  console.error('Error inserting new user:', err);
+  showCustomAlert('Error', 'Error adding new user', 'error');
+}
+    }
+
+  } catch (error) {
+    hideLoading();
+    console.error('Error in form submission:', error);
+    showCustomAlert('Error', 'An error occurred while processing the request', 'error');
+  }
 });
 
 // Password toggle function for inline icons
-function togglePassword(inputId) {
+window.togglePassword = function(inputId) {
   const input = document.getElementById(inputId);
   const passwordGroup = input.closest('.password-group');
   const toggle = passwordGroup ? passwordGroup.querySelector('.password-toggle') : input.nextElementSibling;
@@ -717,12 +740,13 @@ function togglePassword(inputId) {
   
   if (input.type === 'password') {
     input.type = 'text';
-    toggle.textContent = '🙈'; // Show hide icon when password is visible
+    toggle.textContent = '🙈';
   } else {
     input.type = 'password';
-    toggle.textContent = '👁️'; // Show eye icon when password is hidden
+    toggle.textContent = '👁️';
   }
-}
+};
+
 
 // Initialize password field icons when modal opens
 function initializePasswordIcons() {
@@ -988,4 +1012,4 @@ window.onclick = function(event) {
   if (event.target === modal) {
     closeModal();
   }
-}
+};
