@@ -245,4 +245,48 @@ async function loadSlipFromReservation() {
   console.log('Slip loaded successfully');
 }
 
-document.addEventListener('DOMContentLoaded', loadSlipFromReservation);
+// Send Email handler
+function setupSendEmailButton() {
+  const btn = document.getElementById('sendEmailBtn');
+  if (!btn) return;
+
+  btn.addEventListener('click', async function() {
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+
+    const to = 'facility.reservation12@gmail.com';
+    const subject = 'Venue Slip / VRF';
+    const slipEl = document.querySelector('.container');
+    const bodyHtml = slipEl ? slipEl.outerHTML : document.documentElement.outerHTML;
+
+    try {
+      const emailData = {
+        to: to,           // Use the variable you defined above
+        subject: subject, // Use the variable you defined above
+        html: bodyHtml    // Use the variable you defined above
+      };
+
+      const res = await fetch('http://localhost:8000/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(emailData)
+      });
+
+      const data = await res.json().catch(() => ({}));
+      
+      if (res.ok && data.success) {
+        alert('Email sent successfully');
+      } else {
+        alert('Send failed: ' + (data.error || res.status));
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Network error: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '📧 Send Email';
+    }
+  });
+}

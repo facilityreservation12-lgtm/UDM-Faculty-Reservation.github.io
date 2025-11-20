@@ -569,7 +569,7 @@ body {
 ================================== */
 @media (min-width: 901px) and (max-width: 1200px) {
   .sidebar {
-    width: 20%;
+    width: 15%;
     padding: 25px;
   }
 
@@ -592,7 +592,7 @@ body {
 ================================== */
 @media (min-width: 1201px) and (max-width: 1440px) {
   .sidebar {
-    width: 20%;
+    width: 15%;
     padding: 25px;
   }
 
