@@ -73,6 +73,68 @@ async function fetchApprovedReservations(facility) {
   }
 }
 
+async function fetchManualEvents(facility) {
+  try {
+    const supabaseClient = getSupabaseClient();
+    if (!supabaseClient) {
+      console.warn('Supabase client not available for manual events');
+      return [];
+    }
+
+    const { data: manualEvents, error } = await supabaseClient
+      .from('manual_events')
+      .select('id, facility, date, time_start, time_end, title_of_the_event, reserved_by')
+      .eq('facility', facility)
+      .order('date', { ascending: true })
+      .order('time_start', { ascending: true });
+
+    if (error) {
+      console.error('❌ Error fetching manual events:', error);
+      return [];
+    }
+
+    const userIds = [
+      ...new Set(
+        (manualEvents || [])
+          .map(ev => ev.reserved_by)
+          .filter(Boolean)
+      )
+    ];
+
+    let userMap = {};
+    if (userIds.length) {
+      const { data: users, error: userError } = await supabaseClient
+        .from('users')
+        .select('id, first_name, last_name')
+        .in('id', userIds);
+
+      if (userError) {
+        console.warn('⚠️ Unable to fetch users for manual events:', userError);
+      } else if (users) {
+        userMap = users.reduce((acc, user) => {
+          const name = `${user.first_name || ''} ${user.last_name || ''}`.trim();
+          acc[user.id] = name || user.id;
+          return acc;
+        }, {});
+      }
+    }
+
+    return (manualEvents || []).map(ev => ({
+      code: `MAN-${String(ev.id).padStart(4, '0')}`,
+      userName: userMap[ev.reserved_by] || ev.reserved_by || 'Manual Entry',
+      date: ev.date,
+      time_start: ev.time_start,
+      time_end: ev.time_end,
+      title: ev.title_of_the_event || 'Manual reservation',
+      source: 'internal',
+      isManual: true
+    }));
+  } catch (err) {
+    console.error('❌ Error in fetchManualEvents:', err);
+    return [];
+  }
+}
+
 // Function to format time from 24-hour to 12-hour format
 function formatTime(time) {
   if (!time) return 'N/A';
@@ -108,8 +170,31 @@ async function populateFacilityTable() {
   const facility = facilities[currentFacilityIndex];
   console.log(`🔄 Populating table for facility: ${facility}`);
 
-  const reservations = await fetchApprovedReservations(facility);
+  const [reservations, manualEvents] = await Promise.all([
+    fetchApprovedReservations(facility),
+    fetchManualEvents(facility)
+  ]);
   console.log(`✅ Reservations fetched:`, reservations);
+  console.log(`✅ Manual events fetched:`, manualEvents);
+
+  const normalizedReservations = reservations.map(reservation => ({
+    code: reservation.request_id || 'N/A',
+    userName: `${reservation.users?.first_name || ''} ${reservation.users?.last_name || ''}`.trim() || 'Unknown User',
+    date: reservation.date,
+    time_start: reservation.time_start,
+    time_end: reservation.time_end,
+    title: reservation.title_of_the_event || 'No details provided',
+    source: 'external',
+    isManual: false,
+    requestId: reservation.request_id || null
+  }));
+
+  const rows = [...normalizedReservations, ...manualEvents];
+  rows.sort((a, b) => {
+    const aDate = new Date(`${a.date || ''}T${a.time_start || '00:00'}`);
+    const bDate = new Date(`${b.date || ''}T${b.time_start || '00:00'}`);
+    return aDate - bDate;
+  });
 
   const table = document.getElementById('facility-table');
   if (!table) {
@@ -128,15 +213,16 @@ async function populateFacilityTable() {
     <th>Date</th>
     <th>Time</th>
     <th>Details</th>
+    <th>Type</th>
     <th>Action</th>
   `;
   headerRow.style.backgroundColor = '#f5f5f5';
 
-  if (reservations.length === 0) {
+  if (rows.length === 0) {
     console.warn(`⚠️ No approved reservations found for facility: ${facility}`);
     const noDataRow = table.insertRow();
     noDataRow.innerHTML = `
-      <td colspan="6" style="text-align: center; padding: 20px; color: #666; font-style: italic;">
+      <td colspan="7" style="text-align: center; padding: 20px; color: #666; font-style: italic;">
         No approved reservations for ${facility}
       </td>
     `;
@@ -144,31 +230,22 @@ async function populateFacilityTable() {
   }
 
   // Populate with real reservation data
-  reservations.forEach((reservation, index) => {
-    console.log(`🔍 Processing reservation ${index + 1}:`, reservation);
+  rows.forEach((entry, index) => {
+    console.log(`🔍 Processing reservation ${index + 1}:`, entry);
 
     const row = table.insertRow();
-
-    // Combine first_name and last_name
-    const userName = `${reservation.users?.first_name || ''} ${reservation.users?.last_name || ''}`.trim();
-    if (!userName) {
-      console.warn(`⚠️ User name missing for reservation ID: ${reservation.request_id}`);
-    }
-
-    // Format time range
-    const startTime = formatTime(reservation.time_start);
-    const endTime = formatTime(reservation.time_end);
+    const startTime = formatTime(entry.time_start);
+    const endTime = formatTime(entry.time_end);
     const timeRange = `${startTime} - ${endTime}`;
-
-    // Format date
-    const formattedDate = formatDate(reservation.date);
+    const formattedDate = formatDate(entry.date);
+    const typeLabel = entry.isManual ? 'External (Manual)' : 'Internal (FRF)';
 
     // Create cells safely
     const codeCell = row.insertCell();
-    codeCell.textContent = reservation.request_id || 'N/A';
+    codeCell.textContent = entry.code || 'N/A';
 
     const userCell = row.insertCell();
-    userCell.textContent = userName || 'Unknown User';
+    userCell.textContent = entry.userName || 'Unknown User';
 
     const dateCell = row.insertCell();
     dateCell.textContent = formattedDate;
@@ -177,29 +254,40 @@ async function populateFacilityTable() {
     timeCell.textContent = timeRange;
 
     const detailsCell = row.insertCell();
-    detailsCell.textContent = reservation.title_of_the_event || 'No details provided';
+    detailsCell.textContent = entry.title || 'No details provided';
+
+    const typeCell = row.insertCell();
+    const badge = document.createElement('span');
+    badge.className = `type-badge ${entry.isManual ? 'badge-external' : 'badge-internal'}`;
+    badge.textContent = typeLabel;
+    typeCell.appendChild(badge);
 
     const actionCell = row.insertCell();
-    const btn = document.createElement('button');
-    btn.className = 'view-btn';
-    btn.type = 'button';
-    btn.textContent = 'View Requirements';
-    btn.addEventListener('click', async () => {
-      const reqId = reservation.request_id || '';
-      const url = `SA_Relevantdocuments.html?request_id=${encodeURIComponent(reqId)}`;
-      console.log('View Requirements clicked. request_id=', reqId, 'url=', url);
+    if (!entry.isManual && entry.requestId) {
+      const btn = document.createElement('button');
+      btn.className = 'view-btn';
+      btn.type = 'button';
+      btn.textContent = 'View Requirements';
+      btn.addEventListener('click', async () => {
+        const reqId = entry.requestId || '';
+        const url = `SA_Relevantdocuments.html?request_id=${encodeURIComponent(reqId)}`;
+        console.log('View Requirements clicked. request_id=', reqId, 'url=', url);
 
-      try {
-        window.location.href = url;
-      } catch (navErr) {
-        console.error('❌ Navigation attempt failed for', url, navErr);
-        alert('Failed to navigate to Relevant Documents. See console for details.');
-      }
-    });
-    actionCell.appendChild(btn);
+        try {
+          window.location.href = url;
+        } catch (navErr) {
+          console.error('❌ Navigation attempt failed for', url, navErr);
+          alert('Failed to navigate to Relevant Documents. See console for details.');
+        }
+      });
+      actionCell.appendChild(btn);
+    } else {
+      actionCell.textContent = 'Manual entry';
+      actionCell.classList.add('manual-note');
+    }
   });
 
-  console.log(`📊 Successfully populated ${facility} table with ${reservations.length} approved reservations.`);
+  console.log(`📊 Successfully populated ${facility} table with ${rows.length} items.`);
 }
 
 // Function to update the venue title

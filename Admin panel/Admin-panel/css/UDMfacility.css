@@ -388,6 +388,32 @@ body {
   font-size: 0.9rem;
   color: #666;
 }
+
+.type-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.badge-internal {
+  background: #e6f4ea;
+  color: #1e4d2b;
+  border: 1px solid #bcdcc7;
+}
+
+.badge-external {
+  background: #e8f0fe;
+  color: #1b4fd8;
+  border: 1px solid #c5d4fb;
+}
+
+.manual-note {
+  color: #6c757d;
+  font-style: italic;
+}
 #loadingModal {
   opacity: 0;
   visibility: hidden;

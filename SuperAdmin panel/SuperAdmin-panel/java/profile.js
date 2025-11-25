@@ -105,16 +105,51 @@ async function fetchUserData(userId) {
   }
 }
 
+function sanitizeStoredValue(value) {
+  if (!value) return '';
+  const trimmed = (value || '').trim();
+  if (!trimmed || trimmed.toLowerCase() === 'undefined' || trimmed.toLowerCase() === 'null') {
+    return '';
+  }
+  return trimmed;
+}
+
+function applyUserDisplay(name, role) {
+  if (name && document.getElementById('UserName')) {
+    document.getElementById('UserName').textContent = name;
+  }
+  if (role && document.getElementById('UserRole')) {
+    document.getElementById('UserRole').textContent = role;
+  }
+}
+
+function getDefaultDisplay(userId) {
+  const onSuperAdmin = typeof window !== 'undefined' && window.location.pathname.includes('SuperAdmin');
+  const defaultName = userId ? `User ${userId}` : onSuperAdmin ? 'Super Admin User' : 'Admin User';
+  const defaultRole = onSuperAdmin ? 'Super Admin' : 'Administrator';
+  return { defaultName, defaultRole };
+}
+
 async function loadUserDetails() {
   try {
-    // Get user ID from localStorage (users table based login)
-    let userId = localStorage.getItem('id') || 
-                 localStorage.getItem('user_id') || 
-                 localStorage.getItem('userId') || 
-                 localStorage.getItem('currentUserId');
+    const sanitizeId = (value) => {
+      const v = sanitizeStoredValue(value);
+      return v || null;
+    };
+    let userId = sanitizeId(localStorage.getItem('id')) || 
+                 sanitizeId(localStorage.getItem('user_id')) || 
+                 sanitizeId(localStorage.getItem('userId')) || 
+                 sanitizeId(localStorage.getItem('currentUserId'));
     
     console.log('Admin Dashboard - Retrieved userId from localStorage:', userId);
     console.log('localStorage contents:', {...localStorage});
+
+    const storedUserName = sanitizeStoredValue(localStorage.getItem('user_name') || localStorage.getItem('userName'));
+    const storedUserRole = sanitizeStoredValue(localStorage.getItem('user_role') || localStorage.getItem('userRole'));
+    const defaults = getDefaultDisplay(userId);
+    if (storedUserName || storedUserRole) {
+      applyUserDisplay(storedUserName || 'Loading...', storedUserRole || '');
+    }
 
     if (!userId) {
       console.log('No user ID found in localStorage. User not logged in.');
@@ -133,69 +168,43 @@ async function loadUserDetails() {
       console.warn('Error fetching user or user not found. Using fallback display.');
       
       // Fallback: Use stored user info from localStorage or show generic admin info
-      const storedUserName = localStorage.getItem('user_name') || localStorage.getItem('userName');
-      const storedUserRole = localStorage.getItem('user_role') || localStorage.getItem('userRole');
-      
-      if (storedUserName && storedUserRole) {
+      if (storedUserName || storedUserRole) {
         console.log('Using stored user data from localStorage');
-        if (document.getElementById('UserName')) {
-          document.getElementById('UserName').textContent = storedUserName;
-        }
-        if (document.getElementById('UserRole')) {
-          document.getElementById('UserRole').textContent = storedUserRole;
-        }
+        applyUserDisplay(storedUserName, storedUserRole);
       } else {
-        // Generic fallback based on user ID
         console.log('Using generic fallback user display');
-        const displayName = userId === 'A001' ? 'Admin User' : `User ${userId}`;
-        const displayRole = userId === 'A001' ? 'Administrator' : 'User';
-        
-        if (document.getElementById('UserName')) {
-          document.getElementById('UserName').textContent = displayName;
-        }
-        if (document.getElementById('UserRole')) {
-          document.getElementById('UserRole').textContent = displayRole;
-        }
-        
-        // Store for future use
-        localStorage.setItem('user_name', displayName);
-        localStorage.setItem('user_role', displayRole);
+        applyUserDisplay(defaults.defaultName, defaults.defaultRole);
+        localStorage.setItem('user_name', defaults.defaultName);
+        localStorage.setItem('user_role', defaults.defaultRole);
       }
       return;
     }
 
     // Successfully fetched data from database
-    const userName = `${data.first_name || ''} ${data.last_name || ''}`.trim();
-    const userRole = data.role_name || '';
+    const fetchedName = `${data.first_name || ''} ${data.last_name || ''}`.trim();
+    const fetchedRole = data.role_name || '';
+    const resolvedName = sanitizeStoredValue(fetchedName) || storedUserName || defaults.defaultName;
+    const resolvedRole = sanitizeStoredValue(fetchedRole) || storedUserRole || defaults.defaultRole;
     
-    console.log('Admin Dashboard - User data fetched successfully:', { userName, userRole });
+    console.log('Admin Dashboard - User data fetched successfully:', { fetchedName, fetchedRole, resolvedName, resolvedRole });
     
-    // Update the DOM elements
-    if (document.getElementById('UserName')) {
-      document.getElementById('UserName').textContent = userName || 'Unknown User';
-    }
-    if (document.getElementById('UserRole')) {
-      document.getElementById('UserRole').textContent = userRole || 'No Role';
-    }
+    applyUserDisplay(resolvedName, resolvedRole);
     
-    // Store in localStorage for fallback use
-    localStorage.setItem('user_name', userName);
-    localStorage.setItem('user_role', userRole);
-    localStorage.setItem('id', data.id);
+    if (resolvedName) localStorage.setItem('user_name', resolvedName);
+    if (resolvedRole) localStorage.setItem('user_role', resolvedRole);
+    if (data.id) localStorage.setItem('id', data.id);
     
   } catch (err) {
     console.error('Admin Dashboard - loadUserDetails error:', err);
     console.log('Using fallback due to error');
     
     // Error fallback - similar to network issue fallback
-    const storedUserName = localStorage.getItem('user_name') || localStorage.getItem('userName') || 'Admin User';
-    const storedUserRole = localStorage.getItem('user_role') || localStorage.getItem('userRole') || 'Administrator';
-    
-    if (document.getElementById('UserName')) {
-      document.getElementById('UserName').textContent = storedUserName;
-    }
-    if (document.getElementById('UserRole')) {
-      document.getElementById('UserRole').textContent = storedUserRole;
+    const fallbackName = sanitizeStoredValue(localStorage.getItem('user_name') || localStorage.getItem('userName'));
+    const fallbackRole = sanitizeStoredValue(localStorage.getItem('user_role') || localStorage.getItem('userRole'));
+    if (fallbackName || fallbackRole) {
+      applyUserDisplay(fallbackName || 'Admin User', fallbackRole || 'Administrator');
+    } else {
+      applyUserDisplay(defaults.defaultName, defaults.defaultRole);
     }
   }
 }

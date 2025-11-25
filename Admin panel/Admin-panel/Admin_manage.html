@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Manage Users</title>
+  <link rel="icon" type="image/png" href="img/udm.webp"/>
+  <link rel="stylesheet" href="css/Admin_manage.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="java/alert.js"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="../../supabaseConfig.js"></script>
+  <script src="java/profile.js"></script>
+  <script src="java/AD_logout.js"></script>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="side-container">
+      <div class="user-photo">
+        <img src="img/udmlogo.jpg" alt="User Photo" />
+        <div>
+          <strong id="UserName">Loading...</strong><br/>
+          <span id="UserRole">Loading...</span>
+        </div>
+      </div>
+      <div class="menu">
+        <a href="AdminDashboard.html">Dashboard</a>
+        <a href="AdminVRF.html">FRF</a>
+        <a href="Otheruser.html">Other User</a>
+        <a href="Admincalendar.html">Calendar</a>
+        <a href="Admin_manage.html" class="active">Manage</a>
+        <div class="reqs-sub-menu">
+          <a href="#" class="sidebar-link">Request ▾</a>
+          <div class="sub-menu">
+            <a href="AD_REQ_IncomingRequest.html">IncomingRequest</a>
+            <a href="AD_Pending.html">Pending</a>
+            <a href="AD_Appproved.html">Approved</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button onclick="signOutUser()" class="logout-btn">Log Out</button>
+  </div>
+
+  <div class="main">
+    <div class="main-container">
+      <div class="header-bar">
+        <button class="back-btn" onclick="history.back()">←</button>
+        <span>Manage Users</span>
+      </div>
+
+      <div class="table-controls">
+        <div class="entries-control">
+          <label for="entriesPerPage">Show:</label>
+          <select id="entriesPerPage" onchange="changeEntriesPerPage()">
+            <option value="10">10 entries</option>
+            <option value="20">20 entries</option>
+          </select>
+        </div>
+
+        <button class="add-admin-btn" onclick="openAddModal()">Add User</button>
+      </div>
+
+      <table class="user-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Role</th>
+            <th>Active Status</th>
+            <th>Actions</th>
+          </tr>
+          <tr class="filter-row">
+            <th>
+              <input type="text" id="filterID" placeholder="Filter by ID..." onkeyup="filterByID()" />
+            </th>
+            <th>
+              <input type="text" id="filterName" placeholder="Filter by name/email..." onkeyup="filterByName()" />
+            </th>
+            <th>
+              <select id="filterRole" onchange="filterByRole()">
+                <option value="">All Roles</option>
+                <option value="ADMIN">ADMIN</option>
+                <option value="FACULTY">FACULTY</option>
+                <option value="STUDENT ORGANIZATION">STUDENT ORGANIZATION</option>
+              </select>
+            </th>
+            <th>
+              <select id="filterStatus" onchange="filterByStatus()">
+                <option value="">All Status</option>
+                <option value="Online">Online</option>
+                <option value="Offline">Offline</option>
+              </select>
+            </th>
+            <th>
+              <button onclick="clearFilters()" class="clear-filters-btn">Clear All</button>
+            </th>
+          </tr>
+        </thead>
+        <tbody id="userTableBody">
+          <tr>
+            <td colspan="5" style="text-align: center;">Loading users...</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="pagination-container">
+        <div class="pagination-info">
+          <span id="paginationInfo">Showing 0 to 0 of 0 entries</span>
+        </div>
+        <div class="pagination-controls">
+          <button id="prevPage" onclick="previousPage()" disabled>← Previous</button>
+          <div id="pageNumbers" class="page-numbers"></div>
+          <button id="nextPage" onclick="nextPage()" disabled>Next →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="userModal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeModal()">×</span>
+      <h3 id="modalTitle">Add User</h3>
+      <form id="userForm">
+        <label for="userFirstName">First Name</label>
+        <input type="text" id="userFirstName" required>
+
+        <label for="userLastName">Last Name</label>
+        <input type="text" id="userLastName" required>
+
+        <label for="userEmail">Email</label>
+        <input type="email" id="userEmail" required>
+
+        <label for="userPassword">New Password</label>
+        <div class="password-group">
+          <input type="password" id="userPassword" placeholder="Enter password..." required>
+          <span class="password-toggle" onclick="togglePassword('userPassword')">👁️</span>
+        </div>
+
+        <div id="passwordValidationArea" class="validation-area">
+          <div class="validation-item">
+            <span class="validation-icon" id="lengthIcon">❌</span>
+            <span>At least 8 characters</span>
+          </div>
+          <div class="validation-item">
+            <span class="validation-icon" id="uppercaseIcon">❌</span>
+            <span>Uppercase letter</span>
+          </div>
+          <div class="validation-item">
+            <span class="validation-icon" id="lowercaseIcon">❌</span>
+            <span>Lowercase letter</span>
+          </div>
+          <div class="validation-item">
+            <span class="validation-icon" id="numberIcon">❌</span>
+            <span>Number</span>
+          </div>
+          <div class="validation-item">
+            <span class="validation-icon" id="specialIcon">❌</span>
+            <span>Special character</span>
+          </div>
+        </div>
+
+        <label for="userRePassword">Re-enter Password</label>
+        <div class="password-group">
+          <input type="password" id="userRePassword" placeholder="Re-enter password..." required>
+          <span class="password-toggle" onclick="togglePassword('userRePassword')">👁️</span>
+        </div>
+
+        <div id="passwordMatchArea" class="validation-area">
+          <div class="validation-item">
+            <span class="validation-icon" id="matchIcon">❌</span>
+            <span>Passwords do not match</span>
+          </div>
+        </div>
+
+        <label for="userRole">Role</label>
+        <select id="userRole" required>
+          <option value="">Select Role</option>
+          <option value="ADMIN">ADMIN</option>
+          <option value="FACULTY">FACULTY</option>
+          <option value="STUDENT ORGANIZATION">STUDENT ORGANIZATION</option>
+        </select>
+
+        <div class="modal-actions">
+          <button type="submit">Add</button>
+          <button type="button" class="cancel-btn" onclick="closeModal()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="customAlertModal" class="custom-modal">
+    <div class="custom-modal-content">
+      <button class="modal-close" onclick="closeCustomAlert()">&times;</button>
+      <div id="alertIcon" class="modal-icon"></div>
+      <h3 id="alertTitle" class="modal-title"></h3>
+      <p id="alertMessage" class="modal-message"></p>
+      <div id="alertButtons" class="modal-buttons">
+        <button class="modal-btn primary" onclick="closeCustomAlert()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="loadingModal" class="loading-modal">
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <div id="loadingText" class="loading-text">Loading...</div>
+      <div id="loadingSubtext" class="loading-subtext">Please wait</div>
+    </div>
+  </div>
+
+  <script src="java/Admin_manage.js"></script>
+  <script>
+  document.querySelectorAll('.menu a').forEach(link => {
+    if (
+      link.href &&
+      window.location.pathname.endsWith(link.getAttribute('href'))
+    ) {
+      link.classList.add('active');
+    }
+  });
+  </script>
+</body>
+</html>
+

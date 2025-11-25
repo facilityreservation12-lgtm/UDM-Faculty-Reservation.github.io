@@ -255,7 +255,7 @@ function setupSendEmailButton() {
     btn.textContent = 'Sending…';
 
     const to = 'facility.reservation12@gmail.com';
-    const subject = 'Venue Slip / VRF';
+    const subject = 'Venue Slip / FRF';
     const slipEl = document.querySelector('.container');
     const bodyHtml = slipEl ? slipEl.outerHTML : document.documentElement.outerHTML;
 

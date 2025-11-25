@@ -13,6 +13,7 @@
   <script src="java/AD_logout.js"></script>
   <script src="java/profile.js"></script>
   <script src="java/AD_Slip.js"></script>
+  <script src="java/sendEmail.js"></script>
 </head>
 <body>
 <div class="sidebar">
@@ -26,9 +27,10 @@
       </div>
       <div class="menu">
         <a href="AdminDashboard.html">Dashboard</a>
-        <a href="AdminVRF.html">VRF</a>
+        <a href="AdminVRF.html">FRF</a>
         <a href="Otheruser.html">Other User</a>
         <a href="Admincalendar.html">Calendar</a>
+        <a href="Admin_manage.html">Manage</a>
             <div class="reqs-sub-menu">
                 <a href="#" class="sidebar-link">Request ▾</a>
             <div class="sub-menu">
@@ -140,6 +142,7 @@
 
     <div class="print-button">
       <button onclick="window.print()">🖨 Print Slip</button>
+      <button id="sendEmailBtn">📧 Send Email</button>
     </div>
   </div>
   </div>

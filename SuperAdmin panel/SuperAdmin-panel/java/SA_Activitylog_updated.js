@@ -95,31 +95,6 @@ async function loadUserDetails() {
   }
 }
 
-// Sign out function
-function signOutUser() {
-  if (confirm('Are you sure you want to sign out?')) {
-    localStorage.removeItem('id');
-    localStorage.removeItem('user_id');
-    localStorage.removeItem('user_name');
-    localStorage.removeItem('user_role');
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('userName');
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('isLoggedIn');
-    
-    sessionStorage.clear();
-    
-    const supabase = getSupabase();
-    if (supabase && supabase.auth) {
-      supabase.auth.signOut().catch(error => {
-        console.warn('Error signing out from Supabase:', error);
-      });
-    }
-    
-    window.location.href = '../../User panel/LandingPage.html';
-  }
-}
-
 // Activity Log Functions
 let allLogs = [];
 let filteredLogs = [];
@@ -810,7 +785,6 @@ async function forceLogRoleChange(userId, oldRole, newRole) {
 
 // Make functions globally available
 window.toggleFilter = toggleFilter;
-window.signOutUser = signOutUser;
 window.insertTestLog = insertTestLog; // For debugging
 window.addTestLogs = addTestLogs; // Add multiple test logs
 window.logUserRoleChange = logUserRoleChange; // Manual role change logging
