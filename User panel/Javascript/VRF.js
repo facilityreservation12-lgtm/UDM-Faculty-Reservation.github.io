@@ -282,12 +282,24 @@ document.querySelectorAll('.menu a').forEach(link => {
   const panel = document.getElementById("notificationPanel");
   const overlay = document.getElementById("notificationOverlay");
 
-  function toggleNotificationPanel() {
+  function toggleNotificationPanel(event) {
+    if (event) event.preventDefault();
+    if (!panel || !overlay) return;
+    const willOpen = !panel.classList.contains("active");
     panel.classList.toggle("active");
     overlay.classList.toggle("active");
+    if (willOpen) {
+      markNotificationsAsSeen();
+    }
   }
 
-  overlay.addEventListener("click", toggleNotificationPanel);
+  if (overlay) {
+    overlay.addEventListener("click", () => {
+      if (panel?.classList.contains("active")) {
+        toggleNotificationPanel();
+      }
+    });
+  }
 
   function showConflictModal(messageHtml) {
   const modal = document.getElementById('conflictModal');
@@ -319,6 +331,8 @@ window.addEventListener('DOMContentLoaded', function() {
         console.log('No dateOfEvent parameter in URL');
     }
 });
+
+window.addEventListener('beforeunload', removeRealtimeChannel);
 
 // Retry uploads for reservations saved locally with base64 files
 async function retryLocalUploads(sb) {
@@ -486,6 +500,85 @@ function generateFormHTML(reservation) {
 	`;
 }
 
+const UNSEEN_NOTIF_COUNT_KEY = 'notification_unseen_count';
+let reservationRealtimeChannel = null;
+
+function getCurrentUserId() {
+  return localStorage.getItem('user_id') ||
+         localStorage.getItem('id') ||
+         localStorage.getItem('userId') ||
+         localStorage.getItem('currentUserId');
+}
+
+function getUnseenNotificationCount() {
+  const stored = parseInt(localStorage.getItem(UNSEEN_NOTIF_COUNT_KEY) || '0', 10);
+  return Number.isNaN(stored) ? 0 : stored;
+}
+
+function setUnseenNotificationCount(count) {
+  const safeCount = Math.max(0, count);
+  localStorage.setItem(UNSEEN_NOTIF_COUNT_KEY, String(safeCount));
+  updateNotificationIndicatorUI(safeCount);
+}
+
+function bumpUnseenNotificationCount(incrementBy = 1) {
+  setUnseenNotificationCount(getUnseenNotificationCount() + incrementBy);
+}
+
+function markNotificationsAsSeen() {
+  setUnseenNotificationCount(0);
+  localStorage.setItem('notificationsLastSeenAt', new Date().toISOString());
+}
+
+function updateNotificationIndicatorUI(count = getUnseenNotificationCount()) {
+  const dot = document.getElementById('notificationDot');
+  const badge = document.getElementById('notificationCount');
+  const isActive = count > 0;
+  if (dot) dot.classList.toggle('active', isActive);
+  if (badge) {
+    badge.textContent = count > 9 ? '9+' : String(count);
+    badge.classList.toggle('active', isActive);
+  }
+}
+
+function initNotificationIndicator() {
+  updateNotificationIndicatorUI();
+}
+
+function removeRealtimeChannel() {
+  const sb = getSupabase();
+  if (reservationRealtimeChannel && sb?.removeChannel) {
+    sb.removeChannel(reservationRealtimeChannel);
+    reservationRealtimeChannel = null;
+  }
+}
+
+async function initRealtimeNotifications() {
+  const sb = getSupabase();
+  const userId = getCurrentUserId();
+  if (!sb || !userId || !sb.channel) return;
+
+  removeRealtimeChannel();
+  reservationRealtimeChannel = sb
+    .channel(`reservation-status-${userId}`)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'reservations', filter: `id=eq.${userId}` }, handleRealtimeReservationPayload)
+    .subscribe();
+}
+
+async function handleRealtimeReservationPayload(payload) {
+  try {
+    const { eventType } = payload;
+    if (eventType === 'UPDATE' && payload.old?.status !== payload.new?.status) {
+      showStatusChangeNotification(payload.new, payload.old?.status, payload.new?.status);
+    }
+    if (['INSERT', 'UPDATE', 'DELETE'].includes(eventType)) {
+      await loadUserNotifications();
+    }
+  } catch (err) {
+    console.error('Realtime payload handler error:', err);
+  }
+}
+
 // Load and display user notifications
 async function loadUserNotifications() {
   try {
@@ -496,7 +589,7 @@ async function loadUserNotifications() {
     }
 
     // Get current user ID
-    const userId = localStorage.getItem('user_id') || localStorage.getItem('id');
+    const userId = getCurrentUserId();
 
     if (!userId) {
       console.log('No user logged in, skipping notifications');
@@ -517,7 +610,10 @@ async function loadUserNotifications() {
     }
 
     // Display notifications
-    displayNotifications(reservations || []);
+    const safeReservations = reservations || [];
+    displayNotifications(safeReservations);
+    localStorage.setItem('userReservations', JSON.stringify(safeReservations));
+    updateNotificationIndicatorUI();
 
   } catch (error) {
     console.error('Error loading notifications:', error);
@@ -622,7 +718,7 @@ async function checkForStatusUpdates() {
     if (!sb) return;
 
     // Get current user ID
-    const userId = localStorage.getItem('user_id') || localStorage.getItem('id');
+    const userId = getCurrentUserId();
 
     if (!userId) return;
 
@@ -679,6 +775,8 @@ function showStatusChangeNotification(reservation, oldStatus, newStatus) {
   
   const message = `Status Update: Your request for ${reservation.facility} on ${formattedDate} at ${startTime}-${endTime} has been changed from "${displayOldStatus}" to "${displayNewStatus}"`;
   
+  bumpUnseenNotificationCount();
+
   // Show browser notification if supported
   if ('Notification' in window && Notification.permission === 'granted') {
     new Notification('Reservation Status Update', {
@@ -705,14 +803,20 @@ function requestNotificationPermission() {
 
 document.addEventListener('DOMContentLoaded', async function() {
 	try {
+		initNotificationIndicator();
+
 		// Request notification permission
 		requestNotificationPermission();
 		
-		// Load initial notifications
-		setTimeout(loadUserNotifications, 1000); // Delay to ensure user is loaded
+		// Load initial notifications and hook realtime updates
+		setTimeout(async () => {
+			await loadUserNotifications();
+			await checkForStatusUpdates();
+			await initRealtimeNotifications();
+		}, 800);
 		
-		// Check for status updates every 30 seconds
-		setInterval(checkForStatusUpdates, 30000);
+		// Fallback polling in case realtime disconnects
+		setInterval(checkForStatusUpdates, 60000);
 
 		// Acquire safe client once per page load
 		const sb = getSupabase();

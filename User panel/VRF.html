@@ -40,7 +40,11 @@
       <div class="menu">
         <a href="Userdashboard.html">Dashboard</a>
         <a href="Usercalendar.html">Request Calendar</a>
-        <a onclick="toggleNotificationPanel()">Notification</a>
+        <a class="notification-link" onclick="toggleNotificationPanel(event)">
+          Notification
+          <span id="notificationDot" class="notification-indicator"></span>
+          <span id="notificationCount" class="notification-count">0</span>
+        </a>
       </div>
     </div>
     <button onclick="signOutUser()" class="logout-btn">Log Out</button>

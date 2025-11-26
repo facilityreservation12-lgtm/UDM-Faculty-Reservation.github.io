@@ -169,19 +169,40 @@ body {
   background-color: #f1f1f1;
 }
 
-.print-btn {
-  background-color: #184C2F;
-  color: #fff;
-  border: none;
-  padding: 8px 16px;
-  font-size: 14px;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: background-color 0.3s;
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.print-btn:hover {
-  background-color: #0f3a24;
+.status-pill--pending {
+  background: #fff3cd;
+  color: #a06800;
+  border: 1px solid #ffe69c;
+}
+
+.status-pill--approved {
+  background: #e6f4ea;
+  color: #1d6b3a;
+  border: 1px solid #b7e0c2;
+}
+
+.status-pill--rejected {
+  background: #fde7e7;
+  color: #a1272a;
+  border: 1px solid #f7c6c5;
+}
+
+.status-pill--default {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5f5;
 }
 
 .custom-modal {

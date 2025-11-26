@@ -22,6 +22,25 @@ function formatTime(timeString) {
   return `${displayHour}:${mm} ${ampm}`;
 }
 
+const STATUS_META = {
+  pending: { label: 'Awaiting Decision', pillClass: 'status-pill--pending' },
+  approved: { label: 'Approved', pillClass: 'status-pill--approved' },
+  rejected: { label: 'Disapproved', pillClass: 'status-pill--rejected' }
+};
+
+function getStatusMeta(status) {
+  const key = (status || 'pending').toLowerCase();
+  return STATUS_META[key] || { label: key || 'Pending', pillClass: 'status-pill--default' };
+}
+
+function showFeedback(title, message, type = 'info') {
+  if (typeof showCustomAlert === 'function') {
+    showCustomAlert(title, message, type);
+    return;
+  }
+  alert(`${title}\n${message}`);
+}
+
 // Get user display name (ensure FirstName LastName; never return raw id)
 async function getUserFullName(userId) {
   try {
@@ -33,23 +52,16 @@ async function getUserFullName(userId) {
     if (error || !data || data.length === 0) return 'Unknown User';
     const u = data[0];
 
-    // Prefer explicit first_name + last_name when available
     const fn = (u.first_name || '').toString().trim();
     const ln = (u.last_name || '').toString().trim();
-    if (fn || ln) {
-      return `${fn} ${ln}`.trim();
-    }
+    if (fn || ln) return `${fn} ${ln}`.trim();
 
-    // If only full_name or name present, try to split into first and last
     const candidate = (u.full_name || u.name || '').toString().trim();
     if (candidate) {
       const parts = candidate.split(/\s+/).filter(Boolean);
       if (parts.length === 1) return parts[0];
-      // return first and last parts
       return `${parts[0]} ${parts[parts.length - 1]}`;
     }
-
-    // Do not reveal id; show friendly placeholder instead
     return 'Unknown User';
   } catch (err) {
     console.error('getUserFullName error:', err);
@@ -84,7 +96,6 @@ async function loadPendingRequests() {
       return;
     }
 
-    // Batch fetch user names for all reservations to avoid per-row queries
     const userIds = Array.from(new Set(reservations.map(r => r.id).filter(Boolean)));
     let usersMap = {};
     if (userIds.length > 0) {
@@ -106,11 +117,12 @@ async function loadPendingRequests() {
 
     tableBody.innerHTML = '';
     for (const reservation of reservations) {
-      // prefer batch-fetched name, fallback to 'Unknown User'
       const userName = usersMap[reservation.id] || 'Unknown User';
       const timeStart = formatTime(reservation.time_start);
       const timeEnd = formatTime(reservation.time_end);
       const timeRange = (timeStart || timeEnd) ? `${timeStart} - ${timeEnd}` : '';
+      const statusMeta = getStatusMeta(reservation.status);
+
       const row = document.createElement('tr');
       row.innerHTML = `
         <td>${userName}</td>
@@ -118,7 +130,12 @@ async function loadPendingRequests() {
         <td>${formatDate(reservation.date)}</td>
         <td>${timeRange}</td>
         <td>${reservation.title_of_the_event || 'No title provided'}</td>
-        <td><button class="status-btn" data-request-id="${reservation.request_id}">Accept / Reject</button></td>
+        <td>
+          <div class="status-cell">
+            <span class="status-pill ${statusMeta.pillClass}">${statusMeta.label}</span>
+            <button class="status-btn" data-request-id="${reservation.request_id}">Accept/Reject</button>
+          </div>
+        </td>
       `;
       tableBody.appendChild(row);
     }
@@ -127,25 +144,34 @@ async function loadPendingRequests() {
   }
 }
 
-// --- New: delegated handlers for dynamic .status-btn and modal actions ---
-
 let currentRequestId = null;
 
+async function updateReservationStatus(requestId, nextStatus) {
+  const { error } = await supabase
+    .from('reservations')
+    .update({ status: nextStatus })
+    .eq('request_id', requestId);
+  if (error) {
+    console.error(`Status update error (${nextStatus}):`, error);
+    throw error;
+  }
+  const message = nextStatus === 'approved'
+    ? 'Request approved and removed from the pending list.'
+    : 'Request rejected and removed from the pending list.';
+  showFeedback('Status Updated', message, nextStatus === 'approved' ? 'success' : 'warning');
+}
+
 document.addEventListener('DOMContentLoaded', function() {
-  // attach delegated click handler to tbody for dynamic buttons
   const tableBody = document.getElementById('pendingTableBody');
   if (tableBody) {
     tableBody.addEventListener('click', function (e) {
       const btn = e.target.closest('.status-btn');
       if (!btn) return;
       currentRequestId = btn.dataset.requestId;
-      // store the button element so we can optimistically update/remove the row after success
-      tableBody.dataset.currentButtonId = currentRequestId;
       document.getElementById('statusModal').style.display = 'flex';
     });
   }
 
-  // modal controls
   const closeBtn = document.getElementById('closeStatusModalBtn');
   if (closeBtn) closeBtn.onclick = () => document.getElementById('statusModal').style.display = 'none';
 
@@ -156,30 +182,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const disapproveBtn = document.getElementById('disapproveBtn');
     if (disapproveBtn) disapproveBtn.disabled = true;
     try {
-      const { error } = await supabase
-        .from('reservations')
-        .update({ status: 'approved' })
-        .eq('request_id', currentRequestId);
-      if (error) {
-        console.error('Approve error:', error);
-        alert('Could not approve. See console.');
-      } else {
-        // hide modal and remove the row for this request
-        document.getElementById('statusModal').style.display = 'none';
-        // remove the table row that has the matching data-request-id button
-        const tableBody = document.getElementById('pendingTableBody');
-        if (tableBody) {
-          const btn = tableBody.querySelector(`.status-btn[data-request-id="${currentRequestId}"]`);
-          if (btn) {
-            const row = btn.closest('tr');
-            if (row) row.remove();
-          }
-        }
-        currentRequestId = null;
-      }
+      await updateReservationStatus(currentRequestId, 'approved');
+      document.getElementById('statusModal').style.display = 'none';
+      await loadPendingRequests();
+      currentRequestId = null;
     } catch (err) {
       console.error('Approve exception:', err);
-      alert('Error approving. See console.');
+      showFeedback('Error', 'Error approving request. See console for details.', 'error');
     } finally {
       approveBtn.disabled = false;
       if (disapproveBtn) disapproveBtn.disabled = false;
@@ -193,34 +202,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const approveBtn = document.getElementById('approveBtn');
     if (approveBtn) approveBtn.disabled = true;
     try {
-      // Do not change status to "rejected" — keep status as 'pending'
-      // Option A: avoid any update and simply close the modal:
-      // document.getElementById('statusModal').style.display = 'none';
-      // currentRequestId = null;
-      //
-      // Option B: explicitly set status back to 'pending' (idempotent) so DB remains pending.
-      const { error } = await supabase
-        .from('reservations')
-        .update({ status: 'pending' })
-        .eq('request_id', currentRequestId);
-      if (error) {
-        console.error('Keep-pending error:', error);
-        alert('Could not keep as pending. See console.');
-      } else {
-        // Close modal and keep the row visible (still pending)
-        document.getElementById('statusModal').style.display = 'none';
-        currentRequestId = null;
-      }
+      await updateReservationStatus(currentRequestId, 'rejected');
+      document.getElementById('statusModal').style.display = 'none';
+      await loadPendingRequests();
+      currentRequestId = null;
     } catch (err) {
       console.error('Reject exception:', err);
-      alert('Error rejecting. See console.');
+      showFeedback('Error', 'Error rejecting request. See console for details.', 'error');
     } finally {
       disapproveBtn.disabled = false;
       if (approveBtn) approveBtn.disabled = false;
     }
   };
 
-  // initial load & optional polling
   loadPendingRequests().catch(err => console.error(err));
   setInterval(() => loadPendingRequests().catch(err => console.error(err)), 10000);
 });
