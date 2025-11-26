@@ -130,13 +130,20 @@ async function loadUsers() {
   currentLoggedInUserId = getCurrentUser();
 
   try {
-    const response = await fetch('http://localhost:3000/users');
-
-    if (!response.ok) {
-      throw new Error(`Server error: ${response.status}`);
+    const sb = getSupabase();
+    if (!sb) {
+      throw new Error('Supabase client not initialized');
     }
 
-    const users = await response.json();
+    const { data: users, error } = await sb
+      .from('users')
+      .select('id, first_name, last_name, role_name, role, email')
+      .order('id', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching users from Supabase:', error);
+      throw new Error('Failed to fetch users from database');
+    }
 
     if (!users || users.length === 0) {
       tbody.innerHTML = '<tr><td colspan="5">No users found</td></tr>';
