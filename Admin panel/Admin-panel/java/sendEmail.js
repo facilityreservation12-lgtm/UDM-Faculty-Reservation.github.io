@@ -16,7 +16,7 @@ function setupSendEmailButton() {
     try {
       const payload = {
         to: 'facility.reservation12@gmail.com',
-        subject: `Facility Reservation Form – ${details.eventName || 'FRF'}`,
+        subject: `Facility Reservation Slip – ${details.eventName || 'FRS'}`,
         html: emailBody
       };
 
@@ -121,8 +121,9 @@ function getCheckedLabels(groupEl, transforms = {}) {
 
 function buildEmailTemplate(details) {
   const baseUrl = 'http://localhost:5500/Admin%20panel/Admin-panel/Slip.html';
+  const cacheBuster = `&_t=${Date.now()}`;
   const hasRequest = details.reservationId && details.reservationId !== 'N/A';
-  const slipUrl = hasRequest ? `${baseUrl}?request_id=${encodeURIComponent(details.reservationId)}` : baseUrl;
+  const slipUrl = hasRequest ? `${baseUrl}?request_id=${encodeURIComponent(details.reservationId)}${cacheBuster}` : `${baseUrl}?${cacheBuster.substring(1)}`;
   const downloadUrl = `${slipUrl}${slipUrl.includes('?') ? '&' : '?'}download=true`;
 
   const facilities = details.facilities.join(', ');
@@ -196,7 +197,7 @@ function buildEmailTemplate(details) {
       </div>
 
       <div class="button-row">
-        <a class="button" href="${slipUrl}" target="_blank">View Full FRF</a>
+        <a class="button" href="${slipUrl}" target="_blank">View Full FRS</a>
         <a class="button secondary" href="${downloadUrl}" target="_blank">Download / Print</a>
       </div>
 

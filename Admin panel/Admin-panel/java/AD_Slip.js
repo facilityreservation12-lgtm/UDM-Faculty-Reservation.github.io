@@ -245,4 +245,20 @@ async function loadSlipFromReservation() {
   console.log('Slip loaded successfully');
 }
 
-document.addEventListener('DOMContentLoaded', loadSlipFromReservation);
+// Force reload on page load to prevent caching issues
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', loadSlipFromReservation);
+} else {
+  // DOM already loaded, call immediately
+  loadSlipFromReservation();
+}
+
+// Also reload when page becomes visible (handles back button cache)
+document.addEventListener('visibilitychange', function() {
+  if (!document.hidden) {
+    const requestId = getQueryParam('request_id');
+    if (requestId) {
+      loadSlipFromReservation();
+    }
+  }
+});

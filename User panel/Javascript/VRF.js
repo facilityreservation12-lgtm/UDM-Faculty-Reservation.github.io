@@ -366,8 +366,8 @@ async function retryLocalUploads(sb) {
 		// pdfKey case - regenerate PDF with new format
 		if (r.pdfKey && r.pdfName) {
 			try {
-				// Check if this is an old format PDF that needs regeneration
-				const needsRegeneration = r.pdfFormatVersion !== 'v2' || !r.pdfFormatVersion;
+				// Check if this is an old format PDF that needs regeneration (v3 = FRS format with new title)
+				const needsRegeneration = r.pdfFormatVersion !== 'v3' || !r.pdfFormatVersion;
 				
 				if (needsRegeneration) {
 					console.log('Regenerating PDF with new format for', r.pdfName);
@@ -415,9 +415,9 @@ async function retryLocalUploads(sb) {
 						await deleteFileFromIDB(r.pdfKey);
 						delete r.pdfKey;
 						delete r.pdfName;
-						r.pdfFormatVersion = 'v2'; // Mark as new format
+						r.pdfFormatVersion = 'v3'; // Mark as new FRS format
 						changed = true;
-						console.log('PDF regenerated with new format for', r.codeId || r.request_id || '(unknown)');
+						console.log('PDF regenerated with new FRS format for', r.codeId || r.request_id || '(unknown)');
 					}
 				} else {
 					// Just retry upload of existing PDF
@@ -451,7 +451,7 @@ async function retryLocalUploads(sb) {
 // Helper function to generate form HTML for PDF regeneration
 function generateFormHTML(reservation) {
 	return `
-		<h2>Venue Reservation Form</h2>
+		<h2>Facility Reservation Slip</h2>
 		<div class="row">
 			<div>
 				<label>Date/Time Received: <input type="datetime-local" value="${reservation.dateReceived || ''}" readonly></label><br>
@@ -1472,7 +1472,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 						await storeFileInIDB(pdfKey, pdfFile);
 						reservation.pdfKey = pdfKey;
 						reservation.pdfName = `VRF-${codeId}.pdf`;
-						reservation.pdfFormatVersion = 'v2'; // Mark as new format
+						reservation.pdfFormatVersion = 'v3'; // Mark as new FRS format
 					} catch (pdfErr) {
 						console.error('Failed to store PDF in IndexedDB:', pdfErr);
 					}
