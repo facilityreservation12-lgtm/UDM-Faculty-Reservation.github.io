@@ -181,6 +181,14 @@ document.addEventListener('DOMContentLoaded', function() {
         localStorage.setItem('user_name', userName);
         localStorage.setItem('user_role', user.role_name || user.role);
         
+        // ===== LOG LOGIN ACTIVITY =====
+        if (typeof logActivity === 'function') {
+          await logActivity(`User Login - ${userName} (${normalizedRole})`);
+          console.log('✅ Login activity logged');
+        } else {
+          console.warn('⚠️ logActivity function not available');
+        }
+        
         showCustomAlert('Welcome!', `Login successful! Welcome, ${userName}`, 'success');
         
         // Redirect after showing success message
@@ -202,7 +210,7 @@ document.addEventListener('DOMContentLoaded', function() {
             default:
               showCustomAlert('Error', 'Unknown role!', 'error');
           }
-        }, 2000); // Wait 2 seconds before redirect
+        }, 2000);
 
       } catch (error) {
         // ===== ALSO HIDE LOADING IN CATCH BLOCK =====
