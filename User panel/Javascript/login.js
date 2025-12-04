@@ -182,11 +182,17 @@ document.addEventListener('DOMContentLoaded', function() {
         localStorage.setItem('user_role', user.role_name || user.role);
         
         // ===== LOG LOGIN ACTIVITY =====
+        const normalizedRole = (user.role_name || user.role).toLowerCase().replace(' ', '_');
+        
         if (typeof logActivity === 'function') {
-          await logActivity(`User Login - ${userName} (${normalizedRole})`);
-          console.log('✅ Login activity logged');
+          try {
+            await logActivity(`User Login - ${userName} (${normalizedRole})`);
+            console.log('✅ Login activity logged');
+          } catch (logError) {
+            console.warn('⚠️ Could not log activity:', logError);
+          }
         } else {
-          console.warn('⚠️ logActivity function not available');
+          console.warn('⚠️ logActivity function not available - audit logging disabled');
         }
         
         showCustomAlert('Welcome!', `Login successful! Welcome, ${userName}`, 'success');

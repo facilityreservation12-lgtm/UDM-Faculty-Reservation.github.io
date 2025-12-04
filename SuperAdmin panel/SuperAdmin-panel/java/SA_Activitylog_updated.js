@@ -1,35 +1,4 @@
 // ============================================
-// API HANDLER (Next.js/Serverless Function)
-// ============================================
-
-export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  const { userId, action, requestId } = req.body;
-
-  // Get user IP
-  const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.socket.remoteAddress;
-
-  const { error } = await supabase
-    .from('audit_logs')
-    .insert({
-      user_id: userId,
-      request_id: requestId || null,
-      action,
-      ip_address: ip
-    });
-
-  if (error) {
-    return res.status(500).json({ error });
-  }
-
-  res.status(200).json({ ok: true });
-}
-
-
-// ============================================
 // SUPABASE CLIENT CONFIGURATION
 // ============================================
 
@@ -42,6 +11,12 @@ function getSupabaseClient() {
   if (typeof supabaseClient !== 'undefined' && supabaseClient) {
     console.log('✅ Found global supabaseClient variable');
     return supabaseClient;
+  }
+  
+  // If no window.supabaseClient, create one from Supabase CDN
+  if (typeof window.supabase !== 'undefined' && window.SUPABASE_URL && window.SUPABASE_KEY) {
+    console.log('✅ Creating supabaseClient from Supabase CDN');
+    return window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
   }
   
   console.error('❌ Supabase client not found.');
@@ -333,11 +308,5 @@ document.addEventListener('DOMContentLoaded', async function() {
 // GLOBAL EXPORTS
 // ============================================
 
+window.logActivity = logActivity;
 window.toggleFilter = toggleFilter;
-window.insertTestLog = insertTestLog;
-window.addTestLogs = addTestLogs;
-window.logUserRoleChange = logUserRoleChange;
-window.testRoleUpdateTrigger = testRoleUpdateTrigger;
-window.updateUserRoleWithLogging = updateUserRoleWithLogging;
-window.debugActivityLogging = debugActivityLogging;
-window.forceLogRoleChange = forceLogRoleChange;

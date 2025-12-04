@@ -1,15 +1,24 @@
-// Function to sign out user (for the logout button)
-function signOutUser(options = {}) {
-  const {
-    skipConfirm = false,
-    alertTitle = 'Signed Out',
-    alertMessage = 'You have been signed out successfully.',
-    alertType = 'success'
-  } = options;
-
-  const completeSignOut = () => {
+function signOutUser() {
+  showCustomConfirm('Sign out', 'Are you sure you want to sign out?', async () => {
     console.log('User signing out.');
 
+    // Get user info BEFORE clearing localStorage
+    const userName = localStorage.getItem('user_name') || 'Unknown User';
+    const userRole = localStorage.getItem('user_role') || 'Unknown Role';
+
+    // ===== LOG LOGOUT ACTIVITY =====
+    if (typeof logActivity === 'function') {
+      try {
+        await logActivity(`User Logout - ${userName} (${userRole})`);
+        console.log('✅ Logout activity logged');
+      } catch (logError) {
+        console.warn('⚠️ Could not log logout:', logError);
+      }
+    } else {
+      console.warn('⚠️ logActivity function not available');
+    }
+
+    // Clear local storage
     localStorage.removeItem('id');
     localStorage.removeItem('user_id');
     localStorage.removeItem('user_name');
@@ -22,49 +31,23 @@ function signOutUser(options = {}) {
     localStorage.removeItem('userReservations');
     localStorage.removeItem('selectedDate');
 
+    // Clear session storage
     sessionStorage.clear();
 
-    let supabaseClient = null;
-    if (typeof getSupabaseClient === 'function') {
-      supabaseClient = getSupabaseClient();
-    } else if (typeof window !== 'undefined' && window.supabaseClient) {
-      supabaseClient = window.supabaseClient;
-    }
-
-    if (supabaseClient && supabaseClient.auth) {
-      supabaseClient.auth.signOut().catch(error => {
+    // Supabase sign out (if using Supabase Auth)
+    const sb = getSupabase();
+    if (sb && sb.auth) {
+      sb.auth.signOut().catch(error => {
         console.warn('Error signing out from Supabase:', error);
       });
     }
 
-    console.log('User signed out successfully');
-
-    if (typeof showCustomAlert === 'function') {
-      showCustomAlert(alertTitle, alertMessage, alertType);
-    } else {
-      alert(alertMessage);
-    }
-
-    setTimeout(() => {
-      window.location.href = '../../User panel/LandingPage.html';
-    }, 500);
-  };
-
-  if (skipConfirm) {
-    completeSignOut();
-    return;
-  }
-
-  const confirmFn = typeof showCustomConfirm === 'function'
-    ? showCustomConfirm
-    : (title, message, onConfirm) => {
-        if (confirm(message)) onConfirm();
-      };
-
-  confirmFn('Sign out', 'Are you sure you want to sign out?', completeSignOut);
+    // Redirect to landing page
+    window.location.href = '../../index.html';
+  });
 }
 
-// Ensure global assignment
+// Make globally accessible
 window.signOutUser = signOutUser;
 
 // -----------------------

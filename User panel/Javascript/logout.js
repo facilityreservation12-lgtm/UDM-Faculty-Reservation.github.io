@@ -3,33 +3,19 @@ function signOutUser() {
     console.log('User signing out.');
 
     // Get user info BEFORE clearing localStorage
-    const userId = localStorage.getItem('user_id') || null;
     const userName = localStorage.getItem('user_name') || 'Unknown User';
     const userRole = localStorage.getItem('user_role') || 'Unknown Role';
 
     // ===== LOG LOGOUT ACTIVITY =====
     if (typeof logActivity === 'function') {
-      const action = `User Logout - ${userName} (${userRole})`;
-      logActivity(action);
-      console.log('✅ Logout activity logged');
-
-      // ===== SEND LOG TO SUPABASE AUDIT LOGS =====
-      if (userId) {
-        try {
-          await fetch('/api/audit', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              userId,
-              action: 'logout',
-              requestId: null // no reservation involved
-            })
-          });
-          console.log('✅ Logout recorded in audit_logs table');
-        } catch (error) {
-          console.error('❌ Failed to log logout to audit_logs:', error);
-        }
+      try {
+        await logActivity(`User Logout - ${userName} (${userRole})`);
+        console.log('✅ Logout activity logged');
+      } catch (logError) {
+        console.warn('⚠️ Could not log logout:', logError);
       }
+    } else {
+      console.warn('⚠️ logActivity function not available');
     }
 
     // Clear local storage
@@ -57,6 +43,9 @@ function signOutUser() {
     }
 
     // Redirect to landing page
-    window.location.href = '../index.html';
+    window.location.href = '../LandingPage.html';
   });
 }
+
+// Make globally accessible
+window.signOutUser = signOutUser;

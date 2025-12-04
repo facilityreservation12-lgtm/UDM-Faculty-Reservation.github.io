@@ -3,19 +3,28 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SuperAdmin Manage</title>
+  <title>Activity Logs - SuperAdmin</title>
   <link rel="icon" type="image/png" href="img/udm.webp"/>
   <link rel="stylesheet" href="css/SA_Activitylog.css" />
+  
+  <!-- 1. External libraries -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- Supabase Client -->
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <!-- 2. Supabase config -->
   <script src="../../supabaseConfig.js"></script>
-  <script src="java/profile.js"></script>
+  
+  <!-- 3. Utilities -->
   <script src="java/alert.js"></script>
-  <script src="java/SA_logout.js"></script>
+  
+  <!-- 4. Audit logging -->
+  <script src="java/SA_Activitylog_updated.js"></script>
+  
+  <!-- 5. Profile (deferred) -->
+  <script defer src="java/profile.js"></script>
 </head>
 <body>
-<div class="sidebar">
+  <div class="sidebar">
     <div class="side-container">
       <div class="user-photo">
         <img src="img/udmlogo.png" alt="User Photo" />
@@ -27,11 +36,11 @@
       <div class="menu">
         <a href="SuperAdminDashboard.html">Dashboard</a>
         <div class="reqs-sub-menu">
-                <a href="#" class="sidebar-link">Request ▾</a>
-            <div class="sub-menu">
-                <a href="SA_REQ_IncomingRequest.html">IncomingRequest</a>
-                <a href="SA_Pending.html">Pending</a>
-                <a href="SA_Appproved.html">Approved</a>
+          <a href="#" class="sidebar-link">Request ▾</a>
+          <div class="sub-menu">
+            <a href="SA_REQ_IncomingRequest.html">IncomingRequest</a>
+            <a href="SA_Pending.html">Pending</a>
+            <a href="SA_Appproved.html">Approved</a>
           </div> 
         </div> 
         <a href="SA_Otheruser.html">Other User</a>
@@ -40,7 +49,7 @@
         <a href="SA_Activitylog.html">Logs</a>            
       </div> 
     </div>
-       <button onclick="signOutUser()" class="logout-btn">Log Out</button> 
+    <button onclick="signOutUser()" class="logout-btn">Log Out</button> 
   </div>
 
   <div class="main"> 
@@ -48,12 +57,11 @@
       <button class="back-btn">←</button>
       <h2>Activity Logs</h2>
       <div style="margin-left: 10px; display: flex; flex-wrap: wrap; gap: 5px;">
-        <button onclick="addTestLogs()" style="padding: 5px 10px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer;">Add Test Data</button>
-        <button onclick="debugActivityLogging()" style="padding: 5px 10px; background: #dc3545; color: white; border: none; border-radius: 3px; cursor: pointer;">Debug All</button>
-        <button onclick="forceLogRoleChange('S001', 'faculty', 'admin')" style="padding: 5px 10px; background: #28a745; color: white; border: none; border-radius: 3px; cursor: pointer;">Force Log Role</button>
         <button onclick="loadActivityLogs()" style="padding: 5px 10px; background: #6c757d; color: white; border: none; border-radius: 3px; cursor: pointer;">Refresh Logs</button>
       </div>
-    </div>    <div class="filter-box">
+    </div>
+
+    <div class="filter-box">
       <div class="filter-toggle" onclick="toggleFilter()">Activities Filters ▲</div>
       <div class="filters" id="filterSection">
         <label>Action
@@ -85,40 +93,35 @@
       <div id="logEntries"></div>
     </div>
   </div>
-  </div>
-   <!-- Custom Alert Modal -->
-<div id="customAlertModal" class="custom-modal">
-  <div class="custom-modal-content">
-    <button class="modal-close" onclick="closeCustomAlert()">&times;</button>
-    <div id="alertIcon" class="modal-icon"></div>
-    <h3 id="alertTitle" class="modal-title"></h3>
-    <p id="alertMessage" class="modal-message"></p>
-    <div id="alertButtons" class="modal-buttons">
-      <button class="modal-btn primary" onclick="closeCustomAlert()">OK</button>
+
+  <!-- Custom Alert Modal -->
+  <div id="customAlertModal" class="custom-modal">
+    <div class="custom-modal-content">
+      <button class="modal-close" onclick="closeCustomAlert()">&times;</button>
+      <div id="alertIcon" class="modal-icon"></div>
+      <h3 id="alertTitle" class="modal-title"></h3>
+      <p id="alertMessage" class="modal-message"></p>
+      <div id="alertButtons" class="modal-buttons">
+        <button class="modal-btn primary" onclick="closeCustomAlert()">OK</button>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- Loading Modal -->
-<div id="loadingModal" class="loading-modal">
-  <div class="loading-content">
-    <div class="loading-spinner"></div>
-    <div id="loadingText" class="loading-text">Loading...</div>
-    <div id="loadingSubtext" class="loading-subtext">Please wait</div>
+  <!-- Loading Modal -->
+  <div id="loadingModal" class="loading-modal">
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <div id="loadingText" class="loading-text">Loading...</div>
+      <div id="loadingSubtext" class="loading-subtext">Please wait</div>
+    </div>
   </div>
-</div>
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-  <script src="../../supabaseConfig.js"></script>
-  <script src="java/SA_Activitylog_updated.js"></script>
-    <script>
-document.querySelectorAll('.menu a').forEach(link => {
-  if (
-    link.href &&
-    window.location.pathname.endsWith(link.getAttribute('href'))
-  ) {
-    link.classList.add('active');
-  }
-});
-</script>
+
+  <script>
+    document.querySelectorAll('.menu a').forEach(link => {
+      if (link.href && window.location.pathname.endsWith(link.getAttribute('href'))) {
+        link.classList.add('active');
+      }
+    });
+  </script>
 </body>
 </html>
