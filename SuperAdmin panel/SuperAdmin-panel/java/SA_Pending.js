@@ -96,7 +96,7 @@ async function loadPendingRequests() {
       return;
     }
 
-    const userIds = Array.from(new Set(reservations.map(r => r.user_id).filter(Boolean)));
+    const userIds = Array.from(new Set(reservations.map(r => r.id).filter(Boolean)));
     let usersMap = {};
     if (userIds.length > 0) {
       const { data: users, error: usersErr } = await supabase
@@ -117,7 +117,7 @@ async function loadPendingRequests() {
 
     tableBody.innerHTML = '';
     for (const reservation of reservations) {
-      const userName = usersMap[reservation.user_id] || 'Unknown User';
+      const userName = usersMap[reservation.id] || 'Unknown User';
       const timeStart = formatTime(reservation.time_start);
       const timeEnd = formatTime(reservation.time_end);
       const timeRange = (timeStart || timeEnd) ? `${timeStart} - ${timeEnd}` : '';

@@ -157,7 +157,7 @@ async function loadIncomingRequests(forceReload = false) {
       console.log('Processing reservation:', reservation);
       
       // Get user's full name
-      const userName = await getUserFullName(reservation.user_id);
+      const userName = await getUserFullName(reservation.id);
       
       // Format time range
       const timeStart = formatTime(reservation.time_start);
