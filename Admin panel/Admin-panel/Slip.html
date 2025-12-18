@@ -3,20 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
   <title>Admin Slip</title>
   <link rel="icon" type="image/png" href="img/udm.webp"/>
-  <link rel="stylesheet" href="css/Slip.css?v=2" />
+  <link rel="stylesheet" href="css/Slip.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="../../supabaseConfig.js"></script>
-  <script src="java/alert.js?v=2"></script>
-  <script src="java/AD_logout.js?v=2"></script>
-  <script src="java/profile.js?v=2"></script>
-  <script src="java/AD_Slip.js?v=2"></script>
-  <script src="java/sendEmail.js?v=2"></script>
+  <script src="java/alert.js"></script>
+  <script src="java/AD_logout.js"></script>
+  <script src="java/profile.js"></script>
+  <script src="java/AD_Slip.js"></script>
+  <script src="java/sendEmail.js"></script>
 </head>
 <body>
 <div class="sidebar">
@@ -30,7 +27,7 @@
       </div>
       <div class="menu">
         <a href="AdminDashboard.html">Dashboard</a>
-        <a href="AdminVRF.html">FRS</a>
+        <a href="AdminVRF.html">FRF</a>
         <a href="Otheruser.html">Other User</a>
         <a href="Admincalendar.html">Calendar</a>
         <a href="Admin_manage.html">Manage</a>
@@ -171,14 +168,6 @@
   </div>
 </div>
   <script>
-  // Force reload to prevent caching
-  window.addEventListener('pageshow', function(event) {
-    if (event.persisted) {
-      // Page was loaded from cache, force reload
-      window.location.reload();
-    }
-  });
-
   function toggleInput(inputId, checkbox) {
     const input = document.getElementById(inputId);
     input.style.display = checkbox.checked ? "inline-block" : "none";

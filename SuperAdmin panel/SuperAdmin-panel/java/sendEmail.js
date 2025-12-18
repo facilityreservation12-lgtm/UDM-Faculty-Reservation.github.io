@@ -75,12 +75,12 @@ function setupSendEmailButton() {
       </div>
       
       <div style="text-align: center;">
-        <a href="http://localhost:5500/Admin%20panel/Admin-panel/Slip.html?_t=${Date.now()}" class="button">
-          📄 View Full FRS Details
+        <a href="http://localhost:5500/Admin%20panel/Admin-panel/Slip.html" class="button">
+          📄 View Full FRF Details
         </a>
         <br>
-        <a href="http://localhost:5500/Admin%20panel/Admin-panel/Slip.html?download=true&_t=${Date.now()}" class="button" style="background: #28a745;">
-          ⬇️ Download FRS
+        <a href="http://localhost:5500/Admin%20panel/Admin-panel/Slip.html?download=true" class="button" style="background: #28a745;">
+          ⬇️ Download FRF
         </a>
       </div>
       

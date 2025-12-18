@@ -1,26 +1,8 @@
-// Helper to get Supabase client
-function getSupabase() {
-  // First, check if supabaseConfig.js has initialized the client
-  if (typeof window !== 'undefined' && window.supabaseClient) {
-    return window.supabaseClient;
-  }
-  
-  // Check if global supabaseClient variable exists
-  if (typeof supabaseClient !== 'undefined' && supabaseClient) {
-    return supabaseClient;
-  }
-  
-  // Fallback: try to create client from window.supabase
-  if (typeof window !== 'undefined' && window.supabase && window.SUPABASE_URL && window.SUPABASE_KEY) {
-    return window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
-  }
-  
-  console.error('❌ Supabase client not found');
-  return null;
-}
-
 // Initialize Supabase client
-const supabase = getSupabase();
+const supabase = window.supabase.createClient(
+  window.SUPABASE_URL,
+  window.SUPABASE_KEY
+);
 
 // Function to format date
 function formatDate(dateString) {
@@ -48,14 +30,8 @@ async function getUserFullName(userId) {
   try {
     console.log(`Fetching user details for ID: ${userId}`);
     
-    const sb = getSupabase();
-    if (!sb) {
-      console.error('Supabase client not available');
-      return `User ${userId}`;
-    }
-    
     // First try to get all available columns to see what's in the users table
-    let { data, error } = await sb
+    let { data, error } = await supabase
       .from('users')
       .select('first_name, last_name, role')
       .eq('id', userId);
@@ -99,14 +75,8 @@ let lastReservationCount = 0;
 // Function to check if there are new reservations
 async function checkForNewRequests() {
   try {
-    const sb = getSupabase();
-    if (!sb) {
-      console.error('Supabase client not available');
-      return false;
-    }
-    
     // count only reservations with status = 'request'
-    const { count, error } = await sb
+    const { count, error } = await supabase
       .from('reservations')
       .select('request_id', { count: 'exact', head: true })
       .eq('status', 'request');
@@ -147,24 +117,12 @@ async function loadIncomingRequests(forceReload = false) {
 
     // Show loading message
     const tableBody = document.getElementById('requestTableBody');
-    if (!tableBody) {
-      console.error('Table body not found');
-      return;
-    }
-
-    const sb = getSupabase();
-    if (!sb) {
-      console.error('Supabase client not available');
-      tableBody.innerHTML = '<tr><td colspan="6">Database connection error. Please refresh the page.</td></tr>';
-      return;
-    }
-
     tableBody.innerHTML = '<tr><td colspan="6">Loading...</td></tr>';
 
     console.log('Fetching reservations from Supabase...');
     
     // Fetch only reservations with status 'request' from Supabase
-    const { data: reservations, error } = await sb
+    const { data: reservations, error } = await supabase
       .from('reservations')
       .select('*')
       .eq('status', 'request')
@@ -246,13 +204,8 @@ async function fetchWithTimeout(url, opts = {}, timeout = 5000) {
 // add helper to mark a reservation as PENDING and refresh the list
 async function markAsPending(requestId) {
   try {
-    const sb = getSupabase();
-    if (!sb) {
-      console.warn('Supabase client not available for markAsPending');
-      return;
-    }
     // set to lowercase 'pending' so it won't appear in the "request" list (which filters for 'request')
-    const { error } = await sb
+    const { error } = await supabase
       .from('reservations')
       .update({ status: 'pending' })
       .eq('request_id', requestId);
@@ -277,25 +230,17 @@ async function printVRF(requestId) {
       return;
     }
 
-    // Check if supabase client is available
-    const sb = getSupabase();
-    if (!sb) {
-      console.error('Supabase client not available');
-      alert('Database connection error. Please refresh the page.');
-      return;
-    }
-
-    // 1) Try fetch pdf_url and pdf_format_version from reservations row
-    const { data: row, error: rowErr } = await sb
+    // 1) Try fetch pdf_url from reservations row
+    const { data: row, error: rowErr } = await supabase
       .from('reservations')
-      .select('pdf_url, pdf_format_version')
+      .select('pdf_url')
       .eq('request_id', requestId)
       .single();
 
     if (rowErr) {
       console.error('Error fetching reservation row:', rowErr);
-      // Don't alert, just log - try to continue with storage lookup
-      console.warn('Will attempt storage lookup despite database error');
+      alert('Failed to fetch reservation. See console for details.');
+      return;
     }
 
     // prefer validated public url
@@ -350,15 +295,6 @@ async function printVRF(requestId) {
     const folder = 'Reserved Facilities';
     const fileName = `VRF-${requestId}.pdf`;
     const path = `${folder}/${fileName}`;
-    
-    // Check if PDF format is old (v2 or earlier) - if so, redirect to Slip.html to regenerate
-    if (row && !rowErr && (!row.pdf_format_version || row.pdf_format_version !== 'v3')) {
-      console.log('PDF format is old (not v3), redirecting to Slip.html to regenerate with new format');
-      const slipUrl = `Slip.html?request_id=${encodeURIComponent(requestId)}&_t=${Date.now()}&regenerate=true`;
-      window.open(slipUrl, '_blank');
-      await markAsPending(requestId);
-      return;
-    }
 
     let foundPublicUrl = null;
     let foundBucket = null;
@@ -366,7 +302,7 @@ async function printVRF(requestId) {
     for (const bucket of candidateBuckets) {
       // Try getPublicUrl
       try {
-        const { data: urlData, error: urlErr } = sb
+        const { data: urlData, error: urlErr } = supabase
           .storage
           .from(bucket)
           .getPublicUrl(path);
@@ -382,14 +318,11 @@ async function printVRF(requestId) {
             if (ok) {
               foundPublicUrl = publicUrl;
               foundBucket = bucket;
-              // update reservations.pdf_url with the working public URL and mark as v3 format
-              if (sb) {
-                const { error: updErr } = await sb
-                  .from('reservations')
-                  .update({ pdf_url: publicUrl, pdf_format_version: 'v3' })
-                  .eq('request_id', requestId);
-                if (updErr) console.warn('Failed to update reservations.pdf_url:', updErr);
-              }
+              // update reservations.pdf_url with the working public URL
+              const { error: updErr } = await supabase
+                .from('reservations')
+                .update({ pdf_url: publicUrl })
+                .eq('request_id', requestId);
               if (updErr) console.warn('Failed to update reservations.pdf_url:', updErr);
               await markAsPending(requestId); // <--- mark pending on success
               return;
@@ -404,7 +337,7 @@ async function printVRF(requestId) {
 
       // Try signed URL (short-lived)
       try {
-        const { data: signedData, error: signedErr } = await sb
+        const { data: signedData, error: signedErr } = await supabase
           .storage
           .from(bucket)
           .createSignedUrl(path, 120); // 2 minutes
@@ -413,14 +346,6 @@ async function printVRF(requestId) {
           const signedUrl = signedData.signedUrl;
           const ok = await validateAndOpen(signedUrl);
           if (ok) {
-            // Update format version to v3
-            if (sb) {
-              const { error: updErr } = await sb
-                .from('reservations')
-                .update({ pdf_format_version: 'v3' })
-                .eq('request_id', requestId);
-              if (updErr) console.warn('Failed to update pdf_format_version:', updErr);
-            }
             // don't overwrite pdf_url with signed URL (short-lived)
             await markAsPending(requestId); // <--- mark pending when opening with signed URL
             return;
@@ -431,12 +356,12 @@ async function printVRF(requestId) {
           console.warn(`createSignedUrl error for "${bucket}":`, signedErr);
         }
       } catch (err) {
-        console.warn(`createSignedUrl threw for bucket="${bucket}":`, err);
+        console.warn(`createSignedUrl threw for "${bucket}":`, err);
       }
 
       // Try list folder to find actual filename variants
       try {
-        const { data: listData, error: listErr } = await sb
+        const { data: listData, error: listErr } = await supabase
           .storage
           .from(bucket)
           .list(folder);
@@ -444,13 +369,13 @@ async function printVRF(requestId) {
         if (listErr) {
           console.warn(`list error for bucket="${bucket}" folder="${folder}":`, listErr);
         } else if (Array.isArray(listData)) {
-          // try to find file that includes requestId
+          // try to find file that includes requestId (tolerant)
           const found = listData.find(item => item.name && item.name.includes(requestId));
           if (found) {
             const filePath = `${folder}/${found.name}`;
             // try public url for found item
             try {
-              const { data: urlData2, error: urlErr2 } = sb
+              const { data: urlData2, error: urlErr2 } = supabase
                 .storage
                 .from(bucket)
                 .getPublicUrl(filePath);
@@ -458,16 +383,11 @@ async function printVRF(requestId) {
               if (publicUrl2) {
                 const ok2 = await validateAndOpen(publicUrl2);
                 if (ok2) {
-                  if (sb) {
-                    const { error: updErr2 } = await sb
-                      .from('reservations')
-                      .update({ 
-                        pdf_url: publicUrl2,
-                        pdf_format_version: 'v3' // Mark as new format
-                      })
-                      .eq('request_id', requestId);
-                    if (updErr2) console.warn('Failed to update reservations.pdf_url:', updErr2);
-                  }
+                  const { error: updErr2 } = await supabase
+                    .from('reservations')
+                    .update({ pdf_url: publicUrl2 })
+                    .eq('request_id', requestId);
+                  if (updErr2) console.warn('Failed to update reservations.pdf_url:', updErr2);
                   await markAsPending(requestId); // <--- mark pending on success
                   return;
                 }
@@ -478,7 +398,7 @@ async function printVRF(requestId) {
 
             // as last fallback for found file, try signed URL
             try {
-              const { data: signedData2, error: signedErr2 } = await sb
+              const { data: signedData2, error: signedErr2 } = await supabase
                 .storage
                 .from(bucket)
                 .createSignedUrl(filePath, 120);
@@ -496,11 +416,8 @@ async function printVRF(requestId) {
       }
     } // end for buckets
 
-    // Nothing worked - try to generate new PDF via Slip.html
-    console.log('PDF not found in storage, redirecting to Slip.html to generate new PDF');
-    const slipUrl = `Slip.html?request_id=${encodeURIComponent(requestId)}&_t=${Date.now()}&regenerate=true`;
-    window.open(slipUrl, '_blank');
-    await markAsPending(requestId);
+    // Nothing worked
+    alert('PDF not available for this request. Confirm the file exists in the bucket "facilityreservation" under "Reserved Facilities" as VRF-<request_id>.pdf, or check storage policies.');
   } catch (err) {
     console.error('printVRF error:', err);
     alert('Unexpected error. See console for details.');
