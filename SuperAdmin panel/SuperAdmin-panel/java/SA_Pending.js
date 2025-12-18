@@ -96,7 +96,7 @@ async function loadPendingRequests() {
       return;
     }
 
-    const userIds = Array.from(new Set(reservations.map(r => r.id).filter(Boolean)));
+    const userIds = Array.from(new Set(reservations.map(r => r.user_id).filter(Boolean)));
     let usersMap = {};
     if (userIds.length > 0) {
       const { data: users, error: usersErr } = await supabase

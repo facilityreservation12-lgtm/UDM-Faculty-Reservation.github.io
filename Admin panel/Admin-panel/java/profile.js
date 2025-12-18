@@ -1,35 +1,29 @@
 // Admin Dashboard User Loading Functions
 
-// Helper to get Supabase client from supabaseConfig.js
+// Helper to get Supabase client
 function getSupabaseClient() {
-  // First, check if supabaseConfig.js has initialized the client
+  // Create client from window.SUPABASE_URL and window.SUPABASE_KEY
+  if (typeof window !== 'undefined' && window.supabase && window.SUPABASE_URL && window.SUPABASE_KEY) {
+    return window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
+  }
+  
+  // Check if client is already cached in window
   if (typeof window !== 'undefined' && window.supabaseClient) {
     console.log('✅ Found supabaseClient from supabaseConfig.js');
     return window.supabaseClient;
   }
   
-  // Check if global supabaseClient variable exists
-  if (typeof supabaseClient !== 'undefined' && supabaseClient) {
-    console.log('✅ Found global supabaseClient variable');
-    return supabaseClient;
-  }
-  
   // Check other possible exports
   if (typeof window !== 'undefined') {
-    if (window.supabase) return window.supabase;
-    if (window._supabase) return window._supabase;
-    if (window.sb) return window.sb;
+    if (window.supabase && window.supabase.createClient) {
+      // Already have the library, try to use it if we have credentials
+      if (window.SUPABASE_URL && window.SUPABASE_KEY) {
+        return window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
+      }
+    }
   }
   
-  // Log available properties for debugging
-  const supabaseProps = typeof window !== 'undefined' ? 
-    Object.keys(window).filter(key => key.toLowerCase().includes('supabase')) : [];
-  
   console.error('❌ Supabase client not found.');
-  console.log('🔍 Available Supabase-related properties:', supabaseProps);
-  console.log('🔍 Global supabaseClient exists:', typeof supabaseClient !== 'undefined');
-  console.log('🔍 Window.supabaseClient exists:', typeof window !== 'undefined' && !!window.supabaseClient);
-  
   return null;
 }
 
