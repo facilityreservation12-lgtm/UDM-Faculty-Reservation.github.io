@@ -6,13 +6,21 @@
   <title>Login - Universidad de Manila</title>
   <link rel="icon" type="image/png" href="images/udm-logo.webp"/>
   <link rel="stylesheet" href="CSS/login.css" />
-  <script src="../SuperAdmin panel/SuperAdmin-panel/java/SA_Activitylog_updated.js"></script>
+  
+  <!-- 1. Supabase library FIRST -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <!-- 2. Supabase config SECOND -->
   <script>
     window.SUPABASE_URL = 'https://hfasujvdkbjpllwohqcc.supabase.co';
     window.SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhmYXN1anZka2JqcGxsd29ocWNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ2NjA4ODgsImV4cCI6MjA3MDIzNjg4OH0.Wo6eqzObQ_sI_qebCi0F6iGyyP7TYcHCyxSoOZQOpPM';
+    window.supabaseClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
   </script>
+  
+  <!-- 3. Alert functions -->
   <script defer src="Javascript/alert.js"></script>
+  
+  <!-- 4. Login script -->
   <script defer src="Javascript/login.js"></script>
 </head>
 <body>
@@ -41,6 +49,7 @@
         </div>
       </form>
     </div>
+    
     <!-- Modal for Forgot Password -->
     <div id="forgotPasswordModal" class="modal" style="display:none;">
       <div class="login-box modal-content">
@@ -65,26 +74,27 @@
       </div>
     </div>
   </div>
+
   <!-- Custom Alert Modal -->
-<div id="customAlertModal" class="custom-modal">
-  <div class="custom-modal-content">
-    <button class="modal-close" onclick="closeCustomAlert()">&times;</button>
-    <div id="alertIcon" class="modal-icon"></div>
-    <h3 id="alertTitle" class="modal-title"></h3>
-    <p id="alertMessage" class="modal-message"></p>
-    <div id="alertButtons" class="modal-buttons">
-      <button class="modal-btn primary" onclick="closeCustomAlert()">OK</button>
+  <div id="customAlertModal" class="custom-modal">
+    <div class="custom-modal-content">
+      <button class="modal-close" onclick="closeCustomAlert()">&times;</button>
+      <div id="alertIcon" class="modal-icon"></div>
+      <h3 id="alertTitle" class="modal-title"></h3>
+      <p id="alertMessage" class="modal-message"></p>
+      <div id="alertButtons" class="modal-buttons">
+        <button class="modal-btn primary" onclick="closeCustomAlert()">OK</button>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- Loading Modal -->
-<div id="loadingModal" class="loading-modal">
-  <div class="loading-content">
-    <div class="loading-spinner"></div>
-    <div id="loadingText" class="loading-text">Loading...</div>
-    <div id="loadingSubtext" class="loading-subtext">Please wait</div>
+  <!-- Loading Modal -->
+  <div id="loadingModal" class="loading-modal">
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <div id="loadingText" class="loading-text">Loading...</div>
+      <div id="loadingSubtext" class="loading-subtext">Please wait</div>
+    </div>
   </div>
-</div>
 </body>
 </html>
