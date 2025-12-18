@@ -117,7 +117,7 @@ async function loadPendingRequests() {
 
     tableBody.innerHTML = '';
     for (const reservation of reservations) {
-      const userName = usersMap[reservation.id] || 'Unknown User';
+      const userName = usersMap[reservation.user_id] || 'Unknown User';
       const timeStart = formatTime(reservation.time_start);
       const timeEnd = formatTime(reservation.time_end);
       const timeRange = (timeStart || timeEnd) ? `${timeStart} - ${timeEnd}` : '';
