@@ -60,46 +60,6 @@ body {
   background-color: #1e3e2e;
 }   
 
-.notification-link {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.notification-indicator {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #d93025;
-  opacity: 0;
-  transform: scale(0.2);
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-.notification-indicator.active {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.notification-count {
-  min-width: 20px;
-  height: 20px;
-  border-radius: 999px;
-  background: #d93025;
-  color: #fff;
-  font-size: 12px;
-  font-weight: 600;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  padding: 0 6px;
-}
-
-.notification-count.active {
-  display: inline-flex;
-}
-
 .menu a.active {
   background-color: #F7CF52;
   color: #234734;

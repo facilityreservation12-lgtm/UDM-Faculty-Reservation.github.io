@@ -12,100 +12,15 @@ function getSupabase() {
   return null;
 }
 
-const UNSEEN_NOTIF_COUNT_KEY = 'notification_unseen_count';
-let reservationRealtimeChannel = null;
-
-function getCurrentUserId() {
-  return localStorage.getItem('user_id') ||
-         localStorage.getItem('id') ||
-         localStorage.getItem('userId') ||
-         localStorage.getItem('currentUserId');
-}
-
-function getUnseenNotificationCount() {
-  const stored = parseInt(localStorage.getItem(UNSEEN_NOTIF_COUNT_KEY) || '0', 10);
-  return Number.isNaN(stored) ? 0 : stored;
-}
-
-function setUnseenNotificationCount(count) {
-  const safeCount = Math.max(0, count);
-  localStorage.setItem(UNSEEN_NOTIF_COUNT_KEY, String(safeCount));
-  updateNotificationIndicatorUI(safeCount);
-}
-
-function bumpUnseenNotificationCount(incrementBy = 1) {
-  setUnseenNotificationCount(getUnseenNotificationCount() + incrementBy);
-}
-
-function markNotificationsAsSeen() {
-  setUnseenNotificationCount(0);
-  localStorage.setItem('notificationsLastSeenAt', new Date().toISOString());
-}
-
-function updateNotificationIndicatorUI(count = getUnseenNotificationCount()) {
-  const dot = document.getElementById('notificationDot');
-  const badge = document.getElementById('notificationCount');
-  const isActive = count > 0;
-  if (dot) dot.classList.toggle('active', isActive);
-  if (badge) {
-    badge.textContent = count > 9 ? '9+' : String(count);
-    badge.classList.toggle('active', isActive);
-  }
-}
-
-function initNotificationIndicator() {
-  updateNotificationIndicatorUI();
-}
-
-function removeRealtimeChannel() {
-  const sb = getSupabase();
-  if (reservationRealtimeChannel && sb?.removeChannel) {
-    sb.removeChannel(reservationRealtimeChannel);
-    reservationRealtimeChannel = null;
-  }
-}
-
-async function initRealtimeNotifications() {
-  const sb = getSupabase();
-  const userId = getCurrentUserId();
-  if (!sb || !userId || !sb.channel) return;
-
-  removeRealtimeChannel();
-  reservationRealtimeChannel = sb
-    .channel(`reservation-status-${userId}`)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'reservations', filter: `id=eq.${userId}` }, handleRealtimeReservationPayload)
-    .subscribe();
-}
-
-async function handleRealtimeReservationPayload(payload) {
-  try {
-    const { eventType } = payload;
-    if (eventType === 'UPDATE' && payload.old?.status !== payload.new?.status) {
-      showStatusChangeNotification(payload.new, payload.old?.status, payload.new?.status);
-    }
-    if (['INSERT', 'UPDATE', 'DELETE'].includes(eventType)) {
-      await loadNotifications();
-      await loadReservations();
-    }
-  } catch (err) {
-    console.error('Realtime payload handler error:', err);
-  }
-}
-
 // ===================================
 // NOTIFICATION PANEL TOGGLE
 // ===================================
-function toggleNotificationPanel(event) {
-  if (event) event.preventDefault();
+function toggleNotificationPanel() {
   const panel = document.getElementById("notificationPanel");
   const overlay = document.getElementById("notificationOverlay");
-  if (!panel || !overlay) return;
-  const willOpen = !panel.classList.contains("active");
-  panel.classList.toggle("active");
-  overlay.classList.toggle("active");
-  if (willOpen) {
-    markNotificationsAsSeen();
-  }
+  
+  if (panel) panel.classList.toggle("active");
+  if (overlay) overlay.classList.toggle("active");
 }
 
 // ===================================
@@ -171,7 +86,7 @@ function updateDateTime() {
 // ===================================
 async function loadUserDetails() {
   try {
-    const userId = getCurrentUserId();
+    const userId = localStorage.getItem('user_id') || localStorage.getItem('id');
     console.log('Loading user details for ID:', userId);
     
     if (!userId) {
@@ -394,10 +309,7 @@ async function loadNotifications() {
       return;
     }
 
-    const safeReservations = reservations || [];
-    displayNotifications(safeReservations);
-    localStorage.setItem('userReservations', JSON.stringify(safeReservations));
-    updateNotificationIndicatorUI();
+    displayNotifications(reservations || []);
   } catch (error) {
     console.error('Error loading notifications:', error);
     showAlert('Error', 'Error loading notifications.', 'error');
@@ -466,77 +378,6 @@ function createNotificationItem(reservation) {
   return div;
 }
 
-function requestNotificationPermission() {
-  if ('Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission().catch(err => console.warn('Notification permission error:', err));
-  }
-}
-
-async function checkForStatusUpdates() {
-  try {
-    const sb = getSupabase();
-    if (!sb) return;
-
-    const userId = getCurrentUserId();
-    if (!userId) return;
-
-    const storedReservations = JSON.parse(localStorage.getItem('userReservations') || '[]');
-    const { data: currentReservations, error } = await sb
-      .from('reservations')
-      .select('request_id, facility, date, time_start, time_end, status')
-      .eq('id', userId);
-
-    if (error) {
-      console.error('Error checking status updates:', error);
-      return;
-    }
-
-    if (storedReservations.length > 0) {
-      currentReservations?.forEach(current => {
-        const stored = storedReservations.find(s => s.request_id === current.request_id);
-        if (stored && stored.status !== current.status) {
-          showStatusChangeNotification(current, stored.status, current.status);
-        }
-      });
-    }
-
-    localStorage.setItem('userReservations', JSON.stringify(currentReservations || []));
-  } catch (err) {
-    console.error('Error in checkForStatusUpdates:', err);
-  }
-}
-
-function showStatusChangeNotification(reservation, oldStatus, newStatus) {
-  const date = new Date(reservation.date);
-  const formattedDate = date.toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric'
-  });
-
-  const startTime = formatTime12hr(reservation.time_start);
-  const endTime = formatTime12hr(reservation.time_end);
-  const displayOldStatus = oldStatus?.toLowerCase() === 'request' ? 'Pending' : oldStatus;
-  const displayNewStatus = newStatus?.toLowerCase() === 'request' ? 'Pending' : newStatus;
-
-  const message = `Status Update: Your request for ${reservation.facility} on ${formattedDate} at ${startTime}-${endTime} has been changed from "${displayOldStatus}" to "${displayNewStatus}"`;
-
-  bumpUnseenNotificationCount();
-
-  if ('Notification' in window && Notification.permission === 'granted') {
-    try {
-      new Notification('Reservation Status Update', {
-        body: message,
-        icon: 'images/udm-logo.webp'
-      });
-    } catch (err) {
-      console.warn('Browser notification error:', err);
-    }
-  }
-
-  showAlert('Status Update', message, 'info');
-  updateNotificationIndicatorUI();
-}
 // Get status color for inline styling
 function getStatusColor(status) {
   const mappedStatus = status?.toLowerCase() === 'request' ? 'pending' : status?.toLowerCase();
@@ -562,9 +403,6 @@ function getStatusColor(status) {
 // ===================================
 document.addEventListener('DOMContentLoaded', function() {
   console.log('Dashboard initializing...');
-
-  initNotificationIndicator();
-  requestNotificationPermission();
   
   // Setup overlay click handler
   const overlay = document.getElementById("notificationOverlay");
@@ -584,15 +422,11 @@ document.addEventListener('DOMContentLoaded', function() {
   setInterval(updateDateTime, 1000);
 
   // Load data after a short delay to ensure everything is ready
-  setTimeout(async () => {
-    await loadUserDetails();
-    await loadReservations();
-    await loadNotifications();
-    await checkForStatusUpdates();
-    await initRealtimeNotifications();
+  setTimeout(() => {
+    loadUserDetails();
+    loadReservations();
+    loadNotifications(); // <-- use the correct function name here
   }, 500);
-
-  setInterval(checkForStatusUpdates, 60000);
 });
 
 // Make functions globally available
@@ -600,5 +434,3 @@ window.toggleNotificationPanel = toggleNotificationPanel;
 window.cancelReservation = cancelReservation;
 window.showAlert = showAlert;
 window.showConfirm = showConfirm;
-
-window.addEventListener('beforeunload', removeRealtimeChannel);

@@ -1,3 +1,7 @@
+document.getElementById('closeStatusModalBtn').onclick = function() {
+  document.getElementById('statusModal').style.display = 'none';
+};
+
 // Initialize Supabase client
 const supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
 
@@ -53,19 +57,7 @@ async function getUserFullName(userId) {
   }
 }
 
-const STATUS_META = {
-  pending: { label: 'Awaiting Super Admin', pillClass: 'status-pill--pending' },
-  request: { label: 'Awaiting Print', pillClass: 'status-pill--pending' },
-  approved: { label: 'Approved', pillClass: 'status-pill--approved' },
-  rejected: { label: 'Disapproved', pillClass: 'status-pill--rejected' }
-};
-
-function getStatusMeta(status) {
-  const key = (status || 'pending').toLowerCase();
-  return STATUS_META[key] || { label: key || 'Pending', pillClass: 'status-pill--default' };
-}
-
-// Fetch and display reservations with statuses that admins need to track
+// Fetch and display reservations with status = 'pending'
 async function loadPendingRequests() {
   try {
     const tableBody = document.getElementById('pendingTableBody');
@@ -78,7 +70,7 @@ async function loadPendingRequests() {
     const { data: reservations, error } = await supabase
       .from('reservations')
       .select('*')
-      .in('status', ['request', 'pending', 'approved', 'rejected'])
+      .eq('status', 'pending')
       .order('date', { ascending: true });
 
     if (error) {
@@ -120,15 +112,13 @@ async function loadPendingRequests() {
       const timeEnd = formatTime(reservation.time_end);
       const timeRange = (timeStart || timeEnd) ? `${timeStart} - ${timeEnd}` : '';
       const row = document.createElement('tr');
-      const statusMeta = getStatusMeta(reservation.status);
-      row.classList.toggle('row-is-rejected', statusMeta.label === 'Disapproved');
       row.innerHTML = `
         <td>${userName}</td>
         <td><strong>${reservation.facility || 'N/A'}</strong></td>
         <td>${formatDate(reservation.date)}</td>
         <td>${timeRange}</td>
         <td>${reservation.title_of_the_event || 'No title provided'}</td>
-        <td><span class="status-pill ${statusMeta.pillClass}">${statusMeta.label}</span></td>
+        <td><button class="status-btn" data-request-id="${reservation.request_id}">Accept / Reject</button></td>
       `;
       tableBody.appendChild(row);
     }
@@ -137,7 +127,100 @@ async function loadPendingRequests() {
   }
 }
 
+// --- New: delegated handlers for dynamic .status-btn and modal actions ---
+
+let currentRequestId = null;
+
 document.addEventListener('DOMContentLoaded', function() {
+  // attach delegated click handler to tbody for dynamic buttons
+  const tableBody = document.getElementById('pendingTableBody');
+  if (tableBody) {
+    tableBody.addEventListener('click', function (e) {
+      const btn = e.target.closest('.status-btn');
+      if (!btn) return;
+      currentRequestId = btn.dataset.requestId;
+      // store the button element so we can optimistically update/remove the row after success
+      tableBody.dataset.currentButtonId = currentRequestId;
+      document.getElementById('statusModal').style.display = 'flex';
+    });
+  }
+
+  // modal controls
+  const closeBtn = document.getElementById('closeStatusModalBtn');
+  if (closeBtn) closeBtn.onclick = () => document.getElementById('statusModal').style.display = 'none';
+
+  const approveBtn = document.getElementById('approveBtn');
+  if (approveBtn) approveBtn.onclick = async function () {
+    if (!currentRequestId) return;
+    approveBtn.disabled = true;
+    const disapproveBtn = document.getElementById('disapproveBtn');
+    if (disapproveBtn) disapproveBtn.disabled = true;
+    try {
+      const { error } = await supabase
+        .from('reservations')
+        .update({ status: 'approved' })
+        .eq('request_id', currentRequestId);
+      if (error) {
+        console.error('Approve error:', error);
+        alert('Could not approve. See console.');
+      } else {
+        // hide modal and remove the row for this request
+        document.getElementById('statusModal').style.display = 'none';
+        // remove the table row that has the matching data-request-id button
+        const tableBody = document.getElementById('pendingTableBody');
+        if (tableBody) {
+          const btn = tableBody.querySelector(`.status-btn[data-request-id="${currentRequestId}"]`);
+          if (btn) {
+            const row = btn.closest('tr');
+            if (row) row.remove();
+          }
+        }
+        currentRequestId = null;
+      }
+    } catch (err) {
+      console.error('Approve exception:', err);
+      alert('Error approving. See console.');
+    } finally {
+      approveBtn.disabled = false;
+      if (disapproveBtn) disapproveBtn.disabled = false;
+    }
+  };
+
+  const disapproveBtn = document.getElementById('disapproveBtn');
+  if (disapproveBtn) disapproveBtn.onclick = async function () {
+    if (!currentRequestId) return;
+    disapproveBtn.disabled = true;
+    const approveBtn = document.getElementById('approveBtn');
+    if (approveBtn) approveBtn.disabled = true;
+    try {
+      // Do not change status to "rejected" — keep status as 'pending'
+      // Option A: avoid any update and simply close the modal:
+      // document.getElementById('statusModal').style.display = 'none';
+      // currentRequestId = null;
+      //
+      // Option B: explicitly set status back to 'pending' (idempotent) so DB remains pending.
+      const { error } = await supabase
+        .from('reservations')
+        .update({ status: 'pending' })
+        .eq('request_id', currentRequestId);
+      if (error) {
+        console.error('Keep-pending error:', error);
+        alert('Could not keep as pending. See console.');
+      } else {
+        // Close modal and keep the row visible (still pending)
+        document.getElementById('statusModal').style.display = 'none';
+        currentRequestId = null;
+      }
+    } catch (err) {
+      console.error('Reject exception:', err);
+      alert('Error rejecting. See console.');
+    } finally {
+      disapproveBtn.disabled = false;
+      if (approveBtn) approveBtn.disabled = false;
+    }
+  };
+
+  // initial load & optional polling
   loadPendingRequests().catch(err => console.error(err));
   setInterval(() => loadPendingRequests().catch(err => console.error(err)), 10000);
 });

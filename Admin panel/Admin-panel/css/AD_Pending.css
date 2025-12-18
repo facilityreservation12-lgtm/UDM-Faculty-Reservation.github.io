@@ -164,58 +164,24 @@ body {
   font-size: 14px;
 }
 
-.pending-table tr.row-is-rejected {
-  background-color: #fff7f7;
-}
-
-.status-cell {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.status-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.status-pill--pending {
-  background: #fff3cd;
-  color: #a06800;
-  border: 1px solid #ffe69c;
-}
-
-.status-pill--approved {
-  background: #e6f4ea;
-  color: #1d6b3a;
-  border: 1px solid #b7e0c2;
-}
-
-.status-pill--rejected {
-  background: #fde7e7;
-  color: #a1272a;
-  border: 1px solid #f7c6c5;
-}
-
-.status-pill--default {
-  background: #f1f5f9;
-  color: #475569;
-  border: 1px solid #cbd5f5;
-}
-
 .pending-table tr:hover {
   background-color: #f9f9f9;
 }
 
-/* legacy button styles removed (view-only page) */
+.status-btn {
+  background-color: #184C2F;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  font-size: 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.status-btn:hover {
+  background-color: #0f3a24;
+}
  .custom-modal {
   position: fixed;
   z-index: 9999;

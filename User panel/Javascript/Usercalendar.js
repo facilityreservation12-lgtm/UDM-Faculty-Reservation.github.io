@@ -23,7 +23,10 @@ async function getReservationsForDay(year, month, day) {
     }
 
     // Get current user ID from localStorage (users table based login)
-    const userId = getCurrentUserId();
+    const userId = localStorage.getItem('id') || 
+                   localStorage.getItem('user_id') || 
+                   localStorage.getItem('userId') || 
+                   localStorage.getItem('currentUserId');
 
     if (!userId) {
       console.error('User ID not found in localStorage');
@@ -63,86 +66,6 @@ function getSupabase() {
 	// fallback to global variable `supabase` if present
 	if (typeof supabase !== 'undefined') return supabase;
 	return null;
-}
-
-const UNSEEN_NOTIF_COUNT_KEY = 'notification_unseen_count';
-let reservationRealtimeChannel = null;
-
-function getCurrentUserId() {
-  return localStorage.getItem('id') || 
-         localStorage.getItem('user_id') || 
-         localStorage.getItem('userId') || 
-         localStorage.getItem('currentUserId');
-}
-
-function getUnseenNotificationCount() {
-  const stored = parseInt(localStorage.getItem(UNSEEN_NOTIF_COUNT_KEY) || '0', 10);
-  return Number.isNaN(stored) ? 0 : stored;
-}
-
-function setUnseenNotificationCount(count) {
-  const safeCount = Math.max(0, count);
-  localStorage.setItem(UNSEEN_NOTIF_COUNT_KEY, String(safeCount));
-  updateNotificationIndicatorUI(safeCount);
-}
-
-function bumpUnseenNotificationCount(incrementBy = 1) {
-  setUnseenNotificationCount(getUnseenNotificationCount() + incrementBy);
-}
-
-function markNotificationsAsSeen() {
-  setUnseenNotificationCount(0);
-  localStorage.setItem('notificationsLastSeenAt', new Date().toISOString());
-}
-
-function updateNotificationIndicatorUI(count = getUnseenNotificationCount()) {
-  const dot = document.getElementById('notificationDot');
-  const badge = document.getElementById('notificationCount');
-  const isActive = count > 0;
-  if (dot) dot.classList.toggle('active', isActive);
-  if (badge) {
-    badge.textContent = count > 9 ? '9+' : String(count);
-    badge.classList.toggle('active', isActive);
-  }
-}
-
-function initNotificationIndicator() {
-  updateNotificationIndicatorUI();
-}
-
-function removeRealtimeChannel() {
-  const sb = getSupabase();
-  if (reservationRealtimeChannel && sb?.removeChannel) {
-    sb.removeChannel(reservationRealtimeChannel);
-    reservationRealtimeChannel = null;
-  }
-}
-
-async function initRealtimeNotifications() {
-  const sb = getSupabase();
-  const userId = getCurrentUserId();
-  if (!sb || !userId || !sb.channel) return;
-
-  removeRealtimeChannel();
-  reservationRealtimeChannel = sb
-    .channel(`reservation-status-${userId}`)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'reservations', filter: `id=eq.${userId}` }, handleRealtimeReservationPayload)
-    .subscribe();
-}
-
-async function handleRealtimeReservationPayload(payload) {
-  try {
-    const { eventType } = payload;
-    if (eventType === 'UPDATE' && payload.old?.status !== payload.new?.status) {
-      showStatusChangeNotification(payload.new, payload.old?.status, payload.new?.status);
-    }
-    if (['INSERT', 'UPDATE', 'DELETE'].includes(eventType)) {
-      await loadUserNotifications();
-      await renderCalendar(currentDate);
-    }
-  } catch (err) {
-    console.error('Realtime calendar payload error:', err);
-  }
 }
 
 async function loadUserDetails() {
@@ -231,7 +154,10 @@ async function fetchUserReservations() {
     }
 
     // Get current user ID from localStorage (same as other functions)
-    const userId = getCurrentUserId();
+    const userId = localStorage.getItem('id') || 
+                   localStorage.getItem('user_id') || 
+                   localStorage.getItem('userId') || 
+                   localStorage.getItem('currentUserId');
 
     if (!userId) {
       console.log('No user ID found in localStorage');
@@ -540,18 +466,13 @@ function calculateAvailableSlots(reservations) {
 
 
 // Notification panel toggle function
-function toggleNotificationPanel(event) {
-  if (event) event.preventDefault();
+function toggleNotificationPanel() {
   const panel = document.getElementById("notificationPanel");
   const overlay = document.getElementById("notificationOverlay");
   
   if (panel && overlay) {
-    const willOpen = !panel.classList.contains("active");
     panel.classList.toggle("active");
     overlay.classList.toggle("active");
-    if (willOpen) {
-      markNotificationsAsSeen();
-    }
   }
 }
 
@@ -565,7 +486,10 @@ async function loadUserNotifications() {
     }
 
     // Get current user ID
-    const userId = getCurrentUserId();
+    const userId = localStorage.getItem('id') || 
+                   localStorage.getItem('user_id') || 
+                   localStorage.getItem('userId') || 
+                   localStorage.getItem('currentUserId');
 
     if (!userId) {
       console.log('No user logged in, skipping notifications');
@@ -585,11 +509,8 @@ async function loadUserNotifications() {
       return;
     }
 
-    const safeReservations = reservations || [];
     // Display notifications
-    displayNotifications(safeReservations);
-    localStorage.setItem('userReservations', JSON.stringify(safeReservations));
-    updateNotificationIndicatorUI();
+    displayNotifications(reservations || []);
 
   } catch (error) {
     console.error('Error loading notifications:', error);
@@ -721,7 +642,10 @@ async function checkForStatusUpdates() {
     if (!sb) return;
 
     // Get current user ID
-    const userId = getCurrentUserId();
+    const userId = localStorage.getItem('id') || 
+                   localStorage.getItem('user_id') || 
+                   localStorage.getItem('userId') || 
+                   localStorage.getItem('currentUserId');
 
     if (!userId) return;
 
@@ -777,8 +701,6 @@ function showStatusChangeNotification(reservation, oldStatus, newStatus) {
   const displayNewStatus = mapStatusForDisplay(newStatus);
   
   const message = `Status Update: Your request for ${reservation.facility} on ${formattedDate} at ${startTime}-${endTime} has been changed from "${displayOldStatus}" to "${displayNewStatus}"`;
-
-  bumpUnseenNotificationCount();
   
   // Show browser notification if supported
   if ('Notification' in window && Notification.permission === 'granted') {
@@ -789,8 +711,7 @@ function showStatusChangeNotification(reservation, oldStatus, newStatus) {
   }
   
   // Also show in-app alert
-  showCustomAlert("Status Update", message, "info");
-  updateNotificationIndicatorUI();
+  showCustomAlert(message);
   
   // Refresh notifications panel
   loadUserNotifications();
@@ -807,26 +728,12 @@ function requestNotificationPermission() {
 
 // Initialize notifications when page loads
 document.addEventListener('DOMContentLoaded', function() {
-  initNotificationIndicator();
+  // Request notification permission
   requestNotificationPermission();
   
-  const overlay = document.getElementById("notificationOverlay");
-  if (overlay) {
-    overlay.addEventListener("click", () => {
-      const panel = document.getElementById("notificationPanel");
-      if (panel?.classList.contains("active")) {
-        toggleNotificationPanel();
-      }
-    });
-  }
+  // Load initial notifications
+  setTimeout(loadUserNotifications, 800); // Delay to ensure user is loaded
   
-  setTimeout(async () => {
-    await loadUserNotifications();
-    await checkForStatusUpdates();
-    await initRealtimeNotifications();
-  }, 800);
-  
-  setInterval(checkForStatusUpdates, 60000);
+  // Check for status updates every 30 seconds
+  setInterval(checkForStatusUpdates, 10000);
 });
-
-window.addEventListener('beforeunload', removeRealtimeChannel);
