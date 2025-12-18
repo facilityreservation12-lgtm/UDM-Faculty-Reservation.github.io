@@ -43,7 +43,7 @@ function signOutUser() {
     }
 
     // Redirect to landing page
-    window.location.href = '../LandingPage.html';
+    window.location.href = '../../index.html';
   });
 }
 
