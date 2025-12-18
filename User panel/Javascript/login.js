@@ -181,20 +181,6 @@ document.addEventListener('DOMContentLoaded', function() {
         localStorage.setItem('user_name', userName);
         localStorage.setItem('user_role', user.role_name || user.role);
         
-        // ===== LOG LOGIN ACTIVITY =====
-        const normalizedRole = (user.role_name || user.role).toLowerCase().replace(' ', '_');
-        
-        if (typeof logActivity === 'function') {
-          try {
-            await logActivity(`User Login - ${userName} (${normalizedRole})`);
-            console.log('✅ Login activity logged');
-          } catch (logError) {
-            console.warn('⚠️ Could not log activity:', logError);
-          }
-        } else {
-          console.warn('⚠️ logActivity function not available - audit logging disabled');
-        }
-        
         showCustomAlert('Welcome!', `Login successful! Welcome, ${userName}`, 'success');
         
         // Redirect after showing success message
@@ -216,7 +202,7 @@ document.addEventListener('DOMContentLoaded', function() {
             default:
               showCustomAlert('Error', 'Unknown role!', 'error');
           }
-        }, 2000);
+        }, 2000); // Wait 2 seconds before redirect
 
       } catch (error) {
         // ===== ALSO HIDE LOADING IN CATCH BLOCK =====
