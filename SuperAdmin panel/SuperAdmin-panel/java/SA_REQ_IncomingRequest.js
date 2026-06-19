@@ -1,22 +1,25 @@
+(function() {
+  if (window.supabaseClient && typeof window.supabaseClient.from === 'function') {
+    window.incomingSupabase = window.supabaseClient;
+  } else if (window.supabase && typeof window.supabase.createClient === 'function') {
+    window.incomingSupabase = window.supabase.createClient(
+      'https://tryytusvitsztadzqihq.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyeXl0dXN2aXRzenRhZHpxaWhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3ODQyMTQsImV4cCI6MjA5NzM2MDIxNH0.R9GkjYXhvoN3Jw8nOkiparyHQRCE6uqZMAPpX3edAxA'
+    );
+  } else {
+    console.error('Supabase library not loaded!');
+    return;
+  }
+  console.log('Supabase client initialized for SA_REQ_IncomingRequest');
+})();
+
 // Safe Supabase getter to avoid errors if library not loaded yet
 function getSupabase() {
   if (typeof window === 'undefined') return null;
+  if (window.incomingSupabase) return window.incomingSupabase;
   if (window.supabaseClient) return window.supabaseClient;
-  if (window.supabase && typeof window.SUPABASE_URL !== 'undefined' && typeof window.SUPABASE_KEY !== 'undefined') {
-    try {
-      return window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
-    } catch (e) {
-      console.warn('Could not create supabase client from window.supabase:', e);
-      return null;
-    }
-  }
+  if (window.supabase) return window.supabase;
   return null;
-}
-
-// Initialize Supabase client (defensive)
-const supabase = getSupabase();
-if (!supabase) {
-  console.error('Supabase client not available. Ensure supabase script and supabaseConfig are loaded before this file.');
 }
 
 // Function to format date
@@ -46,7 +49,7 @@ async function getUserFullName(userId) {
     console.log(`Fetching user details for ID: ${userId}`);
     
     // First try to get all available columns to see what's in the users table
-    let { data, error } = await supabase
+    let { data, error } = await getSupabase()
       .from('users')
       .select('first_name, last_name, role')
       .eq('id', userId);
@@ -249,6 +252,12 @@ async function markAsPending(requestId) {
       return;
     }
     console.log(`Reservation ${requestId} marked as PENDING.`);
+    
+    // Log the activity
+    if (typeof logActivity === 'function') {
+      logActivity('Request Reviewed', requestId);
+    }
+    
     // refresh the incoming requests list so UI updates
     try { loadIncomingRequests(true); } catch (e) { console.warn('Could not refresh incoming list:', e); }
   } catch (err) {
@@ -456,8 +465,10 @@ async function printVRF(requestId) {
       }
     } // end for buckets
 
-    // Nothing worked
-    alert('PDF not available for this request. Confirm the file exists in the bucket "facilityreservation" under "Reserved Facilities" as VRF-<request_id>.pdf, or check storage policies.');
+    // Nothing worked - still mark as pending so the request moves to the next stage
+    // even if the PDF is missing
+    await markAsPending(requestId);
+    alert('PDF not available for this request. The request has been moved to Pending status. Please ensure the PDF file exists in storage or upload it.');
   } catch (err) {
     console.error('printVRF error:', err);
     alert('Unexpected error. See console for details.');
@@ -488,7 +499,7 @@ document.addEventListener('DOMContentLoaded', function() {
 async function testSupabaseConnection() {
   try {
     console.log('Testing Supabase connection...');
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('reservations')
       .select('count(*)', { count: 'exact', head: true });
     

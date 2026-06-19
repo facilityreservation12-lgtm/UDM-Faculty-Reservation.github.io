@@ -60,11 +60,20 @@ function getCodePrefix(fac) {
 function getSupabase() {
 	// prefer initialized client set by your supabaseClient.js
 	if (typeof window !== 'undefined') {
-		if (window.supabaseClient) return window.supabaseClient;
-		if (window.supabase) return window.supabase;
+		if (window.supabaseClient && typeof window.supabaseClient.from === 'function') return window.supabaseClient;
+		if (window.supabase && typeof window.supabase.from === 'function') return window.supabase;
 	}
 	// fallback to global variable
-	if (typeof supabase !== 'undefined') return supabase;
+	if (typeof supabase !== 'undefined' && supabase && typeof supabase.from === 'function') return supabase;
+	// last resort: create client if library is available
+	if (typeof window !== 'undefined' && window.supabase && typeof window.supabase.createClient === 'function') {
+		const newClient = window.supabase.createClient(
+			'https://tryytusvitsztadzqihq.supabase.co',
+			'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyeXl0dXN2aXRzenRhZHpxaWhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3ODQyMTQsImV4cCI6MjA5NzM2MDIxNH0.R9GkjYXhvoN3Jw8nOkiparyHQRCE6uqZMAPpX3edAxA'
+		);
+		window.supabaseClient = newClient;
+		return newClient;
+	}
 	return null;
 }
 
@@ -1248,6 +1257,9 @@ document.addEventListener('DOMContentLoaded', async function() {
 								timeEnd: timeEndInput && timeEndInput.value ? timeEndInput.value : "",
 								userId: localStorage.getItem('user_id')
 							});
+							
+							// Log the activity
+							await logActivityForReservation(sb, codeId);
 						}
 					} catch (dbError) {
 						console.error('Database operation exception:', dbError);
@@ -1448,6 +1460,34 @@ async function createReservationNotification(sb, reservationData) {
 		}
 	} catch (error) {
 		console.error('Error creating notification:', error);
+	}
+}
+
+// Log activity for reservation request
+async function logActivityForReservation(sb, requestId) {
+	try {
+		const userId = localStorage.getItem('user_id') || 'unknown_user';
+		
+		const logEntry = {
+			user_id: userId,
+			request_id: requestId,
+			action: 'Reservation Request Created',
+			ip_address: '192.168.1.100'
+		};
+		
+		console.log('Logging reservation activity:', logEntry);
+		
+		const { error: logError } = await sb
+			.from('activity_logs')
+			.insert([logEntry]);
+			
+		if (logError) {
+			console.error('Failed to log activity:', logError);
+		} else {
+			console.log('Activity logged successfully');
+		}
+	} catch (error) {
+		console.error('Error logging activity:', error);
 	}
 }
 

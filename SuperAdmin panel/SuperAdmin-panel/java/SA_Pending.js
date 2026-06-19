@@ -1,9 +1,21 @@
+(function() {
+  if (window.supabaseClient && typeof window.supabaseClient.from === 'function') {
+    window.pendingSupabase = window.supabaseClient;
+  } else if (window.supabase && typeof window.supabase.createClient === 'function') {
+    window.pendingSupabase = window.supabase.createClient(
+      'https://tryytusvitsztadzqihq.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyeXl0dXN2aXRzenRhZHpxaWhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3ODQyMTQsImV4cCI6MjA5NzM2MDIxNH0.R9GkjYXhvoN3Jw8nOkiparyHQRCE6uqZMAPpX3edAxA'
+    );
+  } else {
+    console.error('Supabase library not loaded!');
+    return;
+  }
+  console.log('Supabase client initialized for SA_Pending');
+})();
+
 document.getElementById('closeStatusModalBtn').onclick = function() {
   document.getElementById('statusModal').style.display = 'none';
 };
-
-// Initialize Supabase client
-const supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
 
 // Helper: format date
 function formatDate(dateString) {
@@ -25,7 +37,7 @@ function formatTime(timeString) {
 // Get user display name (ensure FirstName LastName; never return raw id)
 async function getUserFullName(userId) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await window.pendingSupabase
       .from('users')
       .select('first_name,last_name,full_name,name')
       .eq('id', userId)
@@ -67,7 +79,7 @@ async function loadPendingRequests() {
     }
     tableBody.innerHTML = '<tr><td colspan="6">Loading...</td></tr>';
 
-    const { data: reservations, error } = await supabase
+    const { data: reservations, error } = await window.pendingSupabase
       .from('reservations')
       .select('*')
       .eq('status', 'pending')
@@ -88,7 +100,7 @@ async function loadPendingRequests() {
     const userIds = Array.from(new Set(reservations.map(r => r.id).filter(Boolean)));
     let usersMap = {};
     if (userIds.length > 0) {
-      const { data: users, error: usersErr } = await supabase
+      const { data: users, error: usersErr } = await window.pendingSupabase
         .from('users')
         .select('id, first_name, last_name')
         .in('id', userIds);
@@ -156,7 +168,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const disapproveBtn = document.getElementById('disapproveBtn');
     if (disapproveBtn) disapproveBtn.disabled = true;
     try {
-      const { error } = await supabase
+      const { error } = await window.pendingSupabase
         .from('reservations')
         .update({ status: 'approved' })
         .eq('request_id', currentRequestId);
@@ -164,6 +176,10 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('Approve error:', error);
         alert('Could not approve. See console.');
       } else {
+        // Log the acceptance activity
+        if (typeof logActivity === 'function') {
+          logActivity('Request Accepted', currentRequestId);
+        }
         // hide modal and remove the row for this request
         document.getElementById('statusModal').style.display = 'none';
         // remove the table row that has the matching data-request-id button
@@ -193,22 +209,29 @@ document.addEventListener('DOMContentLoaded', function() {
     const approveBtn = document.getElementById('approveBtn');
     if (approveBtn) approveBtn.disabled = true;
     try {
-      // Do not change status to "rejected" — keep status as 'pending'
-      // Option A: avoid any update and simply close the modal:
-      // document.getElementById('statusModal').style.display = 'none';
-      // currentRequestId = null;
-      //
-      // Option B: explicitly set status back to 'pending' (idempotent) so DB remains pending.
-      const { error } = await supabase
+      // Actually reject the request by setting status to 'rejected'
+      const { error } = await window.pendingSupabase
         .from('reservations')
-        .update({ status: 'pending' })
+        .update({ status: 'rejected' })
         .eq('request_id', currentRequestId);
       if (error) {
-        console.error('Keep-pending error:', error);
-        alert('Could not keep as pending. See console.');
+        console.error('Reject error:', error);
+        alert('Could not reject. See console.');
       } else {
-        // Close modal and keep the row visible (still pending)
+        // Log the rejection activity
+        if (typeof logActivity === 'function') {
+          logActivity('Request Rejected', currentRequestId);
+        }
+        // Close modal and remove the row (request is now rejected)
         document.getElementById('statusModal').style.display = 'none';
+        const tableBody = document.getElementById('pendingTableBody');
+        if (tableBody) {
+          const btn = tableBody.querySelector(`.status-btn[data-request-id="${currentRequestId}"]`);
+          if (btn) {
+            const row = btn.closest('tr');
+            if (row) row.remove();
+          }
+        }
         currentRequestId = null;
       }
     } catch (err) {

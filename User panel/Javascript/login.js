@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function() {
           .from('users')
           .select('*')
           .eq('id', userId)
-          .ilike('role', roleFilter);
+          .eq('role_name', roleFilter);
 
         if (error && error.code === '42703') {
           console.log('Trying with minimal columns...');
@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .from('users')
             .select('id, role, password')
             .eq('id', userId)
-            .ilike('role', roleFilter);
+            .eq('role_name', roleFilter);
           data = result.data;
           error = result.error;
         }

@@ -1,8 +1,17 @@
-// Initialize Supabase client
-const supabase = window.supabase.createClient(
-  window.SUPABASE_URL,
-  window.SUPABASE_KEY
-);
+(function() {
+  if (window.supabaseClient && typeof window.supabaseClient.from === 'function') {
+    window.approvedSupabase = window.supabaseClient;
+  } else if (window.supabase && typeof window.supabase.createClient === 'function') {
+    window.approvedSupabase = window.supabase.createClient(
+      'https://tryytusvitsztadzqihq.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyeXl0dXN2aXRzenRhZHpxaWhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3ODQyMTQsImV4cCI6MjA5NzM2MDIxNH0.R9GkjYXhvoN3Jw8nOkiparyHQRCE6uqZMAPpX3edAxA'
+    );
+  } else {
+    console.error('Supabase library not loaded!');
+    return;
+  }
+  console.log('Supabase client initialized for SA_Approved');
+})();
 
 // Helper: format date
 function formatDate(dateString) {
@@ -29,7 +38,7 @@ async function loadApprovedRequests() {
 
     tableBody.innerHTML = '<tr><td colspan="6">Loading...</td></tr>';
 
-    const { data: reservations, error } = await supabase
+    const { data: reservations, error } = await window.approvedSupabase
       .from('reservations')
       .select('*')
       .eq('status', 'approved')
@@ -50,7 +59,7 @@ async function loadApprovedRequests() {
     const userIds = Array.from(new Set(reservations.map(r => r.id).filter(Boolean)));
     let usersMap = {};
     if (userIds.length > 0) {
-      const { data: users, error: usersErr } = await supabase
+      const { data: users, error: usersErr } = await window.approvedSupabase
         .from('users')
         .select('id, first_name, last_name')
         .in('id', userIds);

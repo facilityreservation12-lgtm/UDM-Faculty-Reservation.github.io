@@ -4,31 +4,47 @@
 function getSupabaseClient() {
   // First, check if supabaseConfig.js has initialized the client
   if (typeof window !== 'undefined' && window.supabaseClient) {
-    console.log('✅ Found supabaseClient from supabaseConfig.js');
-    return window.supabaseClient;
+    // Validate that it has the expected Supabase client methods
+    if (typeof window.supabaseClient.from === 'function') {
+      console.log('✅ Found valid supabaseClient from supabaseConfig.js');
+      return window.supabaseClient;
+    } else {
+      console.warn('⚠️ window.supabaseClient exists but is not a valid Supabase client');
+    }
   }
   
-  // Check if global supabaseClient variable exists
-  if (typeof supabaseClient !== 'undefined' && supabaseClient) {
-    console.log('✅ Found global supabaseClient variable');
+  // Check if global supabaseClient variable exists and is valid
+  if (typeof supabaseClient !== 'undefined' && supabaseClient && typeof supabaseClient.from === 'function') {
+    console.log('✅ Found valid global supabaseClient variable');
     return supabaseClient;
   }
   
   // Check other possible exports
   if (typeof window !== 'undefined') {
-    if (window.supabase) return window.supabase;
-    if (window._supabase) return window._supabase;
-    if (window.sb) return window.sb;
+    if (window.supabase && typeof window.supabase.from === 'function') return window.supabase;
+    if (window._supabase && typeof window._supabase.from === 'function') return window._supabase;
+    if (window.sb && typeof window.sb.from === 'function') return window.sb;
+    
+    // Try to create client from window.supabase if it exists
+    if (window.supabase && typeof window.supabase.createClient === 'function') {
+      console.log('🔧 Creating Supabase client from window.supabase');
+      const newClient = window.supabase.createClient(
+        'https://tryytusvitsztadzqihq.supabase.co',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyeXl0dXN2aXRzenRhZHpxaWhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3ODQyMTQsImV4cCI6MjA5NzM2MDIxNH0.R9GkjYXhvoN3Jw8nOkiparyHQRCE6uqZMAPpX3edAxA'
+      );
+      window.supabaseClient = newClient;
+      return newClient;
+    }
   }
   
   // Log available properties for debugging
   const supabaseProps = typeof window !== 'undefined' ? 
     Object.keys(window).filter(key => key.toLowerCase().includes('supabase')) : [];
   
-  console.error('❌ Supabase client not found.');
+  console.error('❌ Valid Supabase client not found.');
   console.log('🔍 Available Supabase-related properties:', supabaseProps);
-  console.log('🔍 Global supabaseClient exists:', typeof supabaseClient !== 'undefined');
-  console.log('🔍 Window.supabaseClient exists:', typeof window !== 'undefined' && !!window.supabaseClient);
+  console.log('🔍 window.supabase:', typeof window.supabase, window.supabase);
+  console.log('🔍 window.supabaseClient:', typeof window.supabaseClient, window.supabaseClient);
   
   return null;
 }

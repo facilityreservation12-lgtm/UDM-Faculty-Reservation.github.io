@@ -1,10 +1,10 @@
 // Supabase Configuration
 // Replace these with your actual Supabase project credentials
 
-const SUPABASE_URL = 'https://hfasujvdkbjpllwohqcc.supabase.co';
+const SUPABASE_URL = 'https://tryytusvitsztadzqihq.supabase.co';
 
 // Using your actual API key from supabaseClient.js
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhmYXN1anZka2JqcGxsd29ocWNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ2NjA4ODgsImV4cCI6MjA3MDIzNjg4OH0.Wo6eqzObQ_sI_qebCi0F6iGyyP7TYcHCyxSoOZQOpPM';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyeXl0dXN2aXRzenRhZHpxaWhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3ODQyMTQsImV4cCI6MjA5NzM2MDIxNH0.R9GkjYXhvoN3Jw8nOkiparyHQRCE6uqZMAPpX3edAxA';
 
 // Initialize Supabase client
 let supabaseClient = null;
@@ -36,6 +36,7 @@ function initializeSupabase() {
   try {
     supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     window.supabaseClient = supabaseClient;
+    window.supabase = supabaseClient; // Also set for compatibility
     console.log('✅ Supabase client initialized successfully from supabaseConfig.js');
     console.log('📡 Ready to fetch users from database');
     return supabaseClient;

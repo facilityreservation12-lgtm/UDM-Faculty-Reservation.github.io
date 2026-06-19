@@ -2,29 +2,24 @@
 // SUPABASE CLIENT CONFIGURATION
 // ============================================
 
-function getSupabaseClient() {
-  if (typeof window !== 'undefined' && window.supabaseClient) {
-    console.log('✅ Found supabaseClient from supabaseConfig.js');
-    return window.supabaseClient;
+(function() {
+  if (window.supabaseClient && typeof window.supabaseClient.from === 'function') {
+    window.logSupabase = window.supabaseClient;
+  } else if (window.supabase && typeof window.supabase.createClient === 'function') {
+    window.logSupabase = window.supabase.createClient(
+      'https://tryytusvitsztadzqihq.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyeXl0dXN2aXRzenRhZHpxaWhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3ODQyMTQsImV4cCI6MjA5NzM2MDIxNH0.R9GkjYXhvoN3Jw8nOkiparyHQRCE6uqZMAPpX3edAxA'
+    );
+  } else {
+    console.error('Supabase library not loaded!');
   }
-  
-  if (typeof supabaseClient !== 'undefined' && supabaseClient) {
-    console.log('✅ Found global supabaseClient variable');
-    return supabaseClient;
-  }
-  
-  // If no window.supabaseClient, create one from Supabase CDN
-  if (typeof window.supabase !== 'undefined' && window.SUPABASE_URL && window.SUPABASE_KEY) {
-    console.log('✅ Creating supabaseClient from Supabase CDN');
-    return window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
-  }
-  
-  console.error('❌ Supabase client not found.');
-  return null;
-}
+})();
 
 function getSupabase() {
-  return getSupabaseClient();
+  if (window.logSupabase) return window.logSupabase;
+  if (window.supabaseClient) return window.supabaseClient;
+  if (window.supabase) return window.supabase;
+  return null;
 }
 
 // ============================================
@@ -81,10 +76,6 @@ async function fetchActivityLogs() {
         first_name: log.users?.first_name || 'Unknown',
         last_name: log.users?.last_name || 'User',
         role_name: log.users?.role_name || 'N/A'
-      },
-      reservations: {
-        title_of_the_event: 'N/A',
-        facility: 'N/A'
       }
     }));
     
@@ -171,10 +162,10 @@ function toggleFilter() {
   
   if (filterSection.style.display === 'none' || !filterSection.style.display) {
     filterSection.style.display = 'flex';
-    filterToggle.textContent = 'Audit Filters ▼';
+    filterToggle.textContent = 'Activities Filters ▼';
   } else {
     filterSection.style.display = 'none';
-    filterToggle.textContent = 'Audit Filters ▲';
+    filterToggle.textContent = 'Activities Filters ▲';
   }
 }
 
@@ -286,7 +277,7 @@ async function logActivity(action, requestId = null) {
 // ============================================
 
 document.addEventListener('DOMContentLoaded', async function() {
-  console.log('SuperAdmin Audit Log - DOM loaded');
+  console.log('Admin Audit Log - DOM loaded');
   
   // Load audit logs
   await loadActivityLogs();

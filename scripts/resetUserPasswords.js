@@ -2,11 +2,11 @@ import { createClient } from '@supabase/supabase-js';
 import 'dotenv/config';
 
 const DEFAULT_PASSWORD = process.argv[2] || 'Default@30';
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://hfasujvdkbjpllwohqcc.supabase.co';
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://tryytusvitsztadzqihq.supabase.co';
 const SUPABASE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
   process.env.SUPABASE_KEY ||
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhmYXN1anZka2JqcGxsd29ocWNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ2NjA4ODgsImV4cCI6MjA3MDIzNjg4OH0.Wo6eqzObQ_sI_qebCi0F6iGyyP7TYcHCyxSoOZQOpPM';
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyeXl0dXN2aXRzenRhZHpxaWhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3ODQyMTQsImV4cCI6MjA5NzM2MDIxNH0.R9GkjYXhvoN3Jw8nOkiparyHQRCE6uqZMAPpX3edAxA';
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
   console.error('Missing Supabase credentials. Set SUPABASE_URL and SUPABASE_KEY.');
@@ -50,4 +50,3 @@ resetPasswords().catch((err) => {
   console.error('Unexpected error while resetting passwords:', err);
   process.exit(1);
 });
-

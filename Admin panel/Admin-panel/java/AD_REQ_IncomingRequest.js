@@ -1,8 +1,17 @@
-// Initialize Supabase client
-const supabase = window.supabase.createClient(
-  window.SUPABASE_URL,
-  window.SUPABASE_KEY
-);
+(function() {
+  if (window.supabaseClient && typeof window.supabaseClient.from === 'function') {
+    window.reqSupabase = window.supabaseClient;
+  } else if (window.supabase && typeof window.supabase.createClient === 'function') {
+    window.reqSupabase = window.supabase.createClient(
+      'https://tryytusvitsztadzqihq.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyeXl0dXN2aXRzenRhZHpxaWhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3ODQyMTQsImV4cCI6MjA5NzM2MDIxNH0.R9GkjYXhvoN3Jw8nOkiparyHQRCE6uqZMAPpX3edAxA'
+    );
+  } else {
+    console.error('Supabase library not loaded!');
+    return;
+  }
+  console.log('Supabase client initialized for AD_REQ_IncomingRequest');
+})();
 
 // Function to format date
 function formatDate(dateString) {
@@ -31,7 +40,7 @@ async function getUserFullName(userId) {
     console.log(`Fetching user details for ID: ${userId}`);
     
     // First try to get all available columns to see what's in the users table
-    let { data, error } = await supabase
+    let { data, error } = await window.reqSupabase
       .from('users')
       .select('first_name, last_name, role')
       .eq('id', userId);
@@ -76,7 +85,7 @@ let lastReservationCount = 0;
 async function checkForNewRequests() {
   try {
     // count only reservations with status = 'request'
-    const { count, error } = await supabase
+    const { count, error } = await window.reqSupabase
       .from('reservations')
       .select('request_id', { count: 'exact', head: true })
       .eq('status', 'request');
@@ -122,7 +131,7 @@ async function loadIncomingRequests(forceReload = false) {
     console.log('Fetching reservations from Supabase...');
     
     // Fetch only reservations with status 'request' from Supabase
-    const { data: reservations, error } = await supabase
+    const { data: reservations, error } = await window.reqSupabase
       .from('reservations')
       .select('*')
       .eq('status', 'request')
@@ -205,7 +214,7 @@ async function fetchWithTimeout(url, opts = {}, timeout = 5000) {
 async function markAsPending(requestId) {
   try {
     // set to lowercase 'pending' so it won't appear in the "request" list (which filters for 'request')
-    const { error } = await supabase
+    const { error } = await window.reqSupabase
       .from('reservations')
       .update({ status: 'pending' })
       .eq('request_id', requestId);
@@ -215,6 +224,12 @@ async function markAsPending(requestId) {
       return;
     }
     console.log(`Reservation ${requestId} marked as PENDING.`);
+    
+    // Log the activity
+    if (typeof logActivity === 'function') {
+      logActivity('Request Reviewed', requestId);
+    }
+    
     // refresh the incoming requests list so UI updates
     try { loadIncomingRequests(true); } catch (e) { console.warn('Could not refresh incoming list:', e); }
   } catch (err) {
@@ -231,7 +246,7 @@ async function printVRF(requestId) {
     }
 
     // 1) Try fetch pdf_url from reservations row
-    const { data: row, error: rowErr } = await supabase
+    const { data: row, error: rowErr } = await window.reqSupabase
       .from('reservations')
       .select('pdf_url')
       .eq('request_id', requestId)
@@ -302,7 +317,7 @@ async function printVRF(requestId) {
     for (const bucket of candidateBuckets) {
       // Try getPublicUrl
       try {
-        const { data: urlData, error: urlErr } = supabase
+        const { data: urlData, error: urlErr } = window.reqSupabase
           .storage
           .from(bucket)
           .getPublicUrl(path);
@@ -319,7 +334,7 @@ async function printVRF(requestId) {
               foundPublicUrl = publicUrl;
               foundBucket = bucket;
               // update reservations.pdf_url with the working public URL
-              const { error: updErr } = await supabase
+              const { error: updErr } = await window.reqSupabase
                 .from('reservations')
                 .update({ pdf_url: publicUrl })
                 .eq('request_id', requestId);
@@ -337,7 +352,7 @@ async function printVRF(requestId) {
 
       // Try signed URL (short-lived)
       try {
-        const { data: signedData, error: signedErr } = await supabase
+        const { data: signedData, error: signedErr } = await window.reqSupabase
           .storage
           .from(bucket)
           .createSignedUrl(path, 120); // 2 minutes
@@ -361,7 +376,7 @@ async function printVRF(requestId) {
 
       // Try list folder to find actual filename variants
       try {
-        const { data: listData, error: listErr } = await supabase
+        const { data: listData, error: listErr } = await window.reqSupabase
           .storage
           .from(bucket)
           .list(folder);
@@ -375,7 +390,7 @@ async function printVRF(requestId) {
             const filePath = `${folder}/${found.name}`;
             // try public url for found item
             try {
-              const { data: urlData2, error: urlErr2 } = supabase
+              const { data: urlData2, error: urlErr2 } = window.reqSupabase
                 .storage
                 .from(bucket)
                 .getPublicUrl(filePath);
@@ -383,7 +398,7 @@ async function printVRF(requestId) {
               if (publicUrl2) {
                 const ok2 = await validateAndOpen(publicUrl2);
                 if (ok2) {
-                  const { error: updErr2 } = await supabase
+                  const { error: updErr2 } = await window.reqSupabase
                     .from('reservations')
                     .update({ pdf_url: publicUrl2 })
                     .eq('request_id', requestId);
@@ -398,7 +413,7 @@ async function printVRF(requestId) {
 
             // as last fallback for found file, try signed URL
             try {
-              const { data: signedData2, error: signedErr2 } = await supabase
+              const { data: signedData2, error: signedErr2 } = await window.reqSupabase
                 .storage
                 .from(bucket)
                 .createSignedUrl(filePath, 120);
@@ -428,8 +443,7 @@ async function printVRF(requestId) {
 document.addEventListener('DOMContentLoaded', function() {
   console.log('DOM Content Loaded - starting initialization...');
   console.log('Window.supabase available:', !!window.supabase);
-  console.log('SUPABASE_URL:', window.SUPABASE_URL);
-  console.log('SUPABASE_KEY length:', window.SUPABASE_KEY ? window.SUPABASE_KEY.length : 'undefined');
+  console.log('Window.reqSupabase available:', !!window.reqSupabase);
   
   // Test Supabase connection
   testSupabaseConnection();
@@ -448,7 +462,7 @@ document.addEventListener('DOMContentLoaded', function() {
 async function testSupabaseConnection() {
   try {
     console.log('Testing Supabase connection...');
-    const { data, error } = await supabase
+    const { data, error } = await window.reqSupabase
       .from('reservations')
       .select('count(*)', { count: 'exact', head: true });
     
