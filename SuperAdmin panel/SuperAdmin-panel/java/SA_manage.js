@@ -730,16 +730,6 @@ try {
     return;
   }
 
-  // If API call succeeds, also insert into custom users table with the generated ID
-  const { error } = await sb.from('users').insert(newUserData);
-
-  if (error) {
-    console.error('Error adding to users table:', error);
-    hideLoading();
-    showCustomAlert('Add Error', 'User was created in auth.users but not in local database. Error: ' + error.message, 'error');
-    return;
-  }
-
   closeModal();
   await loadUsers();
   hideLoading();
@@ -750,7 +740,6 @@ try {
   console.error('Error inserting new user:', err);
   showCustomAlert('Error', 'Error adding new user: ' + err.message, 'error');
 }
-    }
 
   } catch (error) {
     hideLoading();
