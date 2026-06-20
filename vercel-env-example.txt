@@ -1,0 +1,6 @@
+# Vercel Environment Variables
+# Add these in Vercel Dashboard → Settings → Environment Variables
+
+SUPABASE_URL=https://tryytusvitsztadzqihq.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
+APP_URL=https://udm-faculty-reservation-github-io.vercel.app/
