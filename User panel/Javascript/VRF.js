@@ -97,23 +97,17 @@ async function checkConflict(sb, facility, date, start, end) {
 async function loadUserDetails() {
   try {
     const sb = getSupabase();
+    
+    // IMPORTANT: Use the user_id from localStorage which is the formatted ID (e.g., F-003)
+    // Do NOT use sb.auth.getSession().user.id as that returns Supabase Auth UUID
+    // which does NOT match the id in the users table
     let userId = localStorage.getItem('user_id');
-
-    // Try to get user id from active session if client available
-    if (sb && sb.auth && sb.auth.getSession) {
-      try {
-        const { data: { session } } = await sb.auth.getSession();
-        if (session?.user?.id) userId = session.user.id;
-      } catch (sessionErr) {
-        console.warn('getSession error (fallback to localStorage):', sessionErr);
-      }
-    }
 
     if (!userId) {
       if (document.getElementById('UserName')) document.getElementById('UserName').textContent = 'Unknown User';
       if (document.getElementById('UserRole')) document.getElementById('UserRole').textContent = 'Unknown Role';
       if (document.getElementById('welcomeUserName')) document.getElementById('welcomeUserName').textContent = '';
-      console.warn('No user_id available from session or localStorage');
+      console.warn('No user_id available from localStorage');
       return;
     }
 
