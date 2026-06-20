@@ -41,8 +41,8 @@
 
       <form class="login-form" style="display:none;">
         <input type="hidden" id="role" name="role" value="" />
-        <input type="text" id="email" placeholder="User ID" maxlength="5" required />
-        <input type="password" id="password" placeholder="Password" maxlength="10" required />
+        <input type="email" id="email" placeholder="Email Address" required />
+        <input type="password" id="password" placeholder="Password" required />
         <button type="submit">LOG IN</button>
         <div class="forgot-password">
           <a href="#" id="forgotPasswordLink">Forgot Password?</a>
@@ -54,22 +54,15 @@
     <div id="forgotPasswordModal" class="modal" style="display:none;">
       <div class="login-box modal-content">
         <span class="close" id="closeModalBtn">&times;</span>
-        <img src="../User panel/images/udm-logo.webp" alt="UDM Logo" class="logo" />
+        <img src="images/udm-logo.webp" alt="UDM Logo" class="logo" />
         <h1>UNIVERSIDAD DE MANILA</h1>
         <small>Former City College of Manila</small>
-        <h2 style="margin-top: 1rem;">Change Password</h2>
-        <form id="changePasswordForm">
-          <input type="text" placeholder="Enter your User ID" required />
-          <input type="email" placeholder="Enter your Email" required />
-          <div class="password-wrapper">
-            <input type="password" id="newPassword" placeholder="New Password" required />
-            <span class="toggle-password" data-target="newPassword">&#128065;</span>
-          </div>
-          <div class="password-wrapper">
-            <input type="password" id="confirmPassword" placeholder="Confirm New Password" required />
-            <span class="toggle-password" data-target="confirmPassword">&#128065;</span>
-          </div>
-          <button type="submit">Change Password</button>
+        <h2 style="margin-top: 1rem;">Reset Password</h2>
+        <form id="forgotPasswordForm">
+          <input type="email" id="resetEmail" placeholder="Enter your Email Address" required />
+          <p class="reset-instructions">Enter your email address and we'll send a password reset link.</p>
+          <button type="submit" id="sendResetBtn">Send Reset Link</button>
+          <div id="resetStatus" class="reset-status"></div>
         </form>
       </div>
     </div>

@@ -1,5 +1,5 @@
-// ❌ REMOVED: const supabase = window.supabase.createClient(...)
-// ✅ Use window.supabaseClient instead
+// Supabase Auth Direct - No server required
+// Uses supabase.auth for authentication
 
 document.addEventListener('DOMContentLoaded', function() {
   // Role selection logic (show login form after selection)
@@ -14,8 +14,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (roleInput) roleInput.value = role;
     if (loginForm) {
       loginForm.style.display = 'flex';
-      const userIdInput = loginForm.querySelector('input[type="text"]');
-      if (userIdInput) userIdInput.placeholder = `${label} User ID`;
+      const emailInput = loginForm.querySelector('input[type="email"]');
+      if (emailInput) emailInput.value = '';
       const passwordInput = loginForm.querySelector('input[type="password"]');
       if (passwordInput) passwordInput.value = '';
     }
@@ -87,26 +87,79 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
-  // Handle login form submission
+  // ==========================================
+  // FORGOT PASSWORD - Direct Supabase Auth
+  // ==========================================
+  const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+  if (forgotPasswordForm) {
+    forgotPasswordForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const email = document.getElementById('resetEmail').value.trim();
+      const statusEl = document.getElementById('resetStatus');
+      const submitBtn = document.getElementById('sendResetBtn');
+      
+      if (!email) {
+        statusEl.textContent = 'Please enter your email address';
+        statusEl.className = 'reset-status error show';
+        return;
+      }
+      
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending...';
+      statusEl.textContent = 'Sending password reset email...';
+      statusEl.className = 'reset-status show';
+      
+      try {
+        const supabase = window.supabaseClient;
+        
+        // Use Supabase Auth directly - no server needed!
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin + '/User%20panel/reset-password.html'
+        });
+        
+        if (error) {
+          console.error('Reset password error:', error);
+          statusEl.textContent = error.message || 'Failed to send reset email';
+          statusEl.className = 'reset-status error show';
+        } else {
+          statusEl.textContent = 'Password reset email sent! Check your email.';
+          statusEl.className = 'reset-status success show';
+          forgotPasswordForm.reset();
+        }
+      } catch (err) {
+        console.error('Forgot password error:', err);
+        statusEl.textContent = 'Connection error. Please try again.';
+        statusEl.className = 'reset-status error show';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send Reset Link';
+      }
+    });
+  }
+
+  // ==========================================
+  // LOGIN - Supabase Auth signInWithPassword
+  // ==========================================
   if (loginForm) {
     loginForm.addEventListener('submit', async function(e) {
       e.preventDefault();
       
-      // ✅ Use window.supabaseClient instead of const supabase
       const supabase = window.supabaseClient;
       if (!supabase) {
         showCustomAlert('Error', 'Database connection not available', 'error');
         return;
       }
       
-      const userId = loginForm.querySelector('input[type="text"]').value.trim();
-      const password = loginForm.querySelector('input[type="password"]').value;
+      const emailInput = loginForm.querySelector('input[type="email"]');
+      const passwordInput = loginForm.querySelector('input[type="password"]');
+      const email = emailInput ? emailInput.value.trim() : '';
+      const password = passwordInput ? passwordInput.value : '';
       const roleInput = document.getElementById('role');
       const selectedRole = roleInput ? roleInput.value.trim() : '';
       const role = selectedRole.toLowerCase();
-      const roleFilter = role.replace(/\s+/g, '_');
 
-      console.log(`[LOGIN ATTEMPT] UserID: ${userId}, Role: ${role}`);
+      console.log(`[LOGIN ATTEMPT] Email: ${email}, Role: ${role}`);
 
       showLoading('Signing in...', 'Authenticating your credentials');
       
@@ -114,25 +167,14 @@ document.addEventListener('DOMContentLoaded', function() {
       const minLoadingTime = 1500;
 
       try {
-        let { data, error } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', userId)
-          .eq('role_name', roleFilter);
+        // Use Supabase Auth directly
+        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+          email: email,
+          password: password
+        });
 
-        if (error && error.code === '42703') {
-          console.log('Trying with minimal columns...');
-          const result = await supabase
-            .from('users')
-            .select('id, role, password')
-            .eq('id', userId)
-            .eq('role_name', roleFilter);
-          data = result.data;
-          error = result.error;
-        }
-
-        console.log('Supabase query result:', data);
-        console.log('Supabase query error:', error);
+        console.log('Supabase Auth result:', authData);
+        console.log('Supabase Auth error:', authError);
 
         const elapsedTime = Date.now() - startTime;
         const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
@@ -143,49 +185,47 @@ document.addEventListener('DOMContentLoaded', function() {
 
         hideLoading();
 
-        if (error) {
-          console.log(`[LOGIN FAILED] UserID: ${userId}, Role: ${role}, Reason: Database error`, error);
-          showCustomAlert('Connection Error', 'Database connection error. Please try again.', 'error');
+        if (authError) {
+          console.log(`[LOGIN FAILED] Email: ${email}, Reason: ${authError.message}`);
+          showCustomAlert('Login Failed', authError.message || 'Invalid email or password', 'error');
           return;
         }
 
-        if (!data || data.length === 0) {
-          console.log(`[LOGIN FAILED] UserID: ${userId}, Role: ${role}, Reason: Invalid User ID or Role`);
-          showCustomAlert('Login Failed', 'Invalid User ID or Role!', 'error');
+        // Auth succeeded - now lookup user in custom users table to get role
+        const user = authData.user;
+        console.log('[AUTH SUCCESS] User ID:', user.id);
+
+        // Look up user data from custom users table by email
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('email', email)
+          .single();
+
+        if (userError || !userData) {
+          console.log('[LOGIN FAILED] User not found in users table');
+          showCustomAlert('Login Failed', 'User account not found. Please contact administrator.', 'error');
           return;
         }
 
-        const user = data[0];
+        console.log('[USER DATA]', userData);
+
+        const userName = userData.name || userData.full_name || userData.first_name || userData.username || `User ${userData.id}`;
+        const userRole = userData.role_name || userData.role;
         
-        if (!user.password || user.password !== password) {
-          console.log(`[LOGIN FAILED] UserID: ${userId}, Role: ${role}, Reason: Incorrect password`);
-          showCustomAlert('Login Failed', 'Incorrect password!', 'error');
-          return;
-        }
-
-        const userName = user.name || user.full_name || user.first_name || user.username || `User ${user.id}`;
-        
-        console.log(`[LOGIN SUCCESS] UserID: ${userId}, Role: ${user.role_name || user.role}, Name: ${userName}`);
-        console.log('Available user data:', user);
+        console.log(`[LOGIN SUCCESS] Email: ${email}, Role: ${userRole}, Name: ${userName}`);
         
         // Store user information
-        localStorage.setItem('id', user.id);
-        localStorage.setItem('user_id', user.id);
+        localStorage.setItem('id', userData.id);
+        localStorage.setItem('user_id', userData.id);
         localStorage.setItem('user_name', userName);
-        localStorage.setItem('user_role', user.role_name || user.role);
-        
-        // Store user email for email notifications
-        if (user.email) {
-          localStorage.setItem('user_email', user.email);
-          console.log('User email stored:', user.email);
-        } else {
-          console.warn('No email found for user:', user.id);
-        }
+        localStorage.setItem('user_role', userRole);
+        localStorage.setItem('user_email', email);
         
         showCustomAlert('Welcome!', `Login successful! Welcome, ${userName}`, 'success');
         
         setTimeout(() => {
-          const normalizedRole = (user.role || user.role_name).toLowerCase().replace(' ', '_');
+          const normalizedRole = userRole.toLowerCase().replace(' ', '_');
           switch (normalizedRole) {
             case 'super_admin':
               window.location.href = '../SuperAdmin panel/SuperAdmin-panel/SuperAdminDashboard.html';
