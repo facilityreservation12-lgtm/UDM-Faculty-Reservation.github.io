@@ -708,24 +708,47 @@ const newUserData = {
 };
 
 try {
+  // Call Vercel API to create user in auth.users
+  const apiResponse = await fetch('https://udm-faculty-reservation-github-jqnjb4pqd.vercel.app/api/add-user', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email: email,
+      password: password,
+      first_name: firstName,
+      last_name: lastName,
+      role_name: normalizeRoleName(role)
+    })
+  });
+
+  const apiResult = await apiResponse.json();
+
+  if (!apiResponse.ok) {
+    console.error('API Error:', apiResult);
+    hideLoading();
+    showCustomAlert('Add Error', apiResult.error || 'Error creating user account', 'error');
+    return;
+  }
+
+  // If API call succeeds, also insert into custom users table with the generated ID
   const { error } = await sb.from('users').insert(newUserData);
 
   if (error) {
-    console.error('Error adding new user:', error);
+    console.error('Error adding to users table:', error);
     hideLoading();
-    showCustomAlert('Add Error', 'Error adding new user', 'error');
+    showCustomAlert('Add Error', 'User was created in auth.users but not in local database. Error: ' + error.message, 'error');
     return;
   }
 
   closeModal();
   await loadUsers();
   hideLoading();
-  showCustomAlert('Success', 'User added successfully', 'success');
+  showCustomAlert('Success', 'User added successfully. They can now login with their email and password.', 'success');
 
 } catch (err) {
   hideLoading();
   console.error('Error inserting new user:', err);
-  showCustomAlert('Error', 'Error adding new user', 'error');
+  showCustomAlert('Error', 'Error adding new user: ' + err.message, 'error');
 }
     }
 
