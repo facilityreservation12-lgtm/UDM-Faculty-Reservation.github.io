@@ -470,6 +470,10 @@ document.getElementById('userForm').addEventListener('submit', async (e) => {
     }
   }
 
+  function normalizeRoleName(roleName) {
+    return roleName.toLowerCase().replace(/\s+/g, '_');
+  }
+
   showLoading(
     currentEditingUserId ? 'Updating user...' : 'Adding user...', 
     'Please wait'
@@ -490,7 +494,7 @@ document.getElementById('userForm').addEventListener('submit', async (e) => {
         first_name: firstName,
         last_name: lastName,
         email: email,
-        role_name: role,
+        role_name: normalizeRoleName(role),
         role: roleValue
       };
 
@@ -569,7 +573,7 @@ document.getElementById('userForm').addEventListener('submit', async (e) => {
         first_name: firstName,
         last_name: lastName,
         email: email,
-        role_name: role,
+        role_name: normalizeRoleName(role),
         role: roleValue,
         password: password
       };

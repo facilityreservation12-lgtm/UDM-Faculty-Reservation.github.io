@@ -35,6 +35,21 @@ function getSupabaseForEmail() {
 }
 
 /**
+ * Get the base URL dynamically - works on localhost AND GitHub Pages
+ */
+function getAppBaseUrl() {
+    const hostname = window.location.hostname;
+    
+    // For localhost (development)
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        return window.location.origin;
+    }
+    
+    // For GitHub Pages (production) - adjust repo name as needed
+    return window.location.origin + '/UDM-Faculty-Reservation.github.io';
+}
+
+/**
  * Format date to readable format
  * @param {string} dateString - ISO date string
  * @returns {string} Formatted date (e.g., "January 15, 2024")
@@ -211,7 +226,7 @@ async function sendApprovalEmail(requestId) {
         }
 
         // Prepare email template parameters
-        const docUploadUrl = `http://localhost:5500/User%20panel/DocumentUpload.html?request_id=${encodeURIComponent(reservation.request_id || requestId)}`;
+        const docUploadUrl = `${getAppBaseUrl()}/User%20panel/DocumentUpload.html?request_id=${encodeURIComponent(reservation.request_id || requestId)}`;
         
         const templateParams = {
             to_email: userEmail,
@@ -273,7 +288,7 @@ async function sendRejectionEmail(requestId) {
         }
 
         // Prepare email template parameters
-        const docUploadUrl = `http://localhost:5500/User%20panel/DocumentUpload.html?request_id=${encodeURIComponent(reservation.request_id || requestId)}`;
+        const docUploadUrl = `${getAppBaseUrl()}/User%20panel/DocumentUpload.html?request_id=${encodeURIComponent(reservation.request_id || requestId)}`;
         
         const templateParams = {
             to_email: userEmail,

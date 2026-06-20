@@ -1,140 +1,109 @@
+/**
+ * SuperAdmin sendEmail.js
+ * Email functionality for SuperAdmin panel - converted to EmailJS
+ * Works on both localhost and GitHub Pages with dynamic URLs
+ */
+
+// EmailJS Configuration (same as Admin for consistency)
+const EMAILJS_CONFIG = {
+    publicKey: 'nobu3vJGbaY1kN5dz',
+    serviceId: 'service_uu6zn4a',
+    templateId: 'template_superadmin_notification' // You'll need to create this template in EmailJS
+};
+
+// Initialize EmailJS when script loads
+(function initializeSuperAdminEmailJS() {
+    if (typeof emailjs !== 'undefined') {
+        emailjs.init(EMAILJS_CONFIG.publicKey);
+        console.log('✅ EmailJS initialized for SuperAdmin panel');
+    } else {
+        console.warn('⚠️ EmailJS not loaded yet. Make sure the SDK is included in the HTML.');
+    }
+})();
+
+/**
+ * Get the base URL dynamically - works on localhost AND GitHub Pages
+ */
+function getAppBaseUrl() {
+    const hostname = window.location.hostname;
+    
+    // For localhost (development)
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        return window.location.origin;
+    }
+    
+    // For GitHub Pages (production) - adjust repo name as needed
+    // This handles: https://UDM-FACULTY.github.io/UDM-Faculty-Reservation.github.io/
+    return window.location.origin + '/UDM-Faculty-Reservation.github.io';
+}
+
 // Wait for DOM to be ready
 document.addEventListener('DOMContentLoaded', function() {
-  setupSendEmailButton();
+    setupSendEmailButton();
 });
 
 // Send Email handler
 function setupSendEmailButton() {
-  const btn = document.getElementById('sendEmailBtn');
-  
-  if (!btn) {
-    console.error('❌ Send Email button not found!');
-    return;
-  }
-
-  btn.addEventListener('click', async function() {
-    btn.disabled = true;
-    btn.textContent = 'Sending…';
-
-    const to = 'facility.reservation12@gmail.com';
-    const subject = 'Venue Reservation Form - Approval Required';
+    const btn = document.getElementById('sendEmailBtn');
     
-    // Get slip data (adjust selectors based on your HTML structure)
-    const venueName = document.querySelector('.venue-name')?.textContent || 'N/A';
-    const requesterName = document.querySelector('.requester-name')?.textContent || 'N/A';
-    const eventDate = document.querySelector('.event-date')?.textContent || 'N/A';
-    const eventTime = document.querySelector('.event-time')?.textContent || 'N/A';
-    const reservationId = document.querySelector('.reservation-id')?.textContent || 'N/A';
-    
-    // Document upload page URL for users
-    const docUploadUrl = `http://localhost:5500/User%20panel/DocumentUpload.html?request_id=${encodeURIComponent(reservationId)}`;
-    
-    // Professional email template
-    const bodyHtml = `
-<!DOCTYPE html>
-<html>
-<head>
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .email-container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: #0066cc; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
-    .content { background: #f9f9f9; padding: 30px; border: 1px solid #ddd; }
-    .info-box { background: white; padding: 15px; margin: 15px 0; border-left: 4px solid #0066cc; }
-    .info-row { margin: 10px 0; }
-    .label { font-weight: bold; color: #0066cc; }
-    .button { display: inline-block; background: #0066cc; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
-    .button.documents { background: #17a2b8; }
-    .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #777; }
-  </style>
-</head>
-<body>
-  <div class="email-container">
-    <div class="header">
-      <h1>🏢 Venue Reservation Form</h1>
-      <p>Universidad de Manila - Facility Reservation System</p>
-    </div>
-    
-    <div class="content">
-      <p>Dear Administrator,</p>
-      
-      <p>A new venue reservation request has been submitted and requires your review and approval.</p>
-      
-      <div class="info-box">
-        <h3 style="margin-top: 0; color: #0066cc;">📋 Reservation Details</h3>
-        <div class="info-row">
-          <span class="label">Reservation ID:</span> ${reservationId}
-        </div>
-        <div class="info-row">
-          <span class="label">Venue:</span> ${venueName}
-        </div>
-        <div class="info-row">
-          <span class="label">Requested by:</span> ${requesterName}
-        </div>
-        <div class="info-row">
-          <span class="label">Event Date:</span> ${eventDate}
-        </div>
-        <div class="info-row">
-          <span class="label">Event Time:</span> ${eventTime}
-        </div>
-      </div>
-      
-      <div style="text-align: center;">
-        <a href="http://localhost:5500/Admin%20panel/Admin-panel/Slip.html" class="button">
-          📄 View Full FRF Details
-        </a>
-        <br>
-        <a href="http://localhost:5500/Admin%20panel/Admin-panel/Slip.html?download=true" class="button" style="background: #28a745;">
-          ⬇️ Download FRF
-        </a>
-        <br>
-        <a href="${docUploadUrl}" class="button documents" target="_blank">
-          📄 View / Upload Documents
-        </a>
-      </div>
-      
-      <p style="margin-top: 30px;">Please review the reservation details and take appropriate action.</p>
-      
-      <p>Thank you,<br>
-      <strong>UDM Facility Reservation System</strong></p>
-    </div>
-    
-    <div class="footer">
-      <p>This is an automated message from the Universidad de Manila Facility Reservation System.</p>
-      <p>© ${new Date().getFullYear()} Universidad de Manila. All rights reserved.</p>
-    </div>
-  </div>
-</body>
-</html>
-    `;
-
-    try {
-      const emailData = {
-        to: to,
-        subject: subject,
-        html: bodyHtml
-      };
-
-      const res = await fetch('http://localhost:8000/api/send-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(emailData)
-      });
-
-      const data = await res.json().catch(() => ({}));
-      
-      if (res.ok && data.success) {
-        alert('✅ Email sent successfully! Check your Mailtrap inbox.');
-      } else {
-        alert('❌ Send failed: ' + (data.error || res.status));
-      }
-    } catch (err) {
-      console.error(err);
-      alert('❌ Network error: ' + err.message);
-    } finally {
-      btn.disabled = false;
-      btn.textContent = '📧 Send Email';
+    if (!btn) {
+        console.error('❌ Send Email button not found!');
+        return;
     }
-  });
+
+    btn.addEventListener('click', async function() {
+        btn.disabled = true;
+        btn.textContent = 'Sending…';
+
+        const to = 'facility.reservation12@gmail.com';
+        const subject = 'Venue Reservation Form - Approval Required';
+        
+        // Get slip data (adjust selectors based on your HTML structure)
+        const venueName = document.querySelector('.venue-name')?.textContent || 'N/A';
+        const requesterName = document.querySelector('.requester-name')?.textContent || 'N/A';
+        const eventDate = document.querySelector('.event-date')?.textContent || 'N/A';
+        const eventTime = document.querySelector('.event-time')?.textContent || 'N/A';
+        const reservationId = document.querySelector('.reservation-id')?.textContent || 'N/A';
+        
+        // Get dynamic base URL
+        const baseUrl = getAppBaseUrl();
+        
+        // Build dynamic URLs
+        const slipUrl = `${baseUrl}/Admin%20panel/Admin-panel/Slip.html`;
+        const downloadUrl = `${slipUrl}?download=true`;
+        const docUploadUrl = `${baseUrl}/User%20panel/DocumentUpload.html${reservationId !== 'N/A' ? '?request_id=' + encodeURIComponent(reservationId) : ''}`;
+
+        try {
+            // Prepare email template parameters
+            const templateParams = {
+                to_email: to,
+                subject: subject,
+                venue_name: venueName,
+                requester_name: requesterName,
+                event_date: eventDate,
+                event_time: eventTime,
+                reservation_id: reservationId,
+                slip_url: slipUrl,
+                download_url: downloadUrl,
+                doc_upload_url: docUploadUrl
+            };
+
+            // Send via EmailJS
+            const response = await emailjs.send(
+                EMAILJS_CONFIG.serviceId,
+                EMAILJS_CONFIG.templateId,
+                templateParams
+            );
+
+            console.log('✅ Email sent successfully!', response.status, response.text);
+            alert('✅ Email sent successfully!');
+
+        } catch (error) {
+            console.error('❌ Email send failed:', error);
+            alert('❌ Send failed: ' + (error.message || 'Unknown error'));
+        } finally {
+            btn.disabled = false;
+            btn.textContent = '📧 Send Email';
+        }
+    });
 }
