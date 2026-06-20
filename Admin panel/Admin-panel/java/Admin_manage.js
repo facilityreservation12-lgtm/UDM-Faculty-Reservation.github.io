@@ -580,7 +580,7 @@ document.getElementById('userForm').addEventListener('submit', async (e) => {
 
       try {
         // Call Vercel API to create user in auth.users
-        const apiResponse = await fetch('https://udm-faculty-reservation-github-jqnjb4pqd.vercel.app/api/add-user', {
+        const apiResponse = await fetch('https://udm-faculty-reservation-github-io.vercel.app/api/add-user', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
