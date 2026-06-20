@@ -40,9 +40,8 @@ function signOutUser(options = {}) {
     }
 
     setTimeout(() => {
-      // Redirect to landing page - use dynamic base URL for GitHub Pages compatibility
-      const baseUrl = window.location.origin + '/UDM-Faculty-Reservation.github.io';
-      window.location.href = baseUrl + '/index.html';
+      // Redirect to landing page - dynamic URL for GitHub Pages and Vercel
+      window.location.href = window.location.origin + '/index.html';
     }, 500);
   };
 
