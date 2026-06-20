@@ -740,6 +740,7 @@ try {
   console.error('Error inserting new user:', err);
   showCustomAlert('Error', 'Error adding new user: ' + err.message, 'error');
 }
+    }
 
   } catch (error) {
     hideLoading();
