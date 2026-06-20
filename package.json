@@ -7,5 +7,6 @@
     "express": "^5.1.0",
     "nodemailer": "^7.0.10"
   },
-  "type": "module"
+  "type": "module",
+  "staticBuild": true
 }
