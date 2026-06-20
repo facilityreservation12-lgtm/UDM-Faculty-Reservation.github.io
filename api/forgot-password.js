@@ -47,8 +47,8 @@ export default async function handler(req, res) {
       })
     }
 
-    // Default redirect URL for GitHub Pages
-    const defaultRedirectTo = `${process.env.APP_URL || 'https://facilityreservation12-lgtm.github.io/UDM-Faculty-Reservation.github.io'}/User%20panel/reset-password.html`
+    // Default redirect URL for Vercel deployment
+    const defaultRedirectTo = `${process.env.APP_URL || 'https://udm-faculty-reservation-github-io.vercel.app'}/User%20panel/reset-password.html`
 
     // Send password reset email
     const { error: resetError } = await supabaseAdmin.auth.admin.resetPasswordForEmail(email, {

@@ -228,14 +228,14 @@ document.addEventListener('DOMContentLoaded', function() {
           const normalizedRole = userRole.toLowerCase().replace(' ', '_');
           switch (normalizedRole) {
             case 'super_admin':
-              window.location.href = '../SuperAdmin panel/SuperAdmin-panel/SuperAdminDashboard.html';
+              window.location.href = '/SuperAdmin panel/SuperAdmin-panel/SuperAdminDashboard.html';
               break;
             case 'admin':
-              window.location.href = '../Admin panel/Admin-panel/AdminDashboard.html';
+              window.location.href = '/Admin panel/Admin-panel/AdminDashboard.html';
               break;
             case 'faculty':
             case 'student_organization':
-              window.location.href = './Userdashboard.html';
+              window.location.href = '/User panel/Userdashboard.html';
               break;
             default:
               showCustomAlert('Error', 'Unknown role!', 'error');

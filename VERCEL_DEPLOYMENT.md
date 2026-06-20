@@ -2,7 +2,7 @@
 
 ## Deployment Status
 
-**Preview URL:** https://udm-faculty-reservation-github-jb8yd83ou.vercel.app
+**Preview URL:** https://udm-faculty-reservation-github-io.vercel.app
 
 ---
 
@@ -17,12 +17,12 @@
 |------|-------|
 | `SUPABASE_URL` | `https://tryytusvitsztadzqihq.supabase.co` |
 | `SUPABASE_SERVICE_ROLE_KEY` | Your service role key (from `.env` file or Supabase Dashboard → Settings → API) |
-| `APP_URL` | `https://udm-faculty-reservation-github-jb8yd83ou.vercel.app` |
+| `APP_URL` | `https://udm-faculty-reservation-github-io.vercel.app` |
 
 ### Step 2: Add Vercel URL to Supabase Redirect URLs
 
 1. Go to **Supabase Dashboard → Authentication → Redirect URLs**
-2. Add: `https://udm-faculty-reservation-github-jb8yd83ou.vercel.app/**`
+2. Add: `https://udm-faculty-reservation-github-io.vercel.app/**`
 
 ### Step 3: Redeploy
 
@@ -37,7 +37,7 @@
 
 Create a new user in both auth.users and custom users table.
 
-**URL:** `https://udm-faculty-reservation-github-jb8yd83ou.vercel.app/api/add-user`
+**URL:** `https://udm-faculty-reservation-github-io.vercel.app/api/add-user`
 
 **Request:**
 ```json
@@ -69,13 +69,13 @@ Create a new user in both auth.users and custom users table.
 
 Send password reset email.
 
-**URL:** `https://udm-faculty-reservation-github-jb8yd83ou.vercel.app/api/forgot-password`
+**URL:** `https://udm-faculty-reservation-github-io.vercel.app/api/forgot-password`
 
 **Request:**
 ```json
 {
   "email": "user@example.com",
-  "redirectTo": "https://udm-faculty-reservation-github-jb8yd83ou.vercel.app/User%20panel/reset-password.html"
+  "redirectTo": "https://udm-faculty-reservation-github-io.vercel.app/User%20panel/reset-password.html"
 }
 ```
 
@@ -99,3 +99,18 @@ Verify SUPABASE_SERVICE_ROLE_KEY is correct (not the anon key).
 
 ### User Already Exists
 The API returns an error if the user already exists in auth.users or custom users table.
+
+### Email Not Working
+1. Check that EmailJS is properly initialized in the HTML files
+2. Verify the email templates exist in your EmailJS dashboard
+3. Check browser console for any EmailJS errors
+
+### Paths Not Working
+All paths now use absolute paths from root (`/`) which works on Vercel. If you have issues:
+1. Verify the file structure on Vercel matches the local structure
+2. Check that all HTML files have correct relative paths to CSS/JS files
+
+### Reservation System Not Working
+1. Verify Supabase connection is working
+2. Check that the `reservations` table exists and has proper RLS policies
+3. Ensure user is logged in and has valid session

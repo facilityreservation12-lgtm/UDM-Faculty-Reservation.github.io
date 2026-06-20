@@ -1,7 +1,7 @@
 /**
  * Admin sendEmail.js
  * Email functionality for Admin panel - converted to EmailJS
- * Works on both localhost and GitHub Pages with dynamic URLs
+ * Works on localhost, Vercel, and GitHub Pages with dynamic URLs
  */
 
 // EmailJS Configuration - Using existing templates
@@ -23,18 +23,11 @@ const EMAILJS_CONFIG = {
 })();
 
 /**
- * Get the base URL dynamically - works on localhost AND GitHub Pages
+ * Get the base URL dynamically - works on all environments (localhost, Vercel, GitHub Pages)
  */
 function getAppBaseUrl() {
-    const hostname = window.location.hostname;
-    
-    // For localhost (development)
-    if (hostname === 'localhost' || hostname === '127.0.0.1') {
-        return window.location.origin;
-    }
-    
-    // For GitHub Pages (production) - adjust repo name as needed
-    return window.location.origin + '/UDM-Faculty-Reservation.github.io';
+    // Works for all environments - just use the current origin
+    return window.location.origin;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
