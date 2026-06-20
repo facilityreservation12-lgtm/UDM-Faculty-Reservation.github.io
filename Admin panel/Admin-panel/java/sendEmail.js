@@ -4,11 +4,12 @@
  * Works on both localhost and GitHub Pages with dynamic URLs
  */
 
-// EmailJS Configuration (same as SuperAdmin for consistency)
+// EmailJS Configuration - Using existing templates
 const EMAILJS_CONFIG = {
     publicKey: 'nobu3vJGbaY1kN5dz',
     serviceId: 'service_uu6zn4a',
-    templateId: 'template_admin_frf' // You'll need to create this template in EmailJS
+    // Using existing approval template - modify template in EmailJS dashboard to match your needs
+    templateId: 'template_ekz42oi'
 };
 
 // Initialize EmailJS when script loads
@@ -33,7 +34,6 @@ function getAppBaseUrl() {
     }
     
     // For GitHub Pages (production) - adjust repo name as needed
-    // This handles: https://UDM-FACULTY.github.io/UDM-Faculty-Reservation.github.io/
     return window.location.origin + '/UDM-Faculty-Reservation.github.io';
 }
 
@@ -57,24 +57,16 @@ function setupSendEmailButton() {
             
             // Build dynamic URLs
             const slipUrl = `${baseUrl}/Admin%20panel/Admin-panel/Slip.html${details.reservationId !== 'N/A' ? '?request_id=' + encodeURIComponent(details.reservationId) : ''}`;
-            const downloadUrl = `${slipUrl}${slipUrl.includes('?') ? '&' : '?'}download=true`;
             const docUploadUrl = `${baseUrl}/User%20panel/DocumentUpload.html${details.reservationId !== 'N/A' ? '?request_id=' + encodeURIComponent(details.reservationId) : ''}`;
 
-            // Prepare email template parameters
+            // Prepare email template parameters - matching existing template variables
             const templateParams = {
                 to_email: 'facility.reservation12@gmail.com',
-                subject: `Facility Reservation Form – ${details.eventName || 'FRF'}`,
-                reservation_id: details.reservationId,
-                slip_number: details.slipNumber,
-                unit_office: details.unitOffice,
-                event_name: details.eventName,
-                inclusive_dates: details.inclusiveDates,
-                facilities: details.facilities.join(', '),
-                setups: details.setups.join(', '),
-                remarks: details.remarks.join(', '),
-                slip_url: slipUrl,
-                download_url: downloadUrl,
-                doc_upload_url: docUploadUrl
+                request_id: details.reservationId,
+                facility: details.facility || details.eventName || 'N/A',
+                event_date: details.inclusiveDates || 'N/A',
+                event_title: details.eventName || 'N/A',
+                document_upload_url: docUploadUrl
             };
 
             // Send via EmailJS
@@ -150,10 +142,9 @@ function collectSlipDetails() {
         unitOffice,
         inclusiveDates,
         eventName,
-        facilities: facilityValues,
-        setups: setupValues,
-        remarks: remarksValues,
-        slipHtml: document.querySelector('.container')?.outerHTML || ''
+        facility: facilityValues.join(', '),
+        setups: setupValues.join(', '),
+        remarks: remarksValues.join(', ')
     };
 }
 
@@ -171,14 +162,4 @@ function getCheckedLabels(groupEl, transforms = {}) {
     });
 
     return labels.length ? labels : ['None selected'];
-}
-
-/**
- * DEPRECATED: buildEmailTemplate is no longer needed for EmailJS
- * Kept for backward compatibility but not used
- * @deprecated Use EmailJS template instead
- */
-function buildEmailTemplate(details) {
-    console.warn('buildEmailTemplate is deprecated - using EmailJS templates instead');
-    return '';
 }

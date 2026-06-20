@@ -4,11 +4,12 @@
  * Works on both localhost and GitHub Pages with dynamic URLs
  */
 
-// EmailJS Configuration (same as Admin for consistency)
+// EmailJS Configuration - Using existing templates
 const EMAILJS_CONFIG = {
     publicKey: 'nobu3vJGbaY1kN5dz',
     serviceId: 'service_uu6zn4a',
-    templateId: 'template_superadmin_notification' // You'll need to create this template in EmailJS
+    // Using existing approval template - modify template in EmailJS dashboard to match your needs
+    templateId: 'template_ekz42oi'
 };
 
 // Initialize EmailJS when script loads
@@ -33,7 +34,6 @@ function getAppBaseUrl() {
     }
     
     // For GitHub Pages (production) - adjust repo name as needed
-    // This handles: https://UDM-FACULTY.github.io/UDM-Faculty-Reservation.github.io/
     return window.location.origin + '/UDM-Faculty-Reservation.github.io';
 }
 
@@ -54,9 +54,6 @@ function setupSendEmailButton() {
     btn.addEventListener('click', async function() {
         btn.disabled = true;
         btn.textContent = 'Sending…';
-
-        const to = 'facility.reservation12@gmail.com';
-        const subject = 'Venue Reservation Form - Approval Required';
         
         // Get slip data (adjust selectors based on your HTML structure)
         const venueName = document.querySelector('.venue-name')?.textContent || 'N/A';
@@ -70,22 +67,17 @@ function setupSendEmailButton() {
         
         // Build dynamic URLs
         const slipUrl = `${baseUrl}/Admin%20panel/Admin-panel/Slip.html`;
-        const downloadUrl = `${slipUrl}?download=true`;
         const docUploadUrl = `${baseUrl}/User%20panel/DocumentUpload.html${reservationId !== 'N/A' ? '?request_id=' + encodeURIComponent(reservationId) : ''}`;
 
         try {
-            // Prepare email template parameters
+            // Prepare email template parameters - matching existing template variables
             const templateParams = {
-                to_email: to,
-                subject: subject,
-                venue_name: venueName,
-                requester_name: requesterName,
+                to_email: 'facility.reservation12@gmail.com',
+                request_id: reservationId,
+                facility: venueName,
                 event_date: eventDate,
-                event_time: eventTime,
-                reservation_id: reservationId,
-                slip_url: slipUrl,
-                download_url: downloadUrl,
-                doc_upload_url: docUploadUrl
+                event_title: requesterName,
+                document_upload_url: docUploadUrl
             };
 
             // Send via EmailJS
