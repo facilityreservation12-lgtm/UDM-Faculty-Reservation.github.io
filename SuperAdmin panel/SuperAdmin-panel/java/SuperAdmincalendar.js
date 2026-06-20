@@ -7,6 +7,85 @@ let currentDate = new Date();
 let events = JSON.parse(localStorage.getItem('calendarEvents') || '{}');
 let supabaseEvents = {};
 
+// EmailJS Configuration for manual events
+const EMAILJS_CONFIG_MANUAL = {
+    publicKey: 'nobu3vJGbaY1kN5dz',
+    serviceId: 'service_uu6zn4a',
+    approvalTemplateId: 'template_ekz42oi' // Using existing approval template
+};
+
+// Initialize EmailJS
+(function initializeCalendarEmailJS() {
+    if (typeof emailjs !== 'undefined') {
+        emailjs.init(EMAILJS_CONFIG_MANUAL.publicKey);
+        console.log('✅ EmailJS initialized for calendar');
+    } else {
+        console.warn('⚠️ EmailJS not loaded yet.');
+    }
+})();
+
+// Validate email format
+function isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+// Format date for email
+function formatDateForCalendarEmail(dateString) {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+}
+
+// Format time for email
+function formatTimeForCalendarEmail(timeString) {
+    if (!timeString) return 'N/A';
+    const [hour, minute] = timeString.split(':');
+    const h = parseInt(hour, 10);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const displayHour = h % 12 || 12;
+    return `${displayHour}:${minute} ${ampm}`;
+}
+
+// Send manual event confirmation email
+async function sendManualEventConfirmationEmail(eventData) {
+    console.log('📧 Sending manual event confirmation email:', eventData);
+    
+    try {
+        // Generate a request ID for external users
+        const externalRequestId = `EXT-${Date.now().toString().slice(-6)}`;
+        
+        const templateParams = {
+            to_email: eventData.toEmail,
+            user_name: eventData.userName,
+            request_id: externalRequestId,
+            facility: eventData.facility,
+            event_date: formatDateForCalendarEmail(eventData.eventDate),
+            time_start: formatTimeForCalendarEmail(eventData.timeStart),
+            time_end: formatTimeForCalendarEmail(eventData.timeEnd),
+            event_title: eventData.eventTitle
+        };
+        
+        console.log('📧 Email params:', templateParams);
+        
+        const response = await emailjs.send(
+            EMAILJS_CONFIG_MANUAL.serviceId,
+            EMAILJS_CONFIG_MANUAL.approvalTemplateId,
+            templateParams
+        );
+        
+        console.log('✅ Manual event email sent successfully!', response.status, response.text);
+        return true;
+    } catch (error) {
+        console.error('❌ Failed to send manual event email:', error);
+        return false;
+    }
+}
+
 // Helper function to get current user ID
 async function getCurrentUserId() {
   try {
@@ -185,10 +264,17 @@ async function saveEvent(startDateStr) {
   const startTime = document.getElementById('startTime').value.trim();
   const endTime = document.getElementById('endTime').value.trim();
   const person = document.getElementById('person').value.trim();
+  const eventEmail = document.getElementById('eventEmail').value.trim();
   const duration = parseInt(document.getElementById('duration').value);
 
   if (!title || !facility || !startTime || !endTime || !person || isNaN(duration) || duration < 1) {
     showCustomAlert('Validation Error', 'Please fill in all fields correctly.', 'warning');
+    return;
+  }
+
+  // Validate email if provided
+  if (eventEmail && !isValidEmail(eventEmail)) {
+    showCustomAlert('Validation Error', 'Please enter a valid email address.', 'warning');
     return;
   }
 
@@ -272,7 +358,28 @@ async function saveEvent(startDateStr) {
     localStorage.setItem('calendarEvents', JSON.stringify(events));
     closeModal();
     renderCalendar(currentDate);
-    showCustomAlert('Success', 'Event saved successfully!', 'success');
+    
+    // Send email confirmation if email was provided
+    if (eventEmail) {
+      sendManualEventConfirmationEmail({
+        toEmail: eventEmail,
+        userName: person,
+        eventTitle: title,
+        facility: facility,
+        eventDate: startDateStr,
+        timeStart: startTime,
+        timeEnd: endTime,
+        duration: duration
+      }).then(emailSent => {
+        if (emailSent) {
+          showCustomAlert('Success', 'Event saved and confirmation email sent to ' + eventEmail, 'success');
+        } else {
+          showCustomAlert('Success', 'Event saved successfully! (Email could not be sent)', 'success');
+        }
+      });
+    } else {
+      showCustomAlert('Success', 'Event saved successfully!', 'success');
+    }
 
   } catch (err) {
     showCustomAlert('Error', 'Error saving event: ' + err.message, 'error');
@@ -573,6 +680,8 @@ function openEventModal(dateStr) {
         <input type="time" id="endTime">
         <label>Reserved By:</label>
         <input type="text" id="person">
+        <label>Email Address (for confirmation):</label>
+        <input type="email" id="eventEmail" placeholder="user@example.com">
         <label>Duration (days):</label>
         <input type="number" id="duration" min="1" value="1">
         <div class="modal-buttons">

@@ -26,6 +26,9 @@ function setupSendEmailButton() {
     const eventTime = document.querySelector('.event-time')?.textContent || 'N/A';
     const reservationId = document.querySelector('.reservation-id')?.textContent || 'N/A';
     
+    // Document upload page URL for users
+    const docUploadUrl = `http://localhost:5500/User%20panel/DocumentUpload.html?request_id=${encodeURIComponent(reservationId)}`;
+    
     // Professional email template
     const bodyHtml = `
 <!DOCTYPE html>
@@ -40,6 +43,7 @@ function setupSendEmailButton() {
     .info-row { margin: 10px 0; }
     .label { font-weight: bold; color: #0066cc; }
     .button { display: inline-block; background: #0066cc; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+    .button.documents { background: #17a2b8; }
     .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #777; }
   </style>
 </head>
@@ -82,6 +86,10 @@ function setupSendEmailButton() {
         <a href="http://localhost:5500/Admin%20panel/Admin-panel/Slip.html?download=true" class="button" style="background: #28a745;">
           ⬇️ Download FRF
         </a>
+        <br>
+        <a href="${docUploadUrl}" class="button documents" target="_blank">
+          📄 View / Upload Documents
+        </a>
       </div>
       
       <p style="margin-top: 30px;">Please review the reservation details and take appropriate action.</p>
@@ -92,7 +100,7 @@ function setupSendEmailButton() {
     
     <div class="footer">
       <p>This is an automated message from the Universidad de Manila Facility Reservation System.</p>
-      <p>© 2024 Universidad de Manila. All rights reserved.</p>
+      <p>© ${new Date().getFullYear()} Universidad de Manila. All rights reserved.</p>
     </div>
   </div>
 </body>

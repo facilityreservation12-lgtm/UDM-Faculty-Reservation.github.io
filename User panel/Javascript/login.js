@@ -174,6 +174,14 @@ document.addEventListener('DOMContentLoaded', function() {
         localStorage.setItem('user_name', userName);
         localStorage.setItem('user_role', user.role_name || user.role);
         
+        // Store user email for email notifications
+        if (user.email) {
+          localStorage.setItem('user_email', user.email);
+          console.log('User email stored:', user.email);
+        } else {
+          console.warn('No email found for user:', user.id);
+        }
+        
         showCustomAlert('Welcome!', `Login successful! Welcome, ${userName}`, 'success');
         
         setTimeout(() => {

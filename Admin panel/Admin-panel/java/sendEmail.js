@@ -124,6 +124,10 @@ function buildEmailTemplate(details) {
   const hasRequest = details.reservationId && details.reservationId !== 'N/A';
   const slipUrl = hasRequest ? `${baseUrl}?request_id=${encodeURIComponent(details.reservationId)}` : baseUrl;
   const downloadUrl = `${slipUrl}${slipUrl.includes('?') ? '&' : '?'}download=true`;
+  
+  // Document upload page URL for users
+  const docUploadBaseUrl = 'http://localhost:5500/User%20panel/DocumentUpload.html';
+  const docUploadUrl = hasRequest ? `${docUploadBaseUrl}?request_id=${encodeURIComponent(details.reservationId)}` : docUploadBaseUrl;
 
   const facilities = details.facilities.join(', ');
   const setups = details.setups.join(', ');
@@ -148,6 +152,7 @@ function buildEmailTemplate(details) {
     .button-row { text-align: center; margin: 24px 0; }
     .button { display: inline-block; margin: 8px; padding: 12px 28px; border-radius: 24px; background: #0066cc; color: #fff; text-decoration: none; font-weight: bold; }
     .button.secondary { background: #28a745; }
+    .button.documents { background: #17a2b8; }
     .slip-preview { margin-top: 24px; border: 1px dashed #cbd2e1; border-radius: 10px; padding: 16px; overflow-x: auto; }
     .footer { text-align: center; font-size: 12px; color: #666; margin-top: 24px; }
   </style>
@@ -198,6 +203,7 @@ function buildEmailTemplate(details) {
       <div class="button-row">
         <a class="button" href="${slipUrl}" target="_blank">View Full FRF</a>
         <a class="button secondary" href="${downloadUrl}" target="_blank">Download / Print</a>
+        <a class="button documents" href="${docUploadUrl}" target="_blank">📄 View / Upload Documents</a>
       </div>
 
       ${slipPreview}

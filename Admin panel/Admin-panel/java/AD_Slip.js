@@ -226,9 +226,10 @@ async function loadSlipFromReservation() {
   if (reservation.requested_by_signature) {
     const requestedBySigImg = document.getElementById('requestedBySignatureImg');
     if (requestedBySigImg) {
-      requestedBySigImg.src = reservation.requested_by_signature;
+      const { data: urlData } = sb.storage.from('facilityreservation').getPublicUrl(reservation.requested_by_signature);
+      requestedBySigImg.src = urlData.publicUrl;
       requestedBySigImg.style.display = 'block';
-      console.log('Requested by signature loaded');
+      console.log('Requested by signature loaded:', urlData.publicUrl);
     }
   }
 

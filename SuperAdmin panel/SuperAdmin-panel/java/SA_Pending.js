@@ -180,6 +180,18 @@ document.addEventListener('DOMContentLoaded', function() {
         if (typeof logActivity === 'function') {
           logActivity('Request Accepted', currentRequestId);
         }
+        
+        // Send approval email notification to user
+        sendApprovalEmail(currentRequestId).then(emailSent => {
+          if (emailSent) {
+            console.log('✅ Approval email notification sent');
+            showEmailNotificationToast('Request approved and email notification sent!', true);
+          } else {
+            console.log('⚠️ Approval email could not be sent (user may not have email on file)');
+            showEmailNotificationToast('Request approved (no email on file for user)', false);
+          }
+        });
+        
         // hide modal and remove the row for this request
         document.getElementById('statusModal').style.display = 'none';
         // remove the table row that has the matching data-request-id button
@@ -222,6 +234,18 @@ document.addEventListener('DOMContentLoaded', function() {
         if (typeof logActivity === 'function') {
           logActivity('Request Rejected', currentRequestId);
         }
+        
+        // Send rejection email notification to user
+        sendRejectionEmail(currentRequestId).then(emailSent => {
+          if (emailSent) {
+            console.log('✅ Rejection email notification sent');
+            showEmailNotificationToast('Request rejected and email notification sent!', true);
+          } else {
+            console.log('⚠️ Rejection email could not be sent (user may not have email on file)');
+            showEmailNotificationToast('Request rejected (no email on file for user)', false);
+          }
+        });
+        
         // Close modal and remove the row (request is now rejected)
         document.getElementById('statusModal').style.display = 'none';
         const tableBody = document.getElementById('pendingTableBody');

@@ -1204,6 +1204,36 @@ document.addEventListener('DOMContentLoaded', async function() {
 				// UPDATE LOADING TEXT - Saving to database
     			showLoading('Saving to database...', 'Storing your reservation information');
 
+				// Upload signature first (if exists) and get the URL before building dbReservation
+				let requestedBySignature = '';
+				const fileInput = document.getElementById('signature');
+				const signatureFile = fileInput && fileInput.files ? fileInput.files[0] : null;
+				
+				if (signatureFile) {
+					const sigFileExt = signatureFile.name.split('.').pop();
+					const sigFileName = `signature_${codeId}.${sigFileExt}`;
+					const sigFilePath = `Reserved Facilities/${sigFileName}`;
+					
+					console.log('Uploading signature:', sigFilePath);
+					const sigUploadResult = await uploadToSupabase(signatureFile, sigFilePath);
+					
+					if (sigUploadResult) {
+						requestedBySignature = sigFilePath;
+						console.log('Signature uploaded successfully:', requestedBySignature);
+					} else {
+						// Upload failed - save to IndexedDB for later retry
+						try {
+							const signatureKey = `${codeId}_signature`;
+							await storeFileInIDB(signatureKey, signatureFile);
+							reservation.signatureKey = signatureKey;
+							reservation.signatureName = sigFileName;
+							console.warn('Signature saved to IndexedDB due to upload failure.');
+						} catch (idbErr) {
+							console.error('Failed to store signature in IndexedDB:', idbErr);
+						}
+					}
+				}
+
 				// Create reservation object for database
 				const dbReservation = {
 					id: localStorage.getItem('user_id'),
@@ -1218,6 +1248,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 					additional_req: additionalReq || '',
 					set_up_details: setupDetails || '',
 					pdf_url: '',
+					requested_by_signature: requestedBySignature,
 					status: 'request'
 				};
 
@@ -1271,34 +1302,6 @@ document.addEventListener('DOMContentLoaded', async function() {
 							retryCount++;
 						} else {
 							break;
-						}
-					}
-				}
- 					// UPDATE LOADING TEXT - Uploading files
-   					 showLoading('Uploading files...', 'Processing signature and documents');
-
-				// Try file upload(s). If upload fails, save in IndexedDB
-				const fileInput = document.getElementById('signature');
-				const file = fileInput && fileInput.files ? fileInput.files[0] : null;
-
-				if (file) {
-					const fileExt = file.name.split('.').pop();
-					const fileName = `signature_${codeId}.${fileExt}`;
-					const filePath = `Reserved Facilities/${fileName}`;
-					
-					console.log('Attempting signature upload:', filePath);
-					const uploadResult = await uploadToSupabase(file, filePath);
-
-					if (!uploadResult) {
-						// Upload failed. Save file in IndexedDB
-						try {
-							const signatureKey = `${codeId}_signature`;
-							await storeFileInIDB(signatureKey, file);
-							reservation.signatureKey = signatureKey;
-							reservation.signatureName = fileName;
-							console.warn('Signature saved to IndexedDB due to upload failure.');
-						} catch (idbErr) {
-							console.error('Failed to store signature in IndexedDB:', idbErr);
 						}
 					}
 				}

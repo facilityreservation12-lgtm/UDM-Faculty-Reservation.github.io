@@ -13,6 +13,7 @@
   <script src="java/profile.js"></script>
   <script src="java/alert.js"></script>
   <script src="java/SA_logout.js"></script>
+  <script src="java/SA_Relevantdocuments.js"></script>
 </head>
 <body>
 <div class="sidebar">
@@ -47,31 +48,101 @@
 <div class="main"> 
 <div class="documents-container">
     <h1><button class="back-btn" onclick="history.back()">←</button> Relevant Documents</h1>
-    <div class="document-grid">
-      <div class="document-card">
-        <p class="title">Approval</p>
-        <img src="https://img.icons8.com/ios/100/document--v1.png" alt="PDF Icon" />
-        <p class="filename">Surname_Approval.PDF</p>       
+    
+    <!-- Reservation Info -->
+    <div class="reservation-info" id="reservationInfo" style="display: none;">
+      <h3>Reservation Details</h3>
+      <div class="info-row">
+        <span class="info-label">Request ID:</span>
+        <span class="info-value" id="infoRequestId">-</span>
       </div>
-      <div class="document-card">
-        <p class="title">Venue Slip</p>
-        <img src="https://img.icons8.com/ios/100/document--v1.png" alt="PDF Icon" />
-        <p class="filename">Surname_VenueSlip.PDF</p>
+      <div class="info-row">
+        <span class="info-label">Facility:</span>
+        <span class="info-value" id="infoFacility">-</span>
       </div>
-      <div class="document-card">
-        <p class="title">Cash Invoice</p>
-        <img src="https://img.icons8.com/ios/100/document--v1.png" alt="PDF Icon" />
-        <p class="filename">Surname_CashInvoice.PDF</p>
+      <div class="info-row">
+        <span class="info-label">Event:</span>
+        <span class="info-value" id="infoEvent">-</span>
       </div>
-      <div class="document-card">
-        <p class="title">FRF</p>
-        <img src="https://img.icons8.com/ios/100/document--v1.png" alt="PDF Icon" />
-        <p class="filename">Surname_FRF.PDF</p>
+      <div class="info-row">
+        <span class="info-label">Requester:</span>
+        <span class="info-value" id="infoRequester">-</span>
       </div>
-      <div class="document-card">
-        <p class="title">Permit to Use Facility</p>
-        <img src="https://img.icons8.com/ios/100/document--v1.png" alt="PDF Icon" />
-        <p class="filename">Surname_PTUF.PDF</p>
+    </div>
+
+    <div class="document-grid" id="documentGrid">
+      <!-- Dynamic content will be loaded here -->
+    </div>
+
+    <!-- Upload Section for Admin Documents -->
+    <div class="upload-section" id="uploadSection" style="display: none;">
+      <h2>Upload Admin Documents</h2>
+      <p class="upload-description">Upload the following administrative documents for this reservation.</p>
+      
+      <div class="upload-grid" id="uploadGrid">
+        <!-- Approval Upload -->
+        <div class="upload-card" id="upload-approval">
+          <div class="upload-card-header">Approval</div>
+          <div class="upload-card-body">
+            <input type="file" id="file-approval" accept=".pdf" class="file-input">
+            <label for="file-approval" class="file-label">
+              <span>Choose PDF file</span>
+            </label>
+            <p class="file-info">Max size: 10MB</p>
+            <div class="upload-status" id="status-approval"></div>
+          </div>
+          <div class="upload-card-footer">
+            <button class="upload-btn" onclick="uploadDocument('approval')" id="btn-approval" disabled>Upload</button>
+          </div>
+        </div>
+
+        <!-- Venue Slip Upload -->
+        <div class="upload-card" id="upload-venue_slip">
+          <div class="upload-card-header">Venue Slip</div>
+          <div class="upload-card-body">
+            <input type="file" id="file-venue_slip" accept=".pdf" class="file-input">
+            <label for="file-venue_slip" class="file-label">
+              <span>Choose PDF file</span>
+            </label>
+            <p class="file-info">Max size: 10MB</p>
+            <div class="upload-status" id="status-venue_slip"></div>
+          </div>
+          <div class="upload-card-footer">
+            <button class="upload-btn" onclick="uploadDocument('venue_slip')" id="btn-venue_slip" disabled>Upload</button>
+          </div>
+        </div>
+
+        <!-- Cash Invoice Upload -->
+        <div class="upload-card" id="upload-cash_invoice">
+          <div class="upload-card-header">Cash Invoice</div>
+          <div class="upload-card-body">
+            <input type="file" id="file-cash_invoice" accept=".pdf" class="file-input">
+            <label for="file-cash_invoice" class="file-label">
+              <span>Choose PDF file</span>
+            </label>
+            <p class="file-info">Max size: 10MB</p>
+            <div class="upload-status" id="status-cash_invoice"></div>
+          </div>
+          <div class="upload-card-footer">
+            <button class="upload-btn" onclick="uploadDocument('cash_invoice')" id="btn-cash_invoice" disabled>Upload</button>
+          </div>
+        </div>
+
+        <!-- Permit to Use Facility Upload -->
+        <div class="upload-card" id="upload-permit_to_use_facility">
+          <div class="upload-card-header">Permit to Use Facility</div>
+          <div class="upload-card-body">
+            <input type="file" id="file-permit_to_use_facility" accept=".pdf" class="file-input">
+            <label for="file-permit_to_use_facility" class="file-label">
+              <span>Choose PDF file</span>
+            </label>
+            <p class="file-info">Max size: 10MB</p>
+            <div class="upload-status" id="status-permit_to_use_facility"></div>
+          </div>
+          <div class="upload-card-footer">
+            <button class="upload-btn" onclick="uploadDocument('permit_to_use_facility')" id="btn-permit_to_use_facility" disabled>Upload</button>
+          </div>
+        </div>
       </div>
     </div>
 

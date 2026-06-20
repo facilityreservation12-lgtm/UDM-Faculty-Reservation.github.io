@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document Upload - UDM Facility Reservation</title>
+  <link rel="icon" type="image/png" href="images/udm-logo.webp">
+  <link rel="stylesheet" href="CSS/DocumentUpload.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../supabaseConfig.js"></script>
+  <script src="Javascript/alert.js"></script>
+  <script src="Javascript/DocumentUpload.js" defer></script>
+  <style>
+    /* Portal-specific styles - no sidebar, standalone page */
+    body {
+      flex-direction: column;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #315C3A 0%, #1e3e2e 100%);
+      margin: 0;
+      padding: 0;
+    }
+
+    .portal-container {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 20px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .portal-header {
+      background: white;
+      border-radius: 20px 20px 0 0;
+      padding: 30px 40px;
+      text-align: center;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+    }
+
+    .portal-header h1 {
+      color: #315C3A;
+      margin: 0 0 10px 0;
+      font-size: 28px;
+    }
+
+    .portal-header p {
+      color: #666;
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .portal-content {
+      background: white;
+      border-radius: 0 0 20px 20px;
+      padding: 40px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+
+    .reservation-summary {
+      background: #f9fbf9;
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 30px;
+    }
+
+    .reservation-summary h3 {
+      color: #315C3A;
+      margin: 0 0 15px 0;
+      font-size: 16px;
+      border-bottom: 2px solid #F7CF52;
+      padding-bottom: 10px;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+    }
+
+    .summary-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .summary-item .label {
+      font-size: 11px;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .summary-item .value {
+      font-size: 14px;
+      color: #333;
+      font-weight: 500;
+    }
+
+    .documents-section {
+      margin-bottom: 30px;
+    }
+
+    .documents-section h2 {
+      color: #315C3A;
+      font-size: 18px;
+      margin: 0 0 15px 0;
+    }
+
+    .document-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 15px;
+    }
+
+    .document-card {
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      transition: all 0.2s;
+      background: white;
+    }
+
+    .document-card:hover {
+      border-color: #315C3A;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .document-card img {
+      width: 50px;
+      height: 50px;
+      margin-bottom: 10px;
+    }
+
+    .document-card .title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    .document-card .filename {
+      font-size: 12px;
+      color: #666;
+      word-break: break-all;
+    }
+
+    .document-card .no-doc {
+      color: #999;
+      font-style: italic;
+    }
+
+    .document-card .card-actions {
+      margin-top: 10px;
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .action-btn {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .action-btn.view {
+      background: #315C3A;
+      color: white;
+    }
+
+    .action-btn.download {
+      background: #F7CF52;
+      color: #234734;
+    }
+
+    /* Upload Section */
+    .upload-section {
+      background: #f9fbf9;
+      border: 2px dashed #ccc;
+      border-radius: 12px;
+      padding: 25px;
+      margin-top: 30px;
+    }
+
+    .upload-section h2 {
+      color: #315C3A;
+      font-size: 18px;
+      margin: 0 0 10px 0;
+    }
+
+    .upload-section > p {
+      color: #666;
+      font-size: 14px;
+      margin: 0 0 20px 0;
+    }
+
+    .upload-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .upload-card {
+      background: white;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .upload-card-header {
+      background: #315C3A;
+      color: white;
+      padding: 12px 15px;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .upload-card-body {
+      padding: 20px;
+    }
+
+    .file-input {
+      display: none;
+    }
+
+    .file-label {
+      display: block;
+      padding: 15px;
+      background: #f9f9f9;
+      border: 2px dashed #ccc;
+      border-radius: 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 14px;
+      color: #666;
+    }
+
+    .file-label:hover {
+      border-color: #315C3A;
+      background: #f0f9f0;
+    }
+
+    .file-info {
+      font-size: 11px;
+      color: #999;
+      margin-top: 8px;
+      text-align: center;
+    }
+
+    .upload-status {
+      margin-top: 10px;
+      font-size: 12px;
+      text-align: center;
+      min-height: 20px;
+    }
+
+    .upload-status.success { color: #2e7d32; }
+    .upload-status.error { color: #c62828; }
+    .upload-status.uploading { color: #1976d2; }
+
+    .upload-card-footer {
+      padding: 15px;
+      background: #f5f5f5;
+    }
+
+    .upload-btn {
+      width: 100%;
+      padding: 12px;
+      background: #315C3A;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .upload-btn:hover:not(:disabled) {
+      background: #1e3e2e;
+    }
+
+    .upload-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    /* Portal Footer */
+    .portal-footer {
+      text-align: center;
+      padding: 20px;
+      color: rgba(255,255,255,0.7);
+      font-size: 12px;
+    }
+
+    /* Print */
+    .print-btn {
+      background: #666;
+      color: white;
+      border: none;
+      padding: 10px 25px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+
+    .print-btn:hover {
+      background: #444;
+    }
+
+    @media (max-width: 600px) {
+      .portal-container {
+        margin: 20px auto;
+        padding: 0 15px;
+      }
+
+      .portal-header, .portal-content {
+        padding: 20px;
+      }
+
+      .document-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .upload-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Hide sidebar-related styles */
+    .sidebar {
+      display: none !important;
+    }
+
+    .main {
+      margin-left: 0 !important;
+      width: 100% !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="portal-container">
+    <div class="portal-header">
+      <h1>📄 Document Upload Portal</h1>
+      <p>Universidad de Manila - Facility Reservation System</p>
+    </div>
+
+    <div class="portal-content">
+      <!-- Reservation Summary -->
+      <div class="reservation-summary" id="reservationInfo">
+        <h3>📋 Reservation Details</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <span class="label">Request ID</span>
+            <span class="value" id="requestId">Loading...</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Facility</span>
+            <span class="value" id="facility">Loading...</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Event</span>
+            <span class="value" id="eventTitle">Loading...</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Date</span>
+            <span class="value" id="eventDate">Loading...</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Time</span>
+            <span class="value" id="eventTime">Loading...</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Status</span>
+            <span class="value" id="status">Loading...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Documents Section -->
+      <div class="documents-section">
+        <h2>📁 Documents</h2>
+        <div class="document-grid" id="documentGrid">
+          <!-- Dynamic content -->
+        </div>
+      </div>
+
+      <!-- Upload Section -->
+      <div class="upload-section" id="uploadSection">
+        <h2>📤 Upload Your Documents</h2>
+        <p>Please upload the required documents for your reservation.</p>
+        
+        <div class="upload-grid">
+          <!-- FRF Upload -->
+          <div class="upload-card" id="frfUploadCard">
+            <div class="upload-card-header">FRF (Facility Reservation Form)</div>
+            <div class="upload-card-body">
+              <input type="file" id="frfFile" accept=".pdf" class="file-input">
+              <label for="frfFile" class="file-label">Click to select PDF file</label>
+              <p class="file-info">Max size: 10MB</p>
+              <div class="upload-status" id="frfStatus"></div>
+            </div>
+            <div class="upload-card-footer">
+              <button class="upload-btn" onclick="uploadDocument('frf')" id="frfUploadBtn" disabled>Upload FRF</button>
+            </div>
+          </div>
+
+          <!-- Signed Approval Upload -->
+          <div class="upload-card" id="signedApprovalUploadCard">
+            <div class="upload-card-header">Signed Approval</div>
+            <div class="upload-card-body">
+              <input type="file" id="signedApprovalFile" accept=".pdf" class="file-input">
+              <label for="signedApprovalFile" class="file-label">Click to select PDF file</label>
+              <p class="file-info">Max size: 10MB</p>
+              <div class="upload-status" id="signedApprovalStatus"></div>
+            </div>
+            <div class="upload-card-footer">
+              <button class="upload-btn" onclick="uploadDocument('signed_approval')" id="signedApprovalUploadBtn" disabled>Upload Signed Approval</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 30px;">
+        <button onclick="window.print()" class="print-btn">🖨️ Print Page</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="portal-footer">
+    <p>© 2024 Universidad de Manila - Facility Reservation System</p>
+  </div>
+
+  <!-- Custom Alert Modal -->
+  <div id="customAlertModal" class="custom-modal">
+    <div class="custom-modal-content">
+      <button class="modal-close" onclick="closeCustomAlert()">&times;</button>
+      <div id="alertIcon" class="modal-icon"></div>
+      <h3 id="alertTitle" class="modal-title"></h3>
+      <p id="alertMessage" class="modal-message"></p>
+      <div id="alertButtons" class="modal-buttons">
+        <button class="modal-btn primary" onclick="closeCustomAlert()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Modal -->
+  <div id="loadingModal" class="loading-modal">
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <div id="loadingText" class="loading-text">Loading...</div>
+      <div id="loadingSubtext" class="loading-subtext">Please wait</div>
+    </div>
+  </div>
+
+  <input type="hidden" id="currentRequestId" value="">
+</body>
+</html>
