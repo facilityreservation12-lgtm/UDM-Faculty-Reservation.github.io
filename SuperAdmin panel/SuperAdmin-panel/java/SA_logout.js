@@ -42,8 +42,9 @@ function signOutUser() {
       });
     }
 
-    // Redirect to landing page
-    window.location.href = '../../index.html';
+    // Redirect to landing page - use dynamic base URL for GitHub Pages compatibility
+    const baseUrl = window.location.origin + '/UDM-Faculty-Reservation.github.io';
+    window.location.href = baseUrl + '/index.html';
   });
 }
 
