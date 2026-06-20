@@ -83,8 +83,7 @@ export default async function handler(req, res) {
         email: email,
         first_name,
         last_name,
-        role_name,
-        supabase_auth_id: authUser.user.id
+        role_name
       })
 
     if (userError) {
