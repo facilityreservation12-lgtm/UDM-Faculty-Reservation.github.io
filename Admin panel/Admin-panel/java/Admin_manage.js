@@ -253,6 +253,7 @@ function openAddModal() {
   document.getElementById('modalTitle').textContent = 'Add User';
   document.getElementById('userForm').reset();
   currentEditingUserId = null;
+  originalRole = null; // Reset original role for new user
 
   const submitButton = document.querySelector('#userForm button[type="submit"]');
   if (submitButton) {
@@ -319,6 +320,9 @@ function openEditModal(user) {
   if (roleFieldElement && user.role_name) {
     roleFieldElement.value = user.role_name;
   }
+  
+  // Store original role for change detection
+  originalRole = user.role_name || '';
 
   document.getElementById('userPassword').value = '';
   document.getElementById('userRePassword').value = '';
@@ -362,6 +366,7 @@ function openEditModal(user) {
 }
 
 let currentEditingUserId = null;
+let originalRole = null; // Store original role when editing to detect changes
 
 async function editUser(userId) {
   showLoading('Loading user data...', 'Please wait');
@@ -405,22 +410,19 @@ function deleteUser(userId) {
       showLoading('Deleting user...', 'Please wait');
 
       try {
-        const sb = getSupabase();
-        if (!sb) {
-          hideLoading();
-          showCustomAlert('Connection Error', 'Database connection error', 'error');
-          return;
-        }
+        // Call API endpoint to delete user (bypasses RLS via service role key)
+        const apiResponse = await fetch('https://udm-faculty-reservation-github-io.vercel.app/api/delete-user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: userId })
+        });
 
-        const { error } = await sb
-          .from('users')
-          .delete()
-          .eq('id', userId);
+        const result = await apiResponse.json();
 
-        if (error) {
-          console.error('Error deleting user:', error);
+        if (!apiResponse.ok) {
+          console.error('API Error deleting user:', result);
           hideLoading();
-          showCustomAlert('Delete Error', 'Error deleting user', 'error');
+          showCustomAlert('Delete Error', result.error || 'Error deleting user', 'error');
           return;
         }
 
@@ -430,7 +432,7 @@ function deleteUser(userId) {
       } catch (error) {
         hideLoading();
         console.error('Error in deleteUser:', error);
-        showCustomAlert('Error', 'Error deleting user', 'error');
+        showCustomAlert('Error', 'Error deleting user: ' + error.message, 'error');
       }
     }
   );
@@ -480,6 +482,26 @@ document.getElementById('userForm').addEventListener('submit', async (e) => {
     return;
   }
 
+  // Check if role changed during edit
+  if (currentEditingUserId && originalRole && role !== originalRole) {
+    // Show warning confirmation for role change
+    showCustomConfirm(
+      'Warning: Role Change',
+      `You are about to change this user's role from "${originalRole}" to "${role}". This may affect their access permissions. Do you want to continue?`,
+      () => {
+        // User confirmed, proceed with update
+        performUserUpdate(firstName, lastName, email, role, password);
+      }
+    );
+    return;
+  }
+
+  // Continue with normal flow (new user or no role change)
+  performUserUpdate(firstName, lastName, email, role, password);
+});
+
+// Function to perform user add/update (extracted for reuse with role change confirmation)
+async function performUserUpdate(firstName, lastName, email, role, password) {
   function getRoleValue(roleName) {
     switch (roleName) {
       case 'ADMIN':
@@ -499,6 +521,21 @@ document.getElementById('userForm').addEventListener('submit', async (e) => {
     return roleName.toLowerCase().replace(/\s+/g, '_');
   }
 
+  function getRolePrefix(roleName) {
+    switch (roleName) {
+      case 'ADMIN':
+        return 'A-';
+      case 'SUPER ADMIN':
+        return 'S-';
+      case 'STUDENT ORGANIZATION':
+        return 'O-';
+      case 'FACULTY':
+        return 'F-';
+      default:
+        return 'U';
+    }
+  }
+
   showLoading(
     currentEditingUserId ? 'Updating user...' : 'Adding user...', 
     'Please wait'
@@ -515,27 +552,26 @@ document.getElementById('userForm').addEventListener('submit', async (e) => {
     const roleValue = getRoleValue(role);
 
     if (currentEditingUserId) {
-      const updateData = {
-        first_name: firstName,
-        last_name: lastName,
-        email: email,
-        role_name: normalizeRoleName(role),
-        role: roleValue
-      };
+      // Call API endpoint to update user (bypasses RLS via service role key)
+      const apiResponse = await fetch('https://udm-faculty-reservation-github-io.vercel.app/api/update-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: currentEditingUserId,
+          first_name: firstName,
+          last_name: lastName,
+          email: email,
+          role: role,
+          role_name: role
+        })
+      });
 
-      if (password) {
-        updateData.password = password;
-      }
+      const result = await apiResponse.json();
 
-      const { error } = await sb
-        .from('users')
-        .update(updateData)
-        .eq('id', currentEditingUserId);
-
-      if (error) {
-        console.error('Error updating user:', error);
+      if (!apiResponse.ok) {
+        console.error('API Error updating user:', result);
         hideLoading();
-        showCustomAlert('Update Error', 'Error updating user', 'error');
+        showCustomAlert('Update Error', result.error || 'Error updating user', 'error');
         return;
       }
 
@@ -700,7 +736,20 @@ document.addEventListener('DOMContentLoaded', () => {
     return; // Redirect in progress
   }
   console.log('Admin_manage.js loaded, initializing...');
-  loadUsers();
+  
+  // Wait for Supabase to be ready before loading users
+  function waitForSupabaseAndLoad() {
+    const sb = getSupabase();
+    if (sb) {
+      console.log('Supabase client ready, loading users...');
+      loadUsers();
+    } else {
+      console.log('Waiting for Supabase client to initialize...');
+      setTimeout(waitForSupabaseAndLoad, 100);
+    }
+  }
+  
+  waitForSupabaseAndLoad();
 
   const passwordField = document.getElementById('userPassword');
   const rePasswordField = document.getElementById('userRePassword');

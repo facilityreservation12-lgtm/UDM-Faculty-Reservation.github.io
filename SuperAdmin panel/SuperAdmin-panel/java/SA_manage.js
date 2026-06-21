@@ -856,7 +856,20 @@ document.addEventListener('DOMContentLoaded', () => {
     return; // Redirect in progress
   }
   console.log('SA_manage.js loaded, initializing...');
-  loadUsers();
+  
+  // Wait for Supabase to be ready before loading users
+  function waitForSupabaseAndLoad() {
+    const sb = getSupabase();
+    if (sb) {
+      console.log('Supabase client ready, loading users...');
+      loadUsers();
+    } else {
+      console.log('Waiting for Supabase client to initialize...');
+      setTimeout(waitForSupabaseAndLoad, 100);
+    }
+  }
+  
+  waitForSupabaseAndLoad();
   
   // Add password validation feedback
   const passwordField = document.getElementById('userPassword');
