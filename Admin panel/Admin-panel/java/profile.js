@@ -1,5 +1,17 @@
 // Admin Dashboard User Loading Functions
 
+// Format internal role names to display names
+function formatRoleDisplay(role) {
+  if (!role) return '';
+  const roleMap = {
+    'super_admin': 'Super Admin',
+    'admin': 'Admin',
+    'faculty': 'Faculty',
+    'student_organization': 'Student Organization'
+  };
+  return roleMap[role] || role;
+}
+
 // Helper to get Supabase client from supabaseConfig.js
 function getSupabaseClient() {
   // First, check if supabaseConfig.js has initialized the client
@@ -120,7 +132,7 @@ async function loadUserDetails() {
           document.getElementById('UserName').textContent = storedUserName;
         }
         if (document.getElementById('UserRole')) {
-          document.getElementById('UserRole').textContent = storedUserRole;
+          document.getElementById('UserRole').textContent = formatRoleDisplay(storedUserRole);
         }
       } else {
         // Generic fallback based on user ID
@@ -132,7 +144,7 @@ async function loadUserDetails() {
           document.getElementById('UserName').textContent = displayName;
         }
         if (document.getElementById('UserRole')) {
-          document.getElementById('UserRole').textContent = displayRole;
+          document.getElementById('UserRole').textContent = formatRoleDisplay(displayRole);
         }
         
         // Store for future use
@@ -153,7 +165,7 @@ async function loadUserDetails() {
       document.getElementById('UserName').textContent = userName || 'Unknown User';
     }
     if (document.getElementById('UserRole')) {
-      document.getElementById('UserRole').textContent = userRole || 'No Role';
+      document.getElementById('UserRole').textContent = formatRoleDisplay(userRole) || 'No Role';
     }
     
     // Store in localStorage for fallback use
@@ -173,7 +185,7 @@ async function loadUserDetails() {
       document.getElementById('UserName').textContent = storedUserName;
     }
     if (document.getElementById('UserRole')) {
-      document.getElementById('UserRole').textContent = storedUserRole;
+      document.getElementById('UserRole').textContent = formatRoleDisplay(storedUserRole);
     }
   }
 }

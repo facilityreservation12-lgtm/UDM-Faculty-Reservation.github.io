@@ -68,12 +68,24 @@ function sanitizeStoredValue(value) {
   return trimmed;
 }
 
+// Format internal role names to display names
+function formatRoleDisplay(role) {
+  if (!role) return '';
+  const roleMap = {
+    'super_admin': 'Super Admin',
+    'admin': 'Admin',
+    'faculty': 'Faculty',
+    'student_organization': 'Student Organization'
+  };
+  return roleMap[role] || role;
+}
+
 function applyUserDisplay(name, role) {
   if (name && document.getElementById('UserName')) {
     document.getElementById('UserName').textContent = name;
   }
   if (role && document.getElementById('UserRole')) {
-    document.getElementById('UserRole').textContent = role;
+    document.getElementById('UserRole').textContent = formatRoleDisplay(role);
   }
 }
 
