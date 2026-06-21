@@ -1,5 +1,30 @@
 // Admin Dashboard User Loading Functions
 
+// ========== RBAC ROLE VERIFICATION ==========
+function checkSuperAdminAccess() {
+  const userId = localStorage.getItem('user_id') || localStorage.getItem('id');
+  const userRole = localStorage.getItem('user_role');
+  
+  console.log('[RBAC] SuperAdmin Access Check - userId:', userId, 'userRole:', userRole);
+  
+  if (!userId) {
+    console.log('[RBAC] No user ID found, redirecting to login...');
+    window.location.href = '/User panel/login.html';
+    return false;
+  }
+  
+  if (userRole !== 'super_admin') {
+    console.log('[RBAC] User role is not super_admin, redirecting to user dashboard...');
+    // Clear potentially wrong session data
+    alert('Access Denied: You do not have permission to access the SuperAdmin panel.');
+    window.location.href = '/User panel/Userdashboard.html';
+    return false;
+  }
+  
+  console.log('[RBAC] SuperAdmin access granted');
+  return true;
+}
+
 // Helper to get Supabase client from supabaseConfig.js
 function getSupabaseClient() {
   if (typeof window !== 'undefined' && window.supabaseClient) {
@@ -157,16 +182,27 @@ function waitForSupabaseAndLoadUser() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+  // RBAC: Check access first
+  if (!checkSuperAdminAccess()) {
+    return; // Redirect in progress
+  }
   console.log('Admin Dashboard - DOM loaded, waiting for Supabase client...');
   setTimeout(waitForSupabaseAndLoadUser, 500);
 });
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', function() {
+    // RBAC: Check access first
+    if (!checkSuperAdminAccess()) {
+      return; // Redirect in progress
+    }
     setTimeout(waitForSupabaseAndLoadUser, 500);
   });
 } else {
-  setTimeout(waitForSupabaseAndLoadUser, 500);
+  // RBAC: Check access first
+  if (checkSuperAdminAccess()) {
+    setTimeout(waitForSupabaseAndLoadUser, 500);
+  }
 }
 
 window.addEventListener('storage', (event) => {

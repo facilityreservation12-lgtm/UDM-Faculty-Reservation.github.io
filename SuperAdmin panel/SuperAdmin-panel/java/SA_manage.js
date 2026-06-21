@@ -1,5 +1,29 @@
 let editingUserId = null;
 
+// ========== RBAC ROLE VERIFICATION ==========
+function checkSuperAdminAccess() {
+  const userId = localStorage.getItem('user_id') || localStorage.getItem('id');
+  const userRole = localStorage.getItem('user_role');
+  
+  console.log('[RBAC] SuperAdmin Access Check - userId:', userId, 'userRole:', userRole);
+  
+  if (!userId) {
+    console.log('[RBAC] No user ID found, redirecting to login...');
+    window.location.href = '/User panel/login.html';
+    return false;
+  }
+  
+  if (userRole !== 'super_admin') {
+    console.log('[RBAC] User role is not super_admin, redirecting to user dashboard...');
+    alert('Access Denied: You do not have permission to access the SuperAdmin panel.');
+    window.location.href = '/User panel/Userdashboard.html';
+    return false;
+  }
+  
+  console.log('[RBAC] SuperAdmin access granted');
+  return true;
+}
+
 // Strong password validation function
 function isStrongPassword(password) {
   // At least 8 characters
@@ -815,6 +839,10 @@ setInterval(() => {
 
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', () => {
+  // RBAC: Check access first
+  if (!checkSuperAdminAccess()) {
+    return; // Redirect in progress
+  }
   console.log('SA_manage.js loaded, initializing...');
   loadUsers();
   

@@ -1,3 +1,26 @@
+// ========== RBAC ROLE VERIFICATION ==========
+(function checkAccessBeforeInit() {
+  const userId = localStorage.getItem('user_id') || localStorage.getItem('id');
+  const userRole = localStorage.getItem('user_role');
+  
+  console.log('[RBAC] SuperAdmin Access Check - userId:', userId, 'userRole:', userRole);
+  
+  if (!userId) {
+    console.log('[RBAC] No user ID found, redirecting to login...');
+    window.location.href = '/User panel/login.html';
+    return;
+  }
+  
+  if (userRole !== 'super_admin') {
+    console.log('[RBAC] User role is not super_admin, redirecting to user dashboard...');
+    alert('Access Denied: You do not have permission to access the SuperAdmin panel.');
+    window.location.href = '/User panel/Userdashboard.html';
+    return;
+  }
+  
+  console.log('[RBAC] SuperAdmin access granted');
+})();
+
 const monthYear = document.getElementById('monthYear');
 const daysContainer = document.getElementById('calendarDays');
 const prevMonthBtn = document.getElementById('prevMonth');

@@ -1,3 +1,40 @@
+// ========== RBAC ROLE VERIFICATION ==========
+function checkUserAccess() {
+  const userId = localStorage.getItem('user_id') || localStorage.getItem('id');
+  const userRole = localStorage.getItem('user_role');
+  
+  console.log('[RBAC] User Panel Access Check - userId:', userId, 'userRole:', userRole);
+  
+  if (!userId) {
+    console.log('[RBAC] No user ID found, redirecting to login...');
+    window.location.href = '/User panel/login.html';
+    return false;
+  }
+  
+  // User panel allows 'faculty' or 'student_organization' roles
+  if (userRole !== 'faculty' && userRole !== 'student_organization') {
+    console.log('[RBAC] User role is not faculty/student_organization, redirecting to appropriate panel...');
+    
+    if (userRole === 'super_admin') {
+      alert('Access Denied: You are a SuperAdmin. Redirecting to SuperAdmin panel.');
+      window.location.href = '/SuperAdmin panel/SuperAdmin-panel/SuperAdminDashboard.html';
+    } else if (userRole === 'admin') {
+      alert('Access Denied: You are an Admin. Redirecting to Admin panel.');
+      window.location.href = '/Admin panel/Admin-panel/AdminDashboard.html';
+    } else {
+      alert('Access Denied: You do not have permission to access this panel.');
+      window.location.href = '/User panel/login.html';
+    }
+    return false;
+  }
+  
+  console.log('[RBAC] User panel access granted');
+  return true;
+}
+
+// Run RBAC check immediately
+checkUserAccess();
+
 const facilityCodes = {
   "Palma Hall": "PH",
   "Right Wing Lobby": "RW",
