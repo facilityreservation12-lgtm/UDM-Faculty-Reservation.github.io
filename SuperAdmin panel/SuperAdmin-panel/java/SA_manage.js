@@ -778,11 +778,11 @@ try {
   hideLoading();
   showCustomAlert('Success', 'User added successfully. They can now login with their email and password.', 'success');
 
-} catch (err) {
-  hideLoading();
-  console.error('Error inserting new user:', err);
-  showCustomAlert('Error', 'Error adding new user: ' + err.message, 'error');
-}
+    } catch (err) {
+      hideLoading();
+      console.error('Error inserting new user:', err);
+      showCustomAlert('Error', 'Error adding new user: ' + err.message, 'error');
+    }
     }
   } catch (error) {
     hideLoading();

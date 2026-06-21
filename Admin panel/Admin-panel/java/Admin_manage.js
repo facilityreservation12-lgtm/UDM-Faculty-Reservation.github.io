@@ -672,7 +672,12 @@ async function performUserUpdate(firstName, lastName, email, role, password) {
         showCustomAlert('Error', 'Error adding new user: ' + err.message, 'error');
       }
     }
-});
+  } catch (error) {
+    hideLoading();
+    console.error('Error in form submission:', error);
+    showCustomAlert('Error', 'An error occurred while processing the request', 'error');
+  }
+}
 
 window.togglePassword = function(inputId) {
   const input = document.getElementById(inputId);
