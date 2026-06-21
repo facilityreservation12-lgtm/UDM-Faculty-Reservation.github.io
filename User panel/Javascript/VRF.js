@@ -1406,6 +1406,23 @@ document.addEventListener('DOMContentLoaded', async function() {
  					pdfPath
  				);
 
+
+				// Update pdf_url in database after successful upload
+				if (pdfUploadResult) {
+					try {
+						const { error: updateError } = await sb
+							.from('reservations')
+							.update({ pdf_url: pdfPath })
+							.eq('request_id', codeId);
+						if (updateError) {
+							console.warn('Failed to update pdf_url in database:', updateError);
+						} else {
+							console.log('pdf_url updated successfully in database:', pdfPath);
+						}
+					} catch (updateErr) {
+						console.warn('Error updating pdf_url:', updateErr);
+					}
+				}
 				if (!pdfUploadResult) {
 					// PDF upload failed. Save PDF blob in IndexedDB
 					try {

@@ -442,7 +442,7 @@ async function printVRF(requestId) {
           console.warn(`list error for bucket="${bucket}" folder="${folder}":`, listErr);
         } else if (Array.isArray(listData)) {
           // try to find file that includes requestId (tolerant)
-          const found = listData.find(item => item.name && item.name.includes(requestId));
+          const found = listData.find(item => item.name && item.name === `VRF-${requestId}.pdf`);
           if (found) {
             const filePath = `${folder}/${found.name}`;
             // try public url for found item
