@@ -312,6 +312,7 @@ function openAddModal() {
   document.getElementById('modalTitle').textContent = 'Add User';
   document.getElementById('userForm').reset();
   currentEditingUserId = null;
+  originalRole = null; // Reset original role for new user
   
   // Set button text to "Add" for new user
   const submitButton = document.querySelector('#userForm button[type="submit"]');
@@ -405,6 +406,9 @@ function openEditModal(user) {
     console.log('Setting role to:', user.role_name);
   }
   
+  // Store original role for change detection
+  originalRole = user.role_name || '';
+  
   // Clear password fields for editing
   document.getElementById('userPassword').value = '';
   document.getElementById('userRePassword').value = '';
@@ -469,6 +473,7 @@ function openEditModal(user) {
 }
 
 let currentEditingUserId = null;
+let originalRole = null; // Store original role when editing to detect changes
 
 // Edit user function
 async function editUser(userId) {
@@ -513,24 +518,21 @@ function deleteUser(userId) {
     'Are you sure you want to delete this user? This action cannot be undone.',
     async () => {
       showLoading('Deleting user...', 'Please wait');
-      
+
       try {
-        const sb = getSupabase();
-        if (!sb) {
-          hideLoading();
-          showCustomAlert('Connection Error', 'Database connection error', 'error');
-          return;
-        }
+        // Call API endpoint to delete user (bypasses RLS via service role key)
+        const apiResponse = await fetch('https://udm-faculty-reservation-github-io.vercel.app/api/delete-user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: userId })
+        });
 
-        const { error } = await sb
-          .from('users')
-          .delete()
-          .eq('id', userId);
+        const result = await apiResponse.json();
 
-        if (error) {
-          console.error('Error deleting user:', error);
+        if (!apiResponse.ok) {
+          console.error('API Error deleting user:', result);
           hideLoading();
-          showCustomAlert('Delete Error', 'Error deleting user', 'error');
+          showCustomAlert('Delete Error', result.error || 'Error deleting user', 'error');
           return;
         }
 
@@ -541,7 +543,7 @@ function deleteUser(userId) {
       } catch (error) {
         hideLoading();
         console.error('Error in deleteUser:', error);
-        showCustomAlert('Error', 'Error deleting user', 'error');
+        showCustomAlert('Error', 'Error deleting user: ' + error.message, 'error');
       }
     }
   );
@@ -597,6 +599,26 @@ document.getElementById('userForm').addEventListener('submit', async (e) => {
     return;
   }
 
+  // Check if role changed during edit
+  if (currentEditingUserId && originalRole && role !== originalRole) {
+    // Show warning confirmation for role change
+    showCustomConfirm(
+      'Warning: Role Change',
+      `You are about to change this user's role from "${originalRole}" to "${role}". This may affect their access permissions. Do you want to continue?`,
+      () => {
+        // User confirmed, proceed with update
+        performUserUpdate(firstName, lastName, email, role, password);
+      }
+    );
+    return;
+  }
+
+  // Continue with normal flow (new user or no role change)
+  performUserUpdate(firstName, lastName, email, role, password);
+});
+
+// Function to perform user add/update (extracted for reuse with role change confirmation)
+async function performUserUpdate(firstName, lastName, email, role, password) {
   // Map role_name to role value
   function getRoleValue(roleName) {
     switch (roleName) {
@@ -633,29 +655,26 @@ document.getElementById('userForm').addEventListener('submit', async (e) => {
     const roleValue = getRoleValue(role);
 
     if (currentEditingUserId) {
-      // Update existing user
-      const updateData = {
-        first_name: firstName,
-        last_name: lastName,
-        email: email,
-        role_name: normalizeRoleName(role),
-        role: roleValue
-      };
-      
-      // Only update password if provided
-      if (password) {
-        updateData.password = password;
-      }
-      
-      const { error } = await sb
-        .from('users')
-        .update(updateData)
-        .eq('id', currentEditingUserId);
+      // Call API endpoint to update user (bypasses RLS via service role key)
+      const apiResponse = await fetch('https://udm-faculty-reservation-github-io.vercel.app/api/update-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: currentEditingUserId,
+          first_name: firstName,
+          last_name: lastName,
+          email: email,
+          role: role,
+          role_name: role
+        })
+      });
 
-      if (error) {
-        console.error('Error updating user:', error);
+      const result = await apiResponse.json();
+
+      if (!apiResponse.ok) {
+        console.error('API Error updating user:', result);
         hideLoading();
-        showCustomAlert('Update Error', 'Error updating user', 'error');
+        showCustomAlert('Update Error', result.error || 'Error updating user', 'error');
         return;
       }
 
@@ -764,14 +783,7 @@ try {
   console.error('Error inserting new user:', err);
   showCustomAlert('Error', 'Error adding new user: ' + err.message, 'error');
 }
-    }
-
-  } catch (error) {
-    hideLoading();
-    console.error('Error in form submission:', error);
-    showCustomAlert('Error', 'An error occurred while processing the request', 'error');
-  }
-});
+}
 
 // Password toggle function for inline icons
 window.togglePassword = function(inputId) {
