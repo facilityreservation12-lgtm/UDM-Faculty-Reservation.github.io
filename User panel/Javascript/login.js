@@ -215,6 +215,17 @@ document.addEventListener('DOMContentLoaded', function() {
         
         console.log(`[LOGIN SUCCESS] Email: ${email}, Role: ${userRole}, Name: ${userName}`);
         
+        // Validate that the user's actual role matches the selected role
+        const normalizedUserRole = (userRole || '').toLowerCase().replace(' ', '_');
+        const normalizedSelectedRole = role.toLowerCase();
+        
+        if (normalizedUserRole !== normalizedSelectedRole) {
+          console.log(`[LOGIN REJECTED] User ${email} has role '${userRole}' but tried to login as '${role}'`);
+          hideLoading();
+          showCustomAlert('Access Denied', `This account is not registered as ${role}. Please select the correct role.`, 'error');
+          return;
+        }
+        
         // Store user information
         localStorage.setItem('id', userData.id);
         localStorage.setItem('user_id', userData.id);
