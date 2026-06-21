@@ -311,11 +311,17 @@ function setupFileInputs() {
 // ===================================
 // HANDLE FILE SELECT
 // ===================================
+// Helper to convert docType to element ID suffix (camelCase for signed_approval)
+function getElementIdSuffix(docType) {
+  return docType.replace(/_([a-z])/g, (m, p1) => p1.toUpperCase());
+}
+
 function handleFileSelect(docType, inputEl) {
   const file = inputEl.files[0];
-  const statusEl = document.getElementById(`${docType}Status`);
-  const uploadBtn = document.getElementById(`${docType}UploadBtn`);
-  const cardEl = document.getElementById(`${docType}UploadCard`);
+  const idSuffix = getElementIdSuffix(docType);
+  const statusEl = document.getElementById(`${idSuffix}Status`);
+  const uploadBtn = document.getElementById(`${idSuffix}UploadBtn`);
+  const cardEl = document.getElementById(`${idSuffix}UploadCard`);
   
   if (!file) {
     statusEl.textContent = '';
@@ -369,8 +375,9 @@ async function uploadDocument(docType) {
   const userId = localStorage.getItem('user_id') || localStorage.getItem('id');
   const userRole = localStorage.getItem('role_name') || 'faculty';
   
-  const statusEl = document.getElementById(`${docType}Status`);
-  const uploadBtn = document.getElementById(`${docType}UploadBtn`);
+  const idSuffix = getElementIdSuffix(docType);
+  const statusEl = document.getElementById(`${idSuffix}Status`);
+  const uploadBtn = document.getElementById(`${idSuffix}UploadBtn`);
   
   try {
     // Disable button during upload
@@ -454,11 +461,11 @@ async function uploadDocument(docType) {
     
     // Update UI
     statusEl.innerHTML = `<span class="success">✓ Uploaded: ${escapeHtml(file.name)}</span>`;
-    const cardEl = document.getElementById(`${docType}UploadCard`);
+    const cardEl = document.getElementById(`${idSuffix}UploadCard`);
     cardEl.classList.add('has-file');
     
     // Clear file input
-    const fileInput = document.getElementById(`${docType === 'frf' ? 'frf' : 'signedApproval'}File`);
+    const fileInput = document.getElementById(`${idSuffix}File`);
     if (fileInput) fileInput.value = '';
     
     // Reload documents
