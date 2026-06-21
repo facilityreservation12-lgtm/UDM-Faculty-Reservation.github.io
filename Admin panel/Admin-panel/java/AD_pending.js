@@ -154,7 +154,7 @@ async function loadPendingRequests() {
         <td>${formatDate(reservation.date)}</td>
         <td>${timeRange}</td>
         <td>${reservation.title_of_the_event || 'No title provided'}</td>
-        <td><button class="status-btn" data-request-id="${reservation.request_id}">Accept / Reject</button></td>
+        <td>View Only</td>
       `;
       tableBody.appendChild(row);
     }

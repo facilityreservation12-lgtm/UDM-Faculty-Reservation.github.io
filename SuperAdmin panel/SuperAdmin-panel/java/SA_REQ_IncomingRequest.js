@@ -219,7 +219,7 @@ async function loadIncomingRequests(forceReload = false) {
       const timeEnd = formatTime(reservation.time_end);
       const timeRange = `${timeStart} - ${timeEnd}`;
       
-      // Create table row
+      // Create table row - SuperAdmin can only view, no print functionality
       const row = document.createElement('tr');
       row.innerHTML = `
         <td>${userName}</td>
@@ -227,7 +227,6 @@ async function loadIncomingRequests(forceReload = false) {
         <td>${formatDate(reservation.date)}</td>
         <td>${timeRange}</td>
         <td>${reservation.title_of_the_event || 'No title provided'}</td>
-        <td><button class="print-btn" onclick="printVRF('${reservation.request_id}')">Print</button></td>
       `;
       
       if (tableBody) tableBody.appendChild(row);
