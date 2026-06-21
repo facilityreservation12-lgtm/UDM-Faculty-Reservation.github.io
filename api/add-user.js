@@ -75,7 +75,7 @@ export default async function handler(req, res) {
     const rolePrefix = getRolePrefix(role_name)
     const newUserId = await generateUserId(rolePrefix, authUser.user.id)
 
-    // Create custom user record
+    // Create custom user record with auth_id
     const { error: userError } = await supabaseAdmin
       .from('users')
       .insert({
@@ -83,7 +83,8 @@ export default async function handler(req, res) {
         email: email,
         first_name,
         last_name,
-        role_name
+        role_name,
+        auth_id: authUser.user.id  // Store the Supabase Auth UUID for later deletion
       })
 
     if (userError) {
