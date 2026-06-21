@@ -783,6 +783,12 @@ try {
   console.error('Error inserting new user:', err);
   showCustomAlert('Error', 'Error adding new user: ' + err.message, 'error');
 }
+    }
+  } catch (error) {
+    hideLoading();
+    console.error('Error in form submission:', error);
+    showCustomAlert('Error', 'An error occurred while processing the request', 'error');
+  }
 }
 
 // Password toggle function for inline icons
