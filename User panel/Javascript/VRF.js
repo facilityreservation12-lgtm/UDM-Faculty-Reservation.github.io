@@ -80,17 +80,8 @@ function getLocalDatetimeLocal() {
 }
 
 function getCodePrefix(fac) {
-  if (!fac) return "PH";
-  if (facilityCodes[fac]) return facilityCodes[fac];
-  const f = fac.toLowerCase();
-  if (f.includes("palma")) return "PH";
-  if (f.includes("right wing") || f.includes("rightwing") || f.includes("right")) return "RW";
-  if (f.includes("mehan")) return "MG";
-  if (f.includes("rooftop")) return "RT";
-  if (f.includes("classroom") || f.includes("room")) return "CR";
-  if (f.includes("basket") || f.includes("court")) return "BC";
-  if (f.includes("ground") || f.includes("floor")) return "GF";
-  return "PH";
+  // Return "FACILITY" as the universal prefix for all facilities
+  return "FACILITY";
 }
 
 // Add safe Supabase client getter to avoid "cannot access before initialization"
@@ -1151,13 +1142,14 @@ document.addEventListener('DOMContentLoaded', async function() {
 			// Generate sequential code for the facility (query DB for existing max, fallback to local)
 			const firstFacility = selectedFacilities[0];
 			const codePrefix = getCodePrefix(firstFacility);
+			const currentYear = new Date().getFullYear();
 			let codeId = null;
 			try {
-				// Query existing request_ids with this prefix
+				// Query existing request_ids with this prefix and year
 				const { data: existingReqs, error: reqError } = await sb
 					.from('reservations')
 					.select('request_id')
-					.like('request_id', `${codePrefix}-%`);
+					.like('request_id', `${codePrefix}-${currentYear}-%`);
 				console.log('Debug: existingReqs for prefix', codePrefix, existingReqs && existingReqs.length);
 				if (reqError) {
 					console.warn('Could not query existing request_ids for prefix, falling back to local:', reqError);
@@ -1167,7 +1159,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 						.map(r => {
 							if (!r || !r.request_id) return null;
 							const parts = String(r.request_id).split('-');
-							const num = parseInt(parts[1], 10);
+							const num = parseInt(parts[2], 10); // Year is now index 1, sequence is index 2
 							return Number.isFinite(num) ? num : null;
 						})
 						.filter(n => n !== null && !isNaN(n) && n >= 0);
@@ -1175,7 +1167,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 					const maxNum = nums.length ? Math.max(...nums) : 0;
 					const next = maxNum + 1;
 					console.log('Debug: next sequence for', codePrefix, next);
-					codeId = `${codePrefix}-${String(next).padStart(4, '0')}`;
+					codeId = `${codePrefix}-${currentYear}-${String(next).padStart(4, '0')}`;
 				}
 			} catch (err) {
 				console.warn('Error while computing next request_id from DB, will fallback to local sequence:', err);
@@ -1184,15 +1176,16 @@ document.addEventListener('DOMContentLoaded', async function() {
 			// Fallback to local sequence if DB method did not set codeId
 			if (!codeId) {
 				// Generate local sequence
+				const yearPrefix = `${codePrefix}-${currentYear}-`;
 				const existingCodes = reservations
-					.filter(r => r.codeId && r.codeId.startsWith(codePrefix))
-					.map(r => parseInt(r.codeId.split('-')[1], 10))
+					.filter(r => r.codeId && r.codeId.startsWith(yearPrefix))
+					.map(r => parseInt(r.codeId.split('-')[2], 10))
 					.filter(n => !isNaN(n));
 				let localSequence = 1;
 				if (existingCodes.length > 0) {
 					localSequence = Math.max(...existingCodes) + 1;
 				}
-				codeId = `${codePrefix}-${String(localSequence).padStart(4, '0')}`;
+				codeId = `${codePrefix}-${currentYear}-${String(localSequence).padStart(4, '0')}`;
 			}
 
 			// Get all form data

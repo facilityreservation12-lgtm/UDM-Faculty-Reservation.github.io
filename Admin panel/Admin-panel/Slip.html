@@ -143,6 +143,21 @@
     </div>
   </div>
   </div>
+
+  <!-- Email Input Modal -->
+  <div id="emailModal" class="custom-modal" style="display: none;">
+    <div class="custom-modal-content">
+      <button class="modal-close" onclick="closeEmailModal()">&times;</button>
+      <h3 class="modal-title">Send Email</h3>
+      <p class="modal-message">Enter the email address where the PDF will be sent:</p>
+      <input type="email" id="emailInput" placeholder="recipient@example.com" style="width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;">
+      <div id="emailModalButtons" class="modal-buttons">
+        <button class="modal-btn primary" onclick="sendEmailWithAddress()">Send</button>
+        <button class="modal-btn secondary" onclick="closeEmailModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Custom Alert Modal -->
 <div id="customAlertModal" class="custom-modal">
   <div class="custom-modal-content">

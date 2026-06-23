@@ -39,47 +39,98 @@ function setupSendEmailButton() {
     if (!btn) return;
 
     btn.addEventListener('click', async () => {
+        // Show the email modal instead of directly sending
+        const modal = document.getElementById('emailModal');
+        const emailInput = document.getElementById('emailInput');
+        if (modal) {
+            modal.style.display = 'flex';
+            if (emailInput) {
+                emailInput.value = ''; // Clear previous input
+                emailInput.focus();
+            }
+        }
+    });
+}
+
+function closeEmailModal() {
+    const modal = document.getElementById('emailModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+async function sendEmailWithAddress() {
+    const emailInput = document.getElementById('emailInput');
+    const recipientEmail = emailInput?.value?.trim();
+    
+    if (!recipientEmail) {
+        alert('Please enter an email address.');
+        return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(recipientEmail)) {
+        alert('Please enter a valid email address.');
+        return;
+    }
+
+    closeEmailModal();
+
+    const btn = document.getElementById('sendEmailBtn');
+    const modalButtons = document.getElementById('emailModalButtons');
+    if (btn) {
         btn.disabled = true;
         btn.textContent = 'Sending…';
+    }
+    if (modalButtons) {
+        modalButtons.style.display = 'none';
+    }
 
-        const details = collectSlipDetails();
+    const details = collectSlipDetails();
 
-        try {
-            // Use EmailJS to send the email
-            const baseUrl = getAppBaseUrl();
-            
-            // Build dynamic URLs
-            const slipUrl = `${baseUrl}/Admin%20panel/Admin-panel/Slip.html${details.reservationId !== 'N/A' ? '?request_id=' + encodeURIComponent(details.reservationId) : ''}`;
-            const docUploadUrl = `${baseUrl}/User%20panel/DocumentUpload.html${details.reservationId !== 'N/A' ? '?request_id=' + encodeURIComponent(details.reservationId) : ''}`;
+    try {
+        // Use EmailJS to send the email
+        const baseUrl = getAppBaseUrl();
+        
+        // Build dynamic URLs
+        const slipUrl = `${baseUrl}/Admin%20panel/Admin-panel/Slip.html${details.reservationId !== 'N/A' ? '?request_id=' + encodeURIComponent(details.reservationId) : ''}`;
+        const docUploadUrl = `${baseUrl}/User%20panel/DocumentUpload.html${details.reservationId !== 'N/A' ? '?request_id=' + encodeURIComponent(details.reservationId) : ''}`;
 
-            // Prepare email template parameters - matching existing template variables
-            const templateParams = {
-                to_email: 'facility.reservation12@gmail.com',
-                request_id: details.reservationId,
-                facility: details.facility || details.eventName || 'N/A',
-                event_date: details.inclusiveDates || 'N/A',
-                event_title: details.eventName || 'N/A',
-                document_upload_url: docUploadUrl
-            };
+        // Prepare email template parameters - matching existing template variables
+        const templateParams = {
+            to_email: recipientEmail,
+            request_id: details.reservationId,
+            facility: details.facility || details.eventName || 'N/A',
+            event_date: details.inclusiveDates || 'N/A',
+            event_title: details.eventName || 'N/A',
+            document_upload_url: docUploadUrl
+        };
 
-            // Send via EmailJS
-            const response = await emailjs.send(
-                EMAILJS_CONFIG.serviceId,
-                EMAILJS_CONFIG.templateId,
-                templateParams
-            );
+        // Send via EmailJS
+        const response = await emailjs.send(
+            EMAILJS_CONFIG.serviceId,
+            EMAILJS_CONFIG.templateId,
+            templateParams
+        );
 
-            console.log('✅ Email sent successfully!', response.status, response.text);
-            alert('✅ Email sent successfully!');
+        console.log('✅ Email sent successfully!', response.status, response.text);
+        alert('✅ Email sent successfully to ' + recipientEmail + '!');
 
-        } catch (error) {
-            console.error('❌ Email send failed:', error);
-            alert('❌ Send failed: ' + (error.message || 'Unknown error'));
-        } finally {
+    } catch (error) {
+        console.error('❌ Email send failed:', error);
+        alert('❌ Send failed: ' + (error.message || 'Unknown error'));
+    } finally {
+        const btn = document.getElementById('sendEmailBtn');
+        const modalButtons = document.getElementById('emailModalButtons');
+        if (btn) {
             btn.disabled = false;
             btn.textContent = '📧 Send Email';
         }
-    });
+        if (modalButtons) {
+            modalButtons.style.display = 'flex';
+        }
+    }
 }
 
 function collectSlipDetails() {
