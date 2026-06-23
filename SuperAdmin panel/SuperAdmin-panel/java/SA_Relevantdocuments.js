@@ -12,7 +12,7 @@ const DOCUMENT_TYPES = {
   frf: { label: 'FRF', uploadBy: 'user', canUpload: false },
   signed_approval: { label: 'Signed Approval', uploadBy: 'user', canUpload: false },
   approval: { label: 'Approval', uploadBy: 'admin', canUpload: true },
-  venue_slip: { label: 'Venue Slip', uploadBy: 'admin', canUpload: true },
+  venue_slip: { label: 'Facility Slip', uploadBy: 'admin', canUpload: true },
   cash_invoice: { label: 'Cash Invoice', uploadBy: 'admin', canUpload: true },
   permit_to_use_facility: { label: 'Permit to Use Facility', uploadBy: 'admin', canUpload: true }
 };

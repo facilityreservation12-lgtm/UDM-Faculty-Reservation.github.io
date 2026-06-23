@@ -93,11 +93,11 @@ async function loadSlipFromReservation() {
     console.log('Date Filed set to:', dateFiledInput.value);
   }
 
-  // Venue Slip No. - Second input in the first row
+  // Facility Slip No. - Second input in the first row
   const venueSlipInputs = document.querySelectorAll('.row .column input[type="text"]');
   if (venueSlipInputs.length > 0) {
     venueSlipInputs[0].value = reservation.codeId || reservation.request_id || '';
-    console.log('Venue Slip No. set to:', venueSlipInputs[0].value);
+    console.log('Facility Slip No. set to:', venueSlipInputs[0].value);
   }
 
   // Unit/Office/College and Inclusive Dates - Inputs in the section
