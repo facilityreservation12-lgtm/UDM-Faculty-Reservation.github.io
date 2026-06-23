@@ -14,6 +14,7 @@ const EMAILJS_CONFIG = {
 
 // Initialize EmailJS when script loads
 (function initializeAdminEmailJS() {
+    console.log('EmailJS Init: Checking emailjs...', typeof emailjs);
     if (typeof emailjs !== 'undefined') {
         emailjs.init(EMAILJS_CONFIG.publicKey);
         console.log('✅ EmailJS initialized for Admin panel');
@@ -30,27 +31,50 @@ function getAppBaseUrl() {
     return window.location.origin;
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    setupSendEmailButton();
-});
-
+// Setup function that can be called manually if DOMContentLoaded already fired
 function setupSendEmailButton() {
+    console.log('setupSendEmailButton called');
     const btn = document.getElementById('sendEmailBtn');
-    if (!btn) return;
+    console.log('SendEmail button element:', btn);
+    if (!btn) {
+        console.error('SendEmail button not found in DOM');
+        return;
+    }
 
-    btn.addEventListener('click', async () => {
+    // Remove any existing listeners to prevent duplicates
+    const newBtn = btn.cloneNode(true);
+    btn.parentNode.replaceChild(newBtn, btn);
+
+    newBtn.addEventListener('click', async () => {
+        console.log('SendEmail button clicked');
         // Show the email modal instead of directly sending
         const modal = document.getElementById('emailModal');
         const emailInput = document.getElementById('emailInput');
+        console.log('Modal element:', modal);
+        console.log('Email input element:', emailInput);
         if (modal) {
             modal.style.display = 'flex';
+            console.log('Modal should now be visible');
             if (emailInput) {
                 emailInput.value = ''; // Clear previous input
                 emailInput.focus();
             }
+        } else {
+            console.error('Email modal not found in DOM');
         }
     });
 }
+
+// Try to setup immediately in case DOMContentLoaded already fired
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    console.log('DOM already loaded, setting up immediately');
+    setupSendEmailButton();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOMContentLoaded fired');
+    setupSendEmailButton();
+});
 
 function closeEmailModal() {
     const modal = document.getElementById('emailModal');
@@ -60,8 +84,10 @@ function closeEmailModal() {
 }
 
 async function sendEmailWithAddress() {
+    console.log('sendEmailWithAddress called');
     const emailInput = document.getElementById('emailInput');
     const recipientEmail = emailInput?.value?.trim();
+    console.log('Recipient email:', recipientEmail);
     
     if (!recipientEmail) {
         alert('Please enter an email address.');
@@ -88,14 +114,18 @@ async function sendEmailWithAddress() {
     }
 
     const details = collectSlipDetails();
+    console.log('Collected details:', details);
 
     try {
         // Use EmailJS to send the email
         const baseUrl = getAppBaseUrl();
+        console.log('Base URL:', baseUrl);
         
         // Build dynamic URLs
-        const slipUrl = `${baseUrl}/Admin%20panel/Admin-panel/Slip.html${details.reservationId !== 'N/A' ? '?request_id=' + encodeURIComponent(details.reservationId) : ''}`;
-        const docUploadUrl = `${baseUrl}/User%20panel/DocumentUpload.html${details.reservationId !== 'N/A' ? '?request_id=' + encodeURIComponent(details.reservationId) : ''}`;
+        const slipUrl = baseUrl + '/Admin%20panel/Admin-panel/Slip.html' + (details.reservationId !== 'N/A' ? '?request_id=' + encodeURIComponent(details.reservationId) : '');
+        const docUploadUrl = baseUrl + '/User%20panel/DocumentUpload.html' + (details.reservationId !== 'N/A' ? '?request_id=' + encodeURIComponent(details.reservationId) : '');
+        console.log('Slip URL:', slipUrl);
+        console.log('Doc Upload URL:', docUploadUrl);
 
         // Prepare email template parameters - matching existing template variables
         const templateParams = {
@@ -106,6 +136,12 @@ async function sendEmailWithAddress() {
             event_title: details.eventName || 'N/A',
             document_upload_url: docUploadUrl
         };
+        console.log('Template params:', templateParams);
+
+        console.log('Checking EmailJS...', typeof emailjs);
+        if (typeof emailjs === 'undefined') {
+            throw new Error('EmailJS not loaded!');
+        }
 
         // Send via EmailJS
         const response = await emailjs.send(
