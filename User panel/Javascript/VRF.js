@@ -468,7 +468,12 @@ async function retryLocalUploads(sb) {
 // Helper function to generate form HTML for PDF regeneration
 function generateFormHTML(reservation) {
 	return `
-		<h2>Venue Reservation Form</h2>
+		<div class="pdf-header" style="text-align: center; margin-bottom: 15px;">
+			<img src="images/udmlogo.jpg" alt="UDM Logo" style="width: 60px; height: auto; vertical-align: middle;">
+			<span style="font-size: 14px; font-weight: bold;">UNIVERSIDAD DE MANILA</span>
+			<img src="images/udmlogo.jpg" alt="UDM Logo" style="width: 60px; height: auto; vertical-align: middle;">
+		</div>
+		<h2 style="text-align: center;">Facility Reservation Form</h2>
 		<div class="row">
 			<div>
 				<label>Date/Time Received: <input type="datetime-local" value="${reservation.dateReceived || ''}" readonly></label><br>

@@ -267,7 +267,19 @@ function setupSendEmailButton() {
         html: bodyHtml    // Use the variable you defined above
       };
 
-      const res = await fetch('http://localhost:8000/api/send-email', {
+      // Check if we're in production - localhost API won't work in production
+    const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+      ? 'http://localhost:8000/api/send-email' 
+      : null;
+
+    let res;
+    if (!apiUrl) {
+      // In production, use EmailJS fallback
+      alert('Email sending via localhost API is not available in production. Please use the Admin panel to send emails.');
+      throw new Error('Production email not configured');
+    }
+
+    res = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
