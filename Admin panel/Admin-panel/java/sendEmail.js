@@ -53,7 +53,7 @@ function setupSendEmailButton() {
         console.log('Modal element:', modal);
         console.log('Email input element:', emailInput);
         if (modal) {
-            modal.style.display = 'flex';
+            modal.classList.add('show');
             console.log('Modal should now be visible');
             if (emailInput) {
                 emailInput.value = ''; // Clear previous input
@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function closeEmailModal() {
     const modal = document.getElementById('emailModal');
     if (modal) {
-        modal.style.display = 'none';
+        modal.classList.remove('show');
     }
 }
 
