@@ -430,29 +430,8 @@ async function saveEvent(startDateStr) {
       
       const eventId = `manual-${Date.now()}-${i}-${Math.random().toString(36).substr(2, 9)}`;
       
-      // Save to Supabase with auto-generated ID and user ID in reserved_by
+      // Save to reservations table with EXT- request_id
       try {
-        const { data, error } = await supabaseClient
-          .from('manual_events')
-          .insert([{
-            facility: facility,
-            date: dateStr,
-            time_start: startTime,
-            time_end: endTime,
-            title_of_the_event: title,
-            reserved_by: userId
-          }])
-          .select();
-
-        if (error) {
-          console.error('Error saving to Supabase:', error);
-          showCustomAlert('Database Error', 'Error saving to database: ' + error.message, 'error');
-          return;
-        }
-        
-        console.log('Successfully saved to Supabase:', data);
-        
-        // Also create/update reservation record for document upload access
         const { data: reservationData, error: reservationError } = await supabaseClient
           .from('reservations')
           .upsert([{
@@ -469,11 +448,11 @@ async function saveEvent(startDateStr) {
           });
           
         if (reservationError) {
-          console.warn('Warning: Could not create reservation record:', reservationError);
-          // Don't fail the whole operation for this
-        } else {
-          console.log('Reservation record created:', reservationData);
+          console.error('Error saving to reservations:', reservationError);
+          showCustomAlert('Database Error', 'Error saving to database: ' + reservationError.message, 'error');
+          return;
         }
+        console.log('Reservation record created:', reservationData);
       } catch (dbErr) {
         console.error('Database error:', dbErr);
         showCustomAlert('Database Error', 'Database error: ' + dbErr.message, 'error');
@@ -487,7 +466,8 @@ async function saveEvent(startDateStr) {
         startTime,
         endTime,
         person,
-        source: 'manual'
+        source: 'manual',
+        requestId: requestId  // Store requestId for update/delete
       };
       
       if (!events[dateStr]) events[dateStr] = [];
@@ -555,29 +535,28 @@ async function saveEditedEvent(dateStr, index) {
       throw new Error('Event not found.');
     }
     
-    if (supabaseClient) {
+    // Use requestId to update reservations table
+    if (supabaseClient && originalEvent.requestId) {
       try {
         const { data, error } = await supabaseClient
-          .from('manual_events')
+          .from('reservations')
           .update({
             facility: facility,
             time_start: startTime,
             time_end: endTime,
             title_of_the_event: title
           })
-          .eq('reserved_by', userId)
+          .eq('request_id', originalEvent.requestId)
           .eq('date', dateStr)
-          .eq('time_start', originalEvent.startTime)
-          .eq('facility', originalEvent.facility)
           .select();
 
         if (error) {
-          console.error('Error updating in Supabase:', error);
-          showCustomAlert('Database Error', 'Error updating in database: ' + error.message, 'error');
+          console.error('Error updating reservation:', error);
+          showCustomAlert('Database Error', 'Error updating reservation: ' + error.message, 'error');
           return;
         }
         
-        console.log('Successfully updated in Supabase:', data);
+        console.log('Successfully updated reservation:', data);
       } catch (dbErr) {
         console.error('Database error:', dbErr);
         showCustomAlert('Database Error', 'Database error: ' + dbErr.message, 'error');
@@ -592,7 +571,8 @@ async function saveEditedEvent(dateStr, index) {
       startTime,
       endTime,
       person,
-      source: 'manual'
+      source: 'manual',
+      requestId: originalEvent.requestId
     };
 
     events[dateStr][index] = updatedEvent;
@@ -634,6 +614,8 @@ async function confirmDuplicate(origDateStr, index) {
     }
 
     const startDate = new Date(targetDate);
+    // Generate new requestId for duplicated event
+    const newRequestId = `EXT-${Date.now().toString().slice(-6)}`;
     
     for (let i = 0; i < duration; i++) {
       const current = new Date(startDate);
@@ -642,27 +624,30 @@ async function confirmDuplicate(origDateStr, index) {
       
       const eventId = `manual-${Date.now()}-${i}-${Math.random().toString(36).substr(2, 9)}`;
       
+      // Save to reservations table with new requestId
       if (supabaseClient) {
         try {
           const { data, error } = await supabaseClient
-            .from('manual_events')
+            .from('reservations')
             .insert([{
+              request_id: newRequestId,
               facility: ev.facility,
               date: newDateStr,
               time_start: ev.startTime,
               time_end: ev.endTime,
               title_of_the_event: ev.title,
-              reserved_by: userId
+              id: userId,
+              status: 'approved'
             }])
             .select();
 
           if (error) {
-            console.error('Error duplicating to Supabase:', error);
-            showCustomAlert('Database Error', 'Error duplicating to database: ' + error.message, 'error');
+            console.error('Error duplicating reservation:', error);
+            showCustomAlert('Database Error', 'Error duplicating reservation: ' + error.message, 'error');
             return;
           }
           
-          console.log('Successfully duplicated to Supabase:', data);
+          console.log('Successfully duplicated reservation:', data);
         } catch (dbErr) {
           console.error('Database error:', dbErr);
           showCustomAlert('Database Error', 'Database error: ' + dbErr.message, 'error');
@@ -677,7 +662,8 @@ async function confirmDuplicate(origDateStr, index) {
         startTime: ev.startTime,
         endTime: ev.endTime,
         person: ev.person,
-        source: 'manual'
+        source: 'manual',
+        requestId: newRequestId
       };
       
       if (!events[newDateStr]) events[newDateStr] = [];
@@ -711,24 +697,22 @@ async function deleteEvent(dateStr, index) {
       throw new Error('Event not found.');
     }
     
-    if (supabaseClient) {
+    // Use requestId to delete from reservations table
+    if (supabaseClient && eventToDelete.requestId) {
       try {
         const { error } = await supabaseClient
-          .from('manual_events')
+          .from('reservations')
           .delete()
-          .eq('reserved_by', userId)
-          .eq('date', dateStr)
-          .eq('time_start', eventToDelete.startTime)
-          .eq('facility', eventToDelete.facility)
-          .eq('title_of_the_event', eventToDelete.title);
+          .eq('request_id', eventToDelete.requestId)
+          .eq('date', dateStr);
 
         if (error) {
-          console.error('Error deleting from Supabase:', error);
-          showCustomAlert('Database Error', 'Error deleting from database: ' + error.message, 'error');
+          console.error('Error deleting reservation:', error);
+          showCustomAlert('Database Error', 'Error deleting reservation: ' + error.message, 'error');
           return;
         }
         
-        console.log('Successfully deleted from Supabase');
+        console.log('Successfully deleted reservation');
       } catch (dbErr) {
         console.error('Database error:', dbErr);
         showCustomAlert('Database Error', 'Database error: ' + dbErr.message, 'error');

@@ -261,7 +261,7 @@ async function fetchInternalFacilityData(year, month) {
   }
 }
 
-// Function to fetch external facility data (from manual_events table)
+// Function to fetch external facility data (from reservations table with EXT- request_id)
 async function fetchExternalFacilityData(year, month) {
   try {
     const supabaseClient = getSupabaseClient();
@@ -277,11 +277,13 @@ async function fetchExternalFacilityData(year, month) {
     
     console.log(`📊 Fetching EXTERNAL events from ${startOfMonth} to ${endOfMonth}`);
 
+    // Fetch external events from reservations table (EXT- request_ids)
     const { data: events, error } = await supabaseClient
-      .from('manual_events')
+      .from('reservations')
       .select('facility, date')
       .gte('date', startOfMonth)
-      .lte('date', endOfMonth);
+      .lte('date', endOfMonth)
+      .like('request_id', 'EXT-%');
 
     if (error) {
       console.error('❌ Error fetching external events:', error);

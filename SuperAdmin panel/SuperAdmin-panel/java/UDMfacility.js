@@ -97,68 +97,6 @@ async function fetchApprovedReservations(facility) {
   }
 }
 
-async function fetchManualEvents(facility) {
-  try {
-    const supabaseClient = getSupabaseClient();
-    if (!supabaseClient) {
-      console.warn('Supabase client not available for manual events');
-      return [];
-    }
-
-    const { data: manualEvents, error } = await supabaseClient
-      .from('manual_events')
-      .select('id, facility, date, time_start, time_end, title_of_the_event, reserved_by')
-      .eq('facility', facility)
-      .order('date', { ascending: true })
-      .order('time_start', { ascending: true });
-
-    if (error) {
-      console.error('❌ Error fetching manual events:', error);
-      return [];
-    }
-
-    const userIds = [
-      ...new Set(
-        (manualEvents || [])
-          .map(ev => ev.reserved_by)
-          .filter(Boolean)
-      )
-    ];
-
-    let userMap = {};
-    if (userIds.length) {
-      const { data: users, error: userError } = await supabaseClient
-        .from('users')
-        .select('id, first_name, last_name')
-        .in('id', userIds);
-
-      if (userError) {
-        console.warn('⚠️ Unable to fetch users for manual events:', userError);
-      } else if (users) {
-        userMap = users.reduce((acc, user) => {
-          const name = `${user.first_name || ''} ${user.last_name || ''}`.trim();
-          acc[user.id] = name || user.id;
-          return acc;
-        }, {});
-      }
-    }
-
-    return (manualEvents || []).map(ev => ({
-      code: `MAN-${String(ev.id).padStart(4, '0')}`,
-      userName: userMap[ev.reserved_by] || ev.reserved_by || 'Manual Entry',
-      date: ev.date,
-      time_start: ev.time_start,
-      time_end: ev.time_end,
-      title: ev.title_of_the_event || 'Manual reservation',
-      source: 'internal',
-      isManual: true
-    }));
-  } catch (err) {
-    console.error('❌ Error in fetchManualEvents:', err);
-    return [];
-  }
-}
-
 // Function to format time from 24-hour to 12-hour format
 function formatTime(time) {
   if (!time) return 'N/A';
@@ -194,12 +132,9 @@ async function populateFacilityTable() {
   const facility = facilities[currentFacilityIndex];
   console.log(`🔄 Populating table for facility: ${facility}`);
 
-  const [reservations, manualEvents] = await Promise.all([
-    fetchApprovedReservations(facility),
-    fetchManualEvents(facility)
-  ]);
+  // Fetch approved reservations (includes EXT- events from calendar)
+  const reservations = await fetchApprovedReservations(facility);
   console.log(`✅ Reservations fetched:`, reservations);
-  console.log(`✅ Manual events fetched:`, manualEvents);
 
   const normalizedReservations = reservations.map(reservation => ({
     code: reservation.request_id || 'N/A',
@@ -213,7 +148,7 @@ async function populateFacilityTable() {
     requestId: reservation.request_id || null
   }));
 
-  const rows = [...normalizedReservations, ...manualEvents];
+  const rows = [...normalizedReservations];
   rows.sort((a, b) => {
     const aDate = new Date(`${a.date || ''}T${a.time_start || '00:00'}`);
     const bDate = new Date(`${b.date || ''}T${b.time_start || '00:00'}`);
