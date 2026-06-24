@@ -74,6 +74,83 @@ function formatTimeForCalendarEmail(timeString) {
     return `${displayHour}:${minute} ${ampm}`;
 }
 
+/**
+ * Get the base URL dynamically - works on all environments (localhost, Vercel, GitHub Pages)
+ */
+function getAppBaseUrl() {
+    return window.location.origin;
+}
+
+/**
+ * Get human-readable label for document type
+ */
+function getDocumentLabel(docType) {
+    const labels = {
+        'frf': 'FRF',
+        'signed_approval': 'Signed Approval',
+        'approval': 'Approval',
+        'venue_slip': 'Venue Slip',
+        'cash_invoice': 'Cash Invoice',
+        'permit_to_use_facility': 'Permit to Use Facility'
+    };
+    return labels[docType] || docType;
+}
+
+/**
+ * Fetch uploaded documents for a reservation
+ */
+async function getUploadedDocuments(requestId) {
+    if (!requestId || requestId === 'N/A') return [];
+    
+    const sb = window.supabaseClient;
+    if (!sb) {
+        console.warn('Supabase client not available for fetching documents');
+        return [];
+    }
+    
+    try {
+        // Try RPC first
+        const { data: docs, error } = await sb
+            .rpc('get_reservation_documents', { p_request_id: requestId });
+        
+        if (error) {
+            console.warn('RPC error fetching documents, trying direct select:', error);
+            // Fallback to direct select
+            const { data: directDocs, error: selectError } = await sb
+                .from('reservation_documents')
+                .select('*')
+                .eq('request_id', requestId);
+            
+            if (selectError) {
+                console.error('Error fetching documents:', selectError);
+                return [];
+            }
+            return directDocs || [];
+        }
+        return docs || [];
+    } catch (err) {
+        console.error('Error in getUploadedDocuments:', err);
+        return [];
+    }
+}
+
+/**
+ * Build HTML list of uploaded documents for email
+ */
+function buildDocumentsListHtml(documents) {
+    if (!documents || documents.length === 0) {
+        return '<p>No documents uploaded yet.</p>';
+    }
+    
+    let html = '<h4>Uploaded Documents:</h4><ul>';
+    documents.forEach(doc => {
+        const label = getDocumentLabel(doc.document_type);
+        html += `<li><a href="${doc.file_url}" target="_blank">${label} - ${doc.filename}</a></li>`;
+    });
+    html += '</ul>';
+    return html;
+}
+
 // Send manual event confirmation email
 async function sendManualEventConfirmationEmail(eventData) {
     console.log('📧 Sending manual event confirmation email:', eventData);
@@ -81,6 +158,17 @@ async function sendManualEventConfirmationEmail(eventData) {
     try {
         // Generate a request ID for external users
         const externalRequestId = `EXT-${Date.now().toString().slice(-6)}`;
+        
+        // Get base URL for building document upload link
+        const baseUrl = getAppBaseUrl();
+        const docUploadUrl = `${baseUrl}/User%20panel/DocumentUpload.html?request_id=${encodeURIComponent(externalRequestId)}`;
+        
+        // Fetch uploaded documents for this reservation (if any exist)
+        const uploadedDocuments = await getUploadedDocuments(externalRequestId);
+        console.log('Uploaded documents:', uploadedDocuments);
+        
+        // Build documents HTML list for email
+        const documentsListHtml = buildDocumentsListHtml(uploadedDocuments);
         
         const templateParams = {
             to_email: eventData.toEmail,
@@ -90,7 +178,9 @@ async function sendManualEventConfirmationEmail(eventData) {
             event_date: formatDateForCalendarEmail(eventData.eventDate),
             time_start: formatTimeForCalendarEmail(eventData.timeStart),
             time_end: formatTimeForCalendarEmail(eventData.timeEnd),
-            event_title: eventData.eventTitle
+            event_title: eventData.eventTitle,
+            document_upload_url: docUploadUrl,
+            uploaded_documents_html: documentsListHtml
         };
         
         console.log('📧 Email params:', templateParams);
