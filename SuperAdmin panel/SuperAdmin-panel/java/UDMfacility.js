@@ -197,7 +197,7 @@ async function populateFacilityTable() {
     const endTime = formatTime(entry.time_end);
     const timeRange = `${startTime} - ${endTime}`;
     const formattedDate = formatDate(entry.date);
-    const typeLabel = entry.isManual ? 'External (Manual)' : 'Internal (FRF)';
+    const typeLabel = entry.isManual ? 'External (Manual)' : 'Internal (FRS)';
 
     // Create cells safely
     const codeCell = row.insertCell();

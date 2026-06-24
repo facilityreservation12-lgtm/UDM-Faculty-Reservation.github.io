@@ -48,7 +48,7 @@ function getSupabase() {
  */
 function getDocumentLabel(docType) {
     const labels = {
-        'frf': 'FRF',
+        'frf': 'FRS',
         'signed_approval': 'Signed Approval',
         'approval': 'Approval',
         'venue_slip': 'Venue Slip',
