@@ -30,6 +30,88 @@ function getAppBaseUrl() {
     return window.location.origin;
 }
 
+/**
+ * Get Supabase client
+ */
+function getSupabase() {
+    if (typeof window !== 'undefined') {
+        if (window.supabaseClient) return window.supabaseClient;
+        if (window.supabase) return window.supabase;
+    }
+    if (typeof supabase !== 'undefined') return supabase;
+    return null;
+}
+
+/**
+ * Get human-readable label for document type
+ */
+function getDocumentLabel(docType) {
+    const labels = {
+        'frf': 'FRF',
+        'signed_approval': 'Signed Approval',
+        'approval': 'Approval',
+        'venue_slip': 'Venue Slip',
+        'cash_invoice': 'Cash Invoice',
+        'permit_to_use_facility': 'Permit to Use Facility'
+    };
+    return labels[docType] || docType;
+}
+
+/**
+ * Fetch uploaded documents for a reservation
+ */
+async function getUploadedDocuments(requestId) {
+    if (!requestId || requestId === 'N/A') return [];
+    
+    const sb = getSupabase();
+    if (!sb) {
+        console.warn('Supabase client not available for fetching documents');
+        return [];
+    }
+    
+    try {
+        // Try RPC first
+        const { data: docs, error } = await sb
+            .rpc('get_reservation_documents', { p_request_id: requestId });
+        
+        if (error) {
+            console.warn('RPC error fetching documents, trying direct select:', error);
+            // Fallback to direct select
+            const { data: directDocs, error: selectError } = await sb
+                .from('reservation_documents')
+                .select('*')
+                .eq('request_id', requestId);
+            
+            if (selectError) {
+                console.error('Error fetching documents:', selectError);
+                return [];
+            }
+            return directDocs || [];
+        }
+        return docs || [];
+    } catch (err) {
+        console.error('Error in getUploadedDocuments:', err);
+        return [];
+    }
+}
+
+/**
+ * Build HTML list of uploaded documents for email
+ */
+function buildDocumentsListHtml(documents) {
+    if (!documents || documents.length === 0) {
+        return '<p>No documents uploaded yet.</p>';
+    }
+    
+    let html = '<h4>Uploaded Documents:</h4><ul>';
+    documents.forEach(doc => {
+        const label = getDocumentLabel(doc.document_type);
+        html += `<li><a href="${doc.file_url}" target="_blank">${label} - ${doc.filename}</a></li>`;
+    });
+    html += '</ul>';
+    return html;
+}
+
 // Wait for DOM to be ready
 document.addEventListener('DOMContentLoaded', function() {
     setupSendEmailButton();
@@ -62,15 +144,32 @@ function setupSendEmailButton() {
         const slipUrl = `${baseUrl}/Admin%20panel/Admin-panel/Slip.html`;
         const docUploadUrl = `${baseUrl}/User%20panel/DocumentUpload.html${reservationId !== 'N/A' ? '?request_id=' + encodeURIComponent(reservationId) : ''}`;
 
+        // Fetch uploaded documents for this reservation
+        const uploadedDocuments = await getUploadedDocuments(reservationId);
+        console.log('Uploaded documents:', uploadedDocuments);
+        
+        // Build documents HTML list for email
+        const documentsListHtml = buildDocumentsListHtml(uploadedDocuments);
+
         try {
             // Prepare email template parameters - matching existing template variables
+            // Include uploaded document URLs if available
             const templateParams = {
                 to_email: 'facility.reservation12@gmail.com',
                 request_id: reservationId,
                 facility: venueName,
                 event_date: eventDate,
                 event_title: requesterName,
-                document_upload_url: docUploadUrl
+                document_upload_url: docUploadUrl,
+                // Include uploaded documents list (for email templates that support HTML)
+                uploaded_documents_html: documentsListHtml,
+                // Also include individual document URLs if template supports them
+                frf_url: uploadedDocuments.find(d => d.document_type === 'frf')?.file_url || '',
+                signed_approval_url: uploadedDocuments.find(d => d.document_type === 'signed_approval')?.file_url || '',
+                approval_url: uploadedDocuments.find(d => d.document_type === 'approval')?.file_url || '',
+                venue_slip_url: uploadedDocuments.find(d => d.document_type === 'venue_slip')?.file_url || '',
+                cash_invoice_url: uploadedDocuments.find(d => d.document_type === 'cash_invoice')?.file_url || '',
+                permit_to_use_facility_url: uploadedDocuments.find(d => d.document_type === 'permit_to_use_facility')?.file_url || ''
             };
 
             // Send via EmailJS
