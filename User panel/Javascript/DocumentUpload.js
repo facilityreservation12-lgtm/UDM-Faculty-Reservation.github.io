@@ -5,7 +5,7 @@
 
 // Document type configuration
 const DOCUMENT_TYPES = {
-  frf: { label: 'FRF', uploadBy: 'user', required: true },
+  frf: { label: 'FRS', uploadBy: 'user', required: true },
   signed_approval: { label: 'Signed Approval', uploadBy: 'user', required: true },
   approval: { label: 'Approval', uploadBy: 'admin', required: false },
   venue_slip: { label: 'Facility Slip', uploadBy: 'admin', required: false },

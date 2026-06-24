@@ -9,7 +9,7 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 // Document types with upload permissions
 const DOCUMENT_TYPES = {
-  frf: { label: 'FRF', uploadBy: 'user', canUpload: false },
+  frf: { label: 'FRS', uploadBy: 'user', canUpload: false },
   signed_approval: { label: 'Signed Approval', uploadBy: 'user', canUpload: false },
   approval: { label: 'Approval', uploadBy: 'admin', canUpload: true },
   venue_slip: { label: 'Facility Slip', uploadBy: 'admin', canUpload: true },
