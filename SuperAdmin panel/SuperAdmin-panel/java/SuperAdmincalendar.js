@@ -439,8 +439,7 @@ async function saveEvent(startDateStr) {
             time_start: startTime,
             time_end: endTime,
             title_of_the_event: title,
-            reserved_by: userId,
-            request_id: requestId  // Link to the reservation
+            reserved_by: userId
           }])
           .select();
 
