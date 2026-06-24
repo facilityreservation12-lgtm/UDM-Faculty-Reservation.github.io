@@ -77,8 +77,9 @@ async function loadUserDetails() {
     console.log('Loading user details for ID:', userId);
     
     if (!userId) {
-      document.getElementById('UserName').textContent = 'Guest User';
-      document.getElementById('UserRole').textContent = '';
+      // This is a standalone portal page - these elements may not exist
+      if (document.getElementById('UserName')) document.getElementById('UserName').textContent = 'Guest User';
+      if (document.getElementById('UserRole')) document.getElementById('UserRole').textContent = '';
       return;
     }
 
@@ -101,8 +102,9 @@ async function loadUserDetails() {
     
     if (data) {
       const userName = `${data.first_name || ''} ${data.last_name || ''}`.trim();
-      document.getElementById('UserName').textContent = userName || 'Unknown User';
-      document.getElementById('UserRole').textContent = data.role_name || '';
+      // This is a standalone portal page - these elements may not exist
+      if (document.getElementById('UserName')) document.getElementById('UserName').textContent = userName || 'Unknown User';
+      if (document.getElementById('UserRole')) document.getElementById('UserRole').textContent = data.role_name || '';
     }
   } catch (err) {
     console.error('Error in loadUserDetails:', err);

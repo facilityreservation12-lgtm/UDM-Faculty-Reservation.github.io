@@ -80,8 +80,8 @@ async function sendManualEventConfirmationEmail(eventData) {
     console.log('📧 Sending manual event confirmation email:', eventData);
     
     try {
-        // Generate a request ID for external users
-        const externalRequestId = `EXT-${Date.now().toString().slice(-6)}`;
+        // Use the provided request ID or generate one if not provided
+        const externalRequestId = eventData.requestId || `EXT-${Date.now().toString().slice(-6)}`;
         
         // Get base URL for building document upload link
         const baseUrl = getAppBaseUrl();
@@ -420,6 +420,9 @@ async function saveEvent(startDateStr) {
     const startDate = new Date(startDateStr);
     const savedEvents = [];
     
+    // Generate a single request ID for this reservation
+    const requestId = `EXT-${Date.now().toString().slice(-6)}`;
+    
     for (let i = 0; i < duration; i++) {
       const current = new Date(startDate);
       current.setDate(current.getDate() + i);
@@ -437,7 +440,8 @@ async function saveEvent(startDateStr) {
             time_start: startTime,
             time_end: endTime,
             title_of_the_event: title,
-            reserved_by: userId
+            reserved_by: userId,
+            request_id: requestId  // Link to the reservation
           }])
           .select();
 
@@ -448,6 +452,29 @@ async function saveEvent(startDateStr) {
         }
         
         console.log('Successfully saved to Supabase:', data);
+        
+        // Also create/update reservation record for document upload access
+        const { data: reservationData, error: reservationError } = await supabaseClient
+          .from('reservations')
+          .upsert([{
+            request_id: requestId,
+            facility: facility,
+            date: dateStr,
+            time_start: startTime,
+            time_end: endTime,
+            title_of_the_event: title,
+            id: userId,
+            status: 'approved'
+          }], {
+            onConflict: 'request_id'
+          });
+          
+        if (reservationError) {
+          console.warn('Warning: Could not create reservation record:', reservationError);
+          // Don't fail the whole operation for this
+        } else {
+          console.log('Reservation record created:', reservationData);
+        }
       } catch (dbErr) {
         console.error('Database error:', dbErr);
         showCustomAlert('Database Error', 'Database error: ' + dbErr.message, 'error');
@@ -483,7 +510,8 @@ async function saveEvent(startDateStr) {
         eventDate: startDateStr,
         timeStart: startTime,
         timeEnd: endTime,
-        duration: duration
+        duration: duration,
+        requestId: requestId  // Pass the pre-generated request ID
       }).then(emailSent => {
         if (emailSent) {
           showCustomAlert('Success', 'Event saved and confirmation email sent to ' + eventEmail, 'success');
