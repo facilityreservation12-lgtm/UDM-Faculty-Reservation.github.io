@@ -634,3 +634,51 @@ textarea {
     width: 365px;
   }
 }
+
+/* ===============================
+   Header Logo Styles (SOA style)
+================================ */
+.soa-container {
+  background: #fff;
+  padding: 30px;
+  max-width: 1400px;
+}
+
+.soa-logos {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-align: center;
+}
+
+.logo-box {
+  width: 33%;
+}
+
+.logo {
+  width: 80px;
+  height: auto;
+}
+
+.soa-logos p {
+  margin-top: 5px;
+  font-size: 12px;
+}
+
+.soa-university {
+  text-align: center;
+  margin-top: 5px;
+}
+
+.soa-university h1 {
+  font-family: 'Cinzel', serif;
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  padding-bottom: 30px;
+}
+
+.soa-title {
+  text-align: center;
+  margin: 20px 0;
+}
